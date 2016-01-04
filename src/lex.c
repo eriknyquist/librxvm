@@ -48,24 +48,52 @@ int lex (char **input)
                 if (**input == DEREF_SYM) {
                     state = STATE_DEREF;
                     (*input)++;
+
                 } else if (**input == CHARC_OPEN_SYM) {
                     state = STATE_END;
                     ret = CHARC_OPEN;
                     literal = 1;
-
                     (*input)++;
+
                 } else if (**input == CHARC_CLOSE_SYM) {
                     state = STATE_END;
                     ret = CHARC_CLOSE;
-
                     literal = 0;
                     (*input)++;
+
+                } else if (**input == LPAREN_SYM) {
+                    if (literal) {
+                        state = STATE_LITERAL;
+                    } else {
+                        state = STATE_END;
+                        ret = LPAREN;
+                        (*input)++;
+                    }
+
+                } else if (**input == RPAREN_SYM) {
+                    if (literal) {
+                        state = STATE_LITERAL;
+                    } else {
+                        state = STATE_END;
+                        ret = RPAREN;
+                        (*input)++;
+                    }
+
                 } else if (**input == ONE_SYM) {
                     if (literal) {
                         state = STATE_LITERAL;
                     } else {
                         state = STATE_END;
                         ret = ONE;
+                        (*input)++;
+                    }
+
+                } else if (**input == ONEZERO_SYM) {
+                    if (literal) {
+                        state = STATE_LITERAL;
+                    } else {
+                        state = STATE_END;
+                        ret = ONEZERO;
                         (*input)++;
                     }
 

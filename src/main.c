@@ -2,57 +2,66 @@
 #include <stdlib.h>
 #include "lex.h"
 
+int tok;
 
-int main (int argc, char *argv[])
+const char *token_string (int token)
 {
-    const char *msg;
-    char *text;
-    int tok;
+    const char *ret;
 
-    if (argc != 2) {
-        printf("Usage: %s <regex>\n", argv[0]);
-        return 1;
+    switch(tok) {
+        case CHARC_OPEN:
+            ret = "CHARC_OPEN";
+        break;
+        case CHARC_CLOSE:
+            ret = "CHARC_CLOSE";
+        break;
+        case CHAR_RANGE:
+            ret = "CHAR_RANGE";
+        break;
+        case LPAREN:
+            ret = "LPAREN";
+        break;
+        case RPAREN:
+            ret = "RPAREN";
+        break;
+        case ONE:
+            ret = "ONE";
+        break;
+        case ZERO:
+            ret = "ZERO";
+        break;
+        case ONEZERO:
+            ret = "ONEZERO";
+        break;
+        case ANY:
+            ret = "ANY";
+        break;
+        case LITERAL:
+            ret = "LITERAL";
+        break;
+        case INVALIDSYM:
+            ret = "ONE";
+        break;
+
+        default:
+            ret = "unknown token";
+        break;
     }
 
-    /* get next token */
-    tok = lex(&argv[1]);
-    while (tok != END) {
-        switch (tok) {
-            case CHARC_OPEN:
-                msg = "open char. class";
-            break;
-            case CHARC_CLOSE:
-                msg = "close char. class";
-            break;
-            case CHAR_RANGE:
-                msg = "char. range";
-            break;
-            case ONE:
-                msg = "one or more";
-            break;
-            case ZERO:
-                msg = "zero or more";
-            break;
-            case ANY:
-                msg = "any character";
-            break;
-            case LITERAL:
-                msg = "literal";
-            break;
-            case INVALIDSYM:
-                msg = "invalid symbol";
-            break;
-        }
+    return ret;
+}
 
-        printf("%20s: ", msg);
-        text = get_token_text();
-        printf("%s\n", text);
-        free(text);
+int main (void)
+{
+    char *regex = "(.[+*A-Z])+\\+*\\.+";
 
-        if (tok == INVALIDSYM) return 1;
-
-        /* get next token */
-        tok = lex(&argv[1]);
+    printf("regex: %s\n\n", regex);
+    printf("tokens:\n");
+    while ((tok = lex(&regex)) != END) {
+        printf("%s ", token_string(tok));
     }
+
+    printf("\n");
+
     return 0;
 }
