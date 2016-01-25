@@ -5,8 +5,12 @@
 #define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
 #define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
 
-static char *old;
-static char *new;
+char *lp1;
+char *lpn;
+
+enum {STATE_START, STATE_LITERAL, STATE_RANGE, STATE_CLASS, STATE_DEREF,
+      STATE_END};
+
 static unsigned int literal;
 
 static inline int isreserved (char x)
@@ -25,13 +29,28 @@ char *get_token_text (void)
     size_t size;
     unsigned int i;
 
-    size = new - old;
+    size = lpn - lp1;
     ret = malloc(size + 1);
     for (i = 0; i < size; i++)
-        ret[i] = old[i];
+        ret[i] = lp1[i];
 
     ret[size] = '\0';
     return ret;
+}
+
+int simple_transition (int literal, char **input, int tok, int *ret)
+{
+    int state;
+
+    if (literal) {
+        state = STATE_LITERAL;
+    } else {
+        state = STATE_END;
+        *ret = tok;
+        (*input)++;
+    }
+
+    return state;
 }
 
 int lex (char **input)
@@ -41,7 +60,7 @@ int lex (char **input)
 
     if (!**input) return END;
 
-    old = *input;
+    lp1 = *input;
     while (state != STATE_END && **input) {
         switch (state) {
             case STATE_START:
@@ -62,59 +81,19 @@ int lex (char **input)
                     (*input)++;
 
                 } else if (**input == LPAREN_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = LPAREN;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, LPAREN, &ret);
                 } else if (**input == RPAREN_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = RPAREN;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, RPAREN, &ret);
                 } else if (**input == ONE_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = ONE;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, ONE, &ret);
                 } else if (**input == ONEZERO_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = ONEZERO;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, ONEZERO, &ret);
                 } else if (**input == ZERO_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = ZERO;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, ZERO, &ret);
                 } else if (**input == ANY_SYM) {
-                    if (literal) {
-                        state = STATE_LITERAL;
-                    } else {
-                        state = STATE_END;
-                        ret = ANY;
-                        (*input)++;
-                    }
-
+                    state = simple_transition(literal, input, ANY, &ret);
+                } else if (**input == CONCAT_SYM) {
+                    state = simple_transition(literal, input, CONCAT, &ret);
                 } else if (isprintable(**input)) {
                     state = STATE_LITERAL;
                 } else {
@@ -146,7 +125,7 @@ int lex (char **input)
                     ret = INVALIDSYM;
                 } else {
                     ret = LITERAL;
-                    old++;
+                    lp1++;
                 }
 
                 (*input)++;
@@ -167,6 +146,6 @@ int lex (char **input)
         }
     }
 
-    new = *input;
+    lpn = *input;
     return ret;
 }

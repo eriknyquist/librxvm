@@ -43,14 +43,8 @@ stackitem_t *create_item(inst_t *inst)
     return item;
 }
 
-stackitem_t *stack_add_head (stack_t *stack, inst_t *inst)
+void stack_point_new_head(stack_t *stack, stackitem_t *new)
 {
-    stackitem_t *new;
-    new = create_item(inst);
-    if (new == NULL) {
-        return NULL;
-    }
-
     if (stack->head == NULL) {
         stack->tail = new;
     } else {
@@ -59,6 +53,17 @@ stackitem_t *stack_add_head (stack_t *stack, inst_t *inst)
     }
 
     stack->head = new;
+}
+
+stackitem_t *stack_add_head (stack_t *stack, inst_t *inst)
+{
+    stackitem_t *new;
+    new = create_item(inst);
+    if (new == NULL) {
+        return NULL;
+    }
+
+    stack_point_new_head(stack, new);
     return new;
 }
 
@@ -85,15 +90,11 @@ void stack_cat (stack_t **stack1, stack_t **stack2)
 {
     if (*stack1 == NULL || (*stack1)->head == NULL) {
         *stack1 = *stack2;
-    } else if (*stack2 != NULL || (*stack2)->head != NULL) {
-        (*stack1)->tail->next = (*stack2)->head;
-        (*stack2)->head->previous = (*stack1)->tail;
-        (*stack1)->tail = (*stack2)->tail;
+    } else if (*stack2 != NULL && (*stack2)->head != NULL) {
+        (*stack1)->head->previous = (*stack2)->tail;
+        (*stack2)->tail->next = (*stack1)->head;
+        (*stack1)->head = (*stack2)->head;
     }
-
-    (*stack2)->head = NULL;
-    (*stack2)->tail = NULL;
-    (*stack2) = NULL;
 }
 
 void stack_free (stack_t *stack)

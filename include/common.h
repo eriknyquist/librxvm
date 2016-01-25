@@ -1,6 +1,9 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#define MAX_CHARC_LEN          256
+#define MAX_NEST_PARENS        64
+
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
 typedef struct stack stack_t;
@@ -8,14 +11,14 @@ typedef struct stack stack_t;
 /*  one node in a list */
 struct stackitem {
     inst_t *inst;
-    struct stackitem *next;
-    struct stackitem *previous;
+    stackitem_t *next;
+    stackitem_t *previous;
 };
 
 /* a list */
 struct stack {
-    struct stackitem *head;
-    struct stackitem *tail;
+    stackitem_t *head;
+    stackitem_t *tail;
     unsigned int size;
 };
 
