@@ -130,16 +130,16 @@ void set_op_match (inst_t *inst)
     inst->ccs = NULL;
 }
 
-void process_op (stack_t *prog, stack_t *buf, stack_t *parens[], int tok)
+void process_op (stack_t *prog, stack_t *parens[], int *pdepth, int tok)
 {
     inst_t inst;
     stackitem_t *i;
 
-    i = buf->tail;
+    i = parens[*pdepth]->tail;
 
-    /* Add all literals from buf. onto output, until operand (which
-     * will be the head of the stack) is reached. */
-    while (i != buf->head) {
+    /* Add all literals from current stack onto output, until
+     * operand (which will be the head of the stack) is reached. */
+    while (i != parens[*pdepth]->head) {
         stack_point_new_head(prog, i);
         i = i->previous;
     }
@@ -174,8 +174,7 @@ void process_op (stack_t *prog, stack_t *buf, stack_t *parens[], int tok)
         break;
     }
 
-    buf->head = NULL;
-    buf->tail = NULL;
+    parens[*pdepth]->head = parens[*pdepth]->tail = NULL;
 }
 
 void expand_char_range (char charc[], int *len)
@@ -203,37 +202,40 @@ void expand_char_range (char charc[], int *len)
 
 stack_t *stage1 (char *input)
 {
-    int state = STATE_START;
+    char charc[MAX_CHARC_LEN];
+    int state;
+    int pdepth;
     int charc_len;
     int tok;
-
-    char charc[MAX_CHARC_LEN];
     stack_t *parens[MAX_NEST_PARENS];
-    stack_t *buf;
     stack_t *ret;
     inst_t inst;
 
     ret = create_stack();
-    buf = create_stack();
+    parens[0] = create_stack();
+
     charc[0] = '\0';
     charc_len = 0;
+    pdepth = 0;
+    state = STATE_START;
 
     while ((tok = lex(&input)) != END) {
         switch (state) {
             case STATE_START:
                 if (tok == LITERAL) {
                     set_op_char(&inst, *lp1);
-                    stack_add_head(buf, &inst);
+                    stack_add_head(parens[pdepth], &inst);
                 } else if (tok == ANY) {
                     set_op_any(&inst);
-                    stack_add_head(buf, &inst);
+                    stack_add_head(parens[pdepth], &inst);
                 } else if (ISOP(tok)) {
-                    process_op(ret, buf, parens, tok);
+                    process_op(ret, parens, &pdepth, tok);
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
                 }
 
             break;
+                //parens[++pdepth] = create_stack();
             case STATE_CHARC:
                 if (tok == LITERAL) {
                     charc[charc_len++] = *lp1;
@@ -242,7 +244,7 @@ stack_t *stage1 (char *input)
                 } else if (tok == CHARC_CLOSE) {
                     charc[charc_len] = '\0';
                     set_op_class(&inst, charc);
-                    stack_add_head(buf, &inst);
+                    stack_add_head(parens[pdepth], &inst);
                     charc_len = 0;
                     charc[0] = '\0';
                     state = STATE_START;
@@ -256,7 +258,7 @@ stack_t *stage1 (char *input)
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(&ret, &buf);
+    stack_cat(&ret, &parens[pdepth]);
 
     /* Add the match instruction */
     set_op_match(&inst);
@@ -268,7 +270,7 @@ stack_t *stage1 (char *input)
 int main (void)
 {
     stack_t *prog;
-    char *s = "aa+b*\\*|[A-Fa-f.~]*";
+    char *s = "aa+b*\\*aa|[A-Fa-f.~]*";
 
     prog = stage1(s);
 
