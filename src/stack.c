@@ -64,7 +64,7 @@ stackitem_t *stack_add_head (stack_t *stack, inst_t *inst)
     }
 
     stack_point_new_head(stack, new);
-    return new;
+    return stack->head;
 }
 
 stackitem_t *stack_add_tail (stack_t *stack, inst_t *inst)

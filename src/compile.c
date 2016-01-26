@@ -130,16 +130,25 @@ void set_op_match (inst_t *inst)
     inst->ccs = NULL;
 }
 
-void process_op (stack_t *prog, stack_t *parens[], int *pdepth, int tok)
+void stack_cat_from_item(stack_t *stack, stackitem_t *i)
 {
-    inst_t inst;
-    stackitem_t *i;
+    while (i != NULL) {
+        stack_point_new_head(stack, i);
+        i = i->previous;
+    }
+}
 
-    i = parens[*pdepth]->tail;
+void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
+{
+    stackitem_t *i;
+    stack_t *target;
+    inst_t inst;
+
+    i = buf->tail;
 
     /* Add all literals from current stack onto output, until
      * operand (which will be the head of the stack) is reached. */
-    while (i != parens[*pdepth]->head) {
+    while (i != item) {
         stack_point_new_head(prog, i);
         i = i->previous;
     }
@@ -148,22 +157,22 @@ void process_op (stack_t *prog, stack_t *parens[], int *pdepth, int tok)
     switch (tok) {
         case ONE:
             set_op_branch(&inst, NULL, NULL);
-            stack_point_new_head(prog, i);
+            stack_cat_from_item(prog, i);
             stack_add_head(prog, &inst);
         break;
         case ZERO:
             set_op_branch(&inst, NULL, NULL);
             stack_add_head(prog, &inst);
-            stack_point_new_head(prog, i);
+            stack_cat_from_item(prog, i);
             stack_add_head(prog, &inst);
         break;
         case ONEZERO:
             set_op_branch(&inst, NULL, NULL);
             stack_add_head(prog, &inst);
-            stack_point_new_head(prog, i);
+            stack_cat_from_item(prog, i);
         break;
         case CONCAT:
-            if (i != NULL) stack_point_new_head(prog, i);
+            if (i != NULL) stack_cat_from_item(prog, i);
             set_op_branch(&inst, NULL, NULL);
             stack_add_tail(prog, &inst);
             set_op_jmp(&inst, NULL);
@@ -174,7 +183,7 @@ void process_op (stack_t *prog, stack_t *parens[], int *pdepth, int tok)
         break;
     }
 
-    parens[*pdepth]->head = parens[*pdepth]->tail = NULL;
+    buf->head = buf->tail = NULL;
 }
 
 void expand_char_range (char charc[], int *len)
@@ -207,8 +216,12 @@ stack_t *stage1 (char *input)
     int pdepth;
     int charc_len;
     int tok;
+    char *i;
+    stackitem_t *operand;
     stack_t *parens[MAX_NEST_PARENS];
     stack_t *ret;
+    stack_t *buf;
+    stack_t *target;
     inst_t inst;
 
     ret = create_stack();
@@ -217,6 +230,8 @@ stack_t *stage1 (char *input)
     charc[0] = '\0';
     charc_len = 0;
     pdepth = 0;
+    operand = NULL;
+    buf = NULL;
     state = STATE_START;
 
     while ((tok = lex(&input)) != END) {
@@ -224,18 +239,30 @@ stack_t *stage1 (char *input)
             case STATE_START:
                 if (tok == LITERAL) {
                     set_op_char(&inst, *lp1);
-                    stack_add_head(parens[pdepth], &inst);
+                    operand = stack_add_head(parens[pdepth], &inst);
+                    buf = parens[pdepth];
                 } else if (tok == ANY) {
                     set_op_any(&inst);
-                    stack_add_head(parens[pdepth], &inst);
+                    operand = stack_add_head(parens[pdepth], &inst);
+                    buf = parens[pdepth];
                 } else if (ISOP(tok)) {
-                    process_op(ret, parens, &pdepth, tok);
+                    target = (pdepth < 1) ? ret : parens[pdepth - 1];
+                    process_op(target, operand, buf, tok);
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
+                } else if (tok == LPAREN) {
+                    parens[++pdepth] = create_stack();
+                } else if (tok == RPAREN) {
+                    if (pdepth < 1) {
+                        fprintf(stderr, "Error: stray ')'\n");
+                        exit(1);
+                    } else {
+                        operand = parens[pdepth]->tail;
+                        buf = parens[pdepth--];
+                    }
                 }
 
             break;
-                //parens[++pdepth] = create_stack();
             case STATE_CHARC:
                 if (tok == LITERAL) {
                     charc[charc_len++] = *lp1;
@@ -244,7 +271,9 @@ stack_t *stage1 (char *input)
                 } else if (tok == CHARC_CLOSE) {
                     charc[charc_len] = '\0';
                     set_op_class(&inst, charc);
-                    stack_add_head(parens[pdepth], &inst);
+
+                    operand = stack_add_head(parens[pdepth], &inst);
+                    buf = parens[pdepth];
                     charc_len = 0;
                     charc[0] = '\0';
                     state = STATE_START;
@@ -252,8 +281,13 @@ stack_t *stage1 (char *input)
                     fprintf(stderr, "Invalid symbol in character class\n");
                     exit(1);
                 }
+
             break;
         }
+        i = lp1;
+        while (i < lpn)
+            printf("%c", *(i++));
+        printf("\n");
     }
 
     /* End of input-- anything left in the buffer
@@ -270,7 +304,8 @@ stack_t *stage1 (char *input)
 int main (void)
 {
     stack_t *prog;
-    char *s = "aa+b*\\*aa|[A-Fa-f.~]*";
+    //char *s = "aa+b*\\*aa|[A-Fa-f.~]*";
+    char *s = "aa+(bb?(cc)+)*";
 
     prog = stage1(s);
 
