@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include "lex.h"
@@ -130,10 +131,11 @@ void set_op_match (inst_t *inst)
     inst->ccs = NULL;
 }
 
-void stack_cat_from_item(stack_t *stack, stackitem_t *i)
+void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 {
-    while (i != NULL) {
-        stack_point_new_head(stack, i);
+    while (1) {
+        stack_point_new_head(stack1, i);
+        if (i == stop) break;
         i = i->previous;
     }
 }
@@ -146,6 +148,7 @@ void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
 
     i = buf->tail;
 
+    print_stack(buf);
     /* Add all literals from current stack onto output, until
      * operand (which will be the head of the stack) is reached. */
     while (i != item) {
@@ -157,22 +160,22 @@ void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
     switch (tok) {
         case ONE:
             set_op_branch(&inst, NULL, NULL);
-            stack_cat_from_item(prog, i);
+            stack_cat_from_item(prog, buf->head, i);
             stack_add_head(prog, &inst);
         break;
         case ZERO:
             set_op_branch(&inst, NULL, NULL);
             stack_add_head(prog, &inst);
-            stack_cat_from_item(prog, i);
+            stack_cat_from_item(prog, buf->head, i);
             stack_add_head(prog, &inst);
         break;
         case ONEZERO:
             set_op_branch(&inst, NULL, NULL);
             stack_add_head(prog, &inst);
-            stack_cat_from_item(prog, i);
+            stack_cat_from_item(prog, buf->head, i);
         break;
         case CONCAT:
-            if (i != NULL) stack_cat_from_item(prog, i);
+            if (i != NULL) stack_cat_from_item(prog, buf->head, i);
             set_op_branch(&inst, NULL, NULL);
             stack_add_tail(prog, &inst);
             set_op_jmp(&inst, NULL);
@@ -239,24 +242,29 @@ stack_t *stage1 (char *input)
             case STATE_START:
                 if (tok == LITERAL) {
                     set_op_char(&inst, *lp1);
-                    operand = stack_add_head(parens[pdepth], &inst);
-                    buf = parens[pdepth];
+                    operand = stack_add_head(parens[0], &inst);
+                    buf = parens[0];
                 } else if (tok == ANY) {
                     set_op_any(&inst);
-                    operand = stack_add_head(parens[pdepth], &inst);
-                    buf = parens[pdepth];
+                    operand = stack_add_head(parens[0], &inst);
+                    buf = parens[0];
                 } else if (ISOP(tok)) {
-                    target = (pdepth < 1) ? ret : parens[pdepth - 1];
+                    target = (pdepth < 1) ? ret : parens[pdepth];
                     process_op(target, operand, buf, tok);
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
                 } else if (tok == LPAREN) {
+                   // target = (pdepth < 1) ? ret : parens[pdepth];
+                    stack_cat(&ret, &parens[0]);
+                    parens[0] = create_stack();
                     parens[++pdepth] = create_stack();
                 } else if (tok == RPAREN) {
                     if (pdepth < 1) {
                         fprintf(stderr, "Error: stray ')'\n");
                         exit(1);
                     } else {
+                        stack_cat(&parens[pdepth], &parens[0]);
+                        parens[0] = create_stack();
                         operand = parens[pdepth]->tail;
                         buf = parens[pdepth--];
                     }
@@ -292,7 +300,7 @@ stack_t *stage1 (char *input)
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(&ret, &parens[pdepth]);
+    stack_cat(&ret, &parens[0]);
 
     /* Add the match instruction */
     set_op_match(&inst);
@@ -305,7 +313,7 @@ int main (void)
 {
     stack_t *prog;
     //char *s = "aa+b*\\*aa|[A-Fa-f.~]*";
-    char *s = "aa+(bb?(cc)+)*";
+    char *s = "aa(bb(cc)+)*";
 
     prog = stage1(s);
 
