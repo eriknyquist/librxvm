@@ -1,8 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define MAX_CHARC_LEN          256
-#define MAX_NEST_PARENS        64
+#define MAX_CHARC_LEN          512
+#define MAX_NEST_PARENS        512
 
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;

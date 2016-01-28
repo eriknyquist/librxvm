@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lex.h"
+#include "err.h"
 
 #define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
 #define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
@@ -97,18 +98,14 @@ int lex (char **input)
                 } else if (isprintable(**input)) {
                     state = STATE_LITERAL;
                 } else {
-                    state = STATE_END;
-                    ret = INVALIDSYM;
-                    (*input)++;
+                    return RVM_EINVAL;
                 }
 
             break;
 
             case STATE_LITERAL:
                 if (**input == RANGE_SEP_SYM && literal) {
-                    state = STATE_END;
-                    ret = INVALIDSYM;
-                    (*input)++;
+                    return RVM_EINVAL;
                 } else if (*(*input + 1) == RANGE_SEP_SYM && literal) {
                     state = STATE_RANGE;
                     *input += 2;
@@ -122,7 +119,7 @@ int lex (char **input)
 
             case STATE_DEREF:
                 if (!**input) {
-                    ret = INVALIDSYM;
+                    return RVM_EINVAL;
                 } else {
                     ret = LITERAL;
                     lp1++;
@@ -138,13 +135,15 @@ int lex (char **input)
                     ret = CHAR_RANGE;
                     (*input)++;
                 } else {
-                    state = STATE_END;
-                    ret = INVALIDSYM;
+                    return RVM_EINVAL;
                 }
 
             break;
         }
     }
+
+    if (state == STATE_DEREF)
+        ret = RVM_ETRAIL;
 
     lpn = *input;
     return ret;

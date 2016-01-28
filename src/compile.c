@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lex.h"
+#include "err.h"
 #include "common.h"
 #include "stack.h"
 
@@ -141,12 +142,16 @@ void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 /* process_op: processes operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'item' and the
  * output is appended to 'prog' */
-void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
+int process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
 {
     stackitem_t *i;
     inst_t inst;
+    stackitem_t *x;
+    stackitem_t *y;
 
     i = buf->tail;
+    x = NULL;
+    y = NULL;
 
     /* Add all literals from current buffer onto output, until
      * the start of the operands is reached. */
@@ -160,35 +165,42 @@ void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
         case ONE:
             set_op_branch(&inst, NULL, NULL);
             stack_cat_from_item(prog, buf->head, i);
-            stack_add_head(prog, &inst);
+            if (stack_add_head(prog, &inst) == NULL)
+                return RVM_EMEM;
         break;
         case ZERO:
             set_op_branch(&inst, NULL, NULL);
-            stack_add_head(prog, &inst);
+            x = stack_add_head(prog, &inst);
             stack_cat_from_item(prog, buf->head, i);
-            stack_add_head(prog, &inst);
+            y = stack_add_head(prog, &inst);
+
+            if (x == NULL || y == NULL)
+                return RVM_EMEM;
         break;
         case ONEZERO:
             set_op_branch(&inst, NULL, NULL);
-            stack_add_head(prog, &inst);
+            if (stack_add_head(prog, &inst) == NULL)
+                return RVM_EMEM;
+
             stack_cat_from_item(prog, buf->head, i);
         break;
         case CONCAT:
             if (i != NULL) stack_cat_from_item(prog, buf->head, i);
             set_op_branch(&inst, NULL, NULL);
-            stack_add_tail(prog, &inst);
+            x = stack_add_tail(prog, &inst);
             set_op_jmp(&inst, NULL);
-            stack_add_head(prog, &inst);
-        break;
-        case CHARC_CLOSE:
-            printf("CHARC_CLOSE\n");
+            y = stack_add_head(prog, &inst);
+
+            if (x == NULL || y == NULL)
+                return RVM_EMEM;
         break;
     }
 
     buf->head = buf->tail = NULL;
+    return 0;
 }
 
-void expand_char_range (char charc[], int *len)
+int expand_char_range (char charc[], int *len)
 {
     char rhi;
     char rlo;
@@ -202,13 +214,14 @@ void expand_char_range (char charc[], int *len)
     }
 
     if ((rhi - rlo) > MAX_CHARC_LEN - (*len + 1)) {
-        fprintf(stderr, "Character class too large");
-        exit(1);
+        return RVM_ECLASSLEN;
     }
 
     while (rlo <= rhi) {
         charc[(*len)++] = rlo++;
     }
+
+    return 0;
 }
 
 /* Stage 1 compiler: takes the input expression string,
@@ -217,33 +230,39 @@ void expand_char_range (char charc[], int *len)
  * branch and jmp instructions have dangling pointers. It is
  * the job of Stage 2 to assign these pointers to the correct
  * instructions. */
-stack_t *stage1 (char *input)
+int stage1 (char *input, stack_t **ret)
 {
     char charc[MAX_CHARC_LEN];
     int state;
     int pdepth;
     int charc_len;
     int tok;
+    int err;
 
     stackitem_t *operand;
     stack_t *parens[MAX_NEST_PARENS];
-    stack_t *ret;
     stack_t *buf;
     stack_t *target;
     inst_t inst;
 
-    ret = create_stack();
+    *ret = create_stack();
     parens[0] = create_stack();
+
+    if (*ret == NULL || parens[0] == NULL)
+        return RVM_EMEM;
 
     charc[0] = '\0';
     charc_len = 0;
     pdepth = 0;
     operand = NULL;
     buf = NULL;
-    target = ret;
+    target = *ret;
     state = STATE_START;
 
     while ((tok = lex(&input)) != END) {
+        if (tok < 0)
+            return tok;
+
         switch (state) {
             case STATE_START:
                 if (tok == LITERAL) {
@@ -255,25 +274,40 @@ stack_t *stage1 (char *input)
                     operand = stack_add_head(parens[0], &inst);
                     buf = parens[0];
                 } else if (ISOP(tok)) {
-                    process_op(target, operand, buf, tok);
+                    if (buf == NULL || buf->head == NULL)
+                        return RVM_BADOP;
+
+                    if ((err = process_op(target, operand, buf, tok)) < 0)
+                        return err;
+
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
                 } else if (tok == LPAREN) {
+                    if (pdepth + 1 > MAX_NEST_PARENS)
+                        return RVM_ENEST;
+
                     stack_cat(target, parens[0]);
                     parens[0] = create_stack();
                     parens[++pdepth] = create_stack();
+
+                    if (parens[0] == NULL || parens[pdepth] == NULL)
+                        return RVM_EMEM;
+
                     target = parens[pdepth];
                 } else if (tok == RPAREN) {
                     if (pdepth < 1) {
-                        fprintf(stderr, "Error: stray ')'\n");
-                        exit(1);
+                        return RVM_BADPAREN;
                     } else {
                         stack_cat(target, parens[0]);
-                        parens[0] = create_stack();
+                        if ((parens[0] = create_stack()) == NULL)
+                            return RVM_EMEM;
+
                         operand = parens[pdepth]->tail;
                         buf = parens[pdepth--];
-                        target = (pdepth < 1) ? ret : parens[pdepth];
+                        target = (pdepth < 1) ? *ret : parens[pdepth];
                     }
+                } else if (tok == CHARC_CLOSE) {
+                    return RVM_BADCLASS;
                 }
 
             break;
@@ -281,7 +315,9 @@ stack_t *stage1 (char *input)
                 if (tok == LITERAL) {
                     charc[charc_len++] = *lp1;
                 } else if (tok == CHAR_RANGE) {
-                    expand_char_range(charc, &charc_len);
+                    if ((err = expand_char_range(charc, &charc_len)) != 0)
+                        return err;
+
                 } else if (tok == CHARC_CLOSE) {
                     charc[charc_len] = '\0';
                     set_op_class(&inst, charc);
@@ -292,23 +328,27 @@ stack_t *stage1 (char *input)
                     charc[0] = '\0';
                     state = STATE_START;
                 } else {
-                    fprintf(stderr, "Invalid symbol in character class\n");
-                    exit(1);
+                    return RVM_EINVAL;
                 }
 
             break;
         }
     }
 
+    if (pdepth)
+        return RVM_EPAREN;
+    if (state == STATE_CHARC)
+        return RVM_ECLASS;
+
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(ret, parens[0]);
+    stack_cat(*ret, parens[0]);
 
     /* Add the match instruction */
     set_op_match(&inst);
-    stack_add_head(ret, &inst);
+    stack_add_head(*ret, &inst);
 
-    return ret;
+    return 0;
 }
 
 int main (int argc, char *argv[])
@@ -319,7 +359,12 @@ int main (int argc, char *argv[])
     }
 
     stack_t *prog;
-    prog = stage1(argv[1]);
+    int ret;
+
+    ret = stage1(argv[1], &prog);
+
+    printf("return code: %d\n", ret);
+    if (ret < 0) exit(ret);
 
     printf("Input expression: %s\n", argv[1]);
     printf("after stage 1 compilation:\n");
