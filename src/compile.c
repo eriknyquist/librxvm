@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include "lex.h"
@@ -9,6 +8,8 @@
 #define ISOP(x) \
 ((x == ONE || x == ZERO || x == ONEZERO || x == CONCAT) ? 1 : 0)
 
+/* pointers for the start & end of text in
+ * input string for the current token */
 extern char *lp1;
 extern char *lpn;
 
