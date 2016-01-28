@@ -14,6 +14,7 @@ extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
 
+/* pretty-print an instruction (debug) */
 void print_inst (inst_t *inst, int num)
 {
     unsigned int i;
@@ -48,6 +49,7 @@ void print_inst (inst_t *inst, int num)
     }
 }
 
+/* pretty-print a list of instructions (debug) */
 void print_prog (stack_t *stack)
 {
     int num = 0;
@@ -72,6 +74,9 @@ void print_prog (stack_t *stack)
     }
 }
 
+/* set_op functions:
+ * a bunch of convenience functions for populating
+ * inst_t types for all instructions */
 void set_op_char (inst_t *inst, char c)
 {
     inst->op = OP_CHAR;
@@ -121,6 +126,8 @@ void set_op_match (inst_t *inst)
     inst->ccs = NULL;
 }
 
+/* stack_cat_from_item: appends items from a stack, starting from
+ * stack item 'i', until stack item 'stop' is reached, onto stack1.*/
 void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 {
     while (1) {
@@ -130,6 +137,9 @@ void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
     }
 }
 
+/* process_op: processes operator 'tok' against a buffer of
+ * literals 'buf', where the first operand is 'item' and the
+ * output is appended to 'prog' */
 void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
 {
     stackitem_t *i;
@@ -137,14 +147,14 @@ void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
 
     i = buf->tail;
 
-    /* Add all literals from current stack onto output, until
-     * operand (which will be the head of the stack) is reached. */
+    /* Add all literals from current buffer onto output, until
+     * the start of the operands is reached. */
     while (i != item) {
         stack_point_new_head(prog, i);
         i = i->previous;
     }
 
-    /* Generate instructions for operator & operand */
+    /* Generate instructions for operator & operand (s) */
     switch (tok) {
         case ONE:
             set_op_branch(&inst, NULL, NULL);
@@ -200,6 +210,12 @@ void expand_char_range (char charc[], int *len)
     }
 }
 
+/* Stage 1 compiler: takes the input expression string,
+ * runs it through the lexer and generates instructions for
+ * the VM. The instructions returned by stage1 are incomplete;
+ * branch and jmp instructions have dangling pointers. It is
+ * the job of Stage 2 to assign these pointers to the correct
+ * instructions. */
 stack_t *stage1 (char *input)
 {
     char charc[MAX_CHARC_LEN];
