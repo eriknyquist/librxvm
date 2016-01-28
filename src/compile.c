@@ -14,16 +14,6 @@ extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
 
-void print_stack (stack_t *stack)
-{
-    stackitem_t *i = stack->head;
-
-    while (i != NULL) {
-        printf("%c", i->inst->c);
-        i = i->next;
-    }
-}
-
 void print_inst (inst_t *inst, int num)
 {
     unsigned int i;
@@ -143,12 +133,10 @@ void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 void process_op (stack_t *prog, stackitem_t *item, stack_t *buf, int tok)
 {
     stackitem_t *i;
-    stack_t *target;
     inst_t inst;
 
     i = buf->tail;
 
-    print_stack(buf);
     /* Add all literals from current stack onto output, until
      * operand (which will be the head of the stack) is reached. */
     while (i != item) {
@@ -219,7 +207,7 @@ stack_t *stage1 (char *input)
     int pdepth;
     int charc_len;
     int tok;
-    char *i;
+
     stackitem_t *operand;
     stack_t *parens[MAX_NEST_PARENS];
     stack_t *ret;
@@ -235,6 +223,7 @@ stack_t *stage1 (char *input)
     pdepth = 0;
     operand = NULL;
     buf = NULL;
+    target = ret;
     state = STATE_START;
 
     while ((tok = lex(&input)) != END) {
@@ -249,24 +238,24 @@ stack_t *stage1 (char *input)
                     operand = stack_add_head(parens[0], &inst);
                     buf = parens[0];
                 } else if (ISOP(tok)) {
-                    target = (pdepth < 1) ? ret : parens[pdepth];
                     process_op(target, operand, buf, tok);
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
                 } else if (tok == LPAREN) {
-                   // target = (pdepth < 1) ? ret : parens[pdepth];
-                    stack_cat(&ret, &parens[0]);
+                    stack_cat(target, parens[0]);
                     parens[0] = create_stack();
                     parens[++pdepth] = create_stack();
+                    target = parens[pdepth];
                 } else if (tok == RPAREN) {
                     if (pdepth < 1) {
                         fprintf(stderr, "Error: stray ')'\n");
                         exit(1);
                     } else {
-                        stack_cat(&parens[pdepth], &parens[0]);
+                        stack_cat(target, parens[0]);
                         parens[0] = create_stack();
                         operand = parens[pdepth]->tail;
                         buf = parens[pdepth--];
+                        target = (pdepth < 1) ? ret : parens[pdepth];
                     }
                 }
 
@@ -292,15 +281,11 @@ stack_t *stage1 (char *input)
 
             break;
         }
-        i = lp1;
-        while (i < lpn)
-            printf("%c", *(i++));
-        printf("\n");
     }
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(&ret, &parens[0]);
+    stack_cat(ret, parens[0]);
 
     /* Add the match instruction */
     set_op_match(&inst);
@@ -309,15 +294,17 @@ stack_t *stage1 (char *input)
     return ret;
 }
 
-int main (void)
+int main (int argc, char *argv[])
 {
+    if (argc != 2) {
+        printf("Usage: %s <regex>\n", argv[0]);
+        exit(1);
+    }
+
     stack_t *prog;
-    //char *s = "aa+b*\\*aa|[A-Fa-f.~]*";
-    char *s = "aa(bb(cc)+)*";
+    prog = stage1(argv[1]);
 
-    prog = stage1(s);
-
-    printf("Input expression: %s\n", s);
+    printf("Input expression: %s\n", argv[1]);
     printf("after stage 1 compilation:\n");
     print_prog(prog);
     return 0;
