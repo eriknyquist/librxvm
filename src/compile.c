@@ -200,7 +200,7 @@ int process_op (context_t *cp)
     return 0;
 }
 
-int expand_char_range (char charc[], int *len)
+int expand_char_range (char charc[], unsigned int *len)
 {
     char rhi;
     char rlo;
@@ -224,6 +224,93 @@ int expand_char_range (char charc[], int *len)
     return 0;
 }
 
+int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
+{
+    int err;
+    inst_t inst;
+
+    if (ISOP(cp->tok)) {
+        if (cp->buf == NULL || cp->buf->head == NULL)
+            return RVM_BADOP;
+
+        if ((err = process_op(cp)) < 0)
+            return err;
+
+    } else if (cp->tok == LITERAL) {
+        set_op_char(&inst, *lp1);
+        cp->operand = stack_add_head(parens[0], &inst);
+        cp->buf = parens[0];
+
+    } else if (cp->tok == ANY) {
+        set_op_any(&inst);
+        cp->operand = stack_add_head(parens[0], &inst);
+        cp->buf = parens[0];
+
+    } else if (cp->tok == CHARC_OPEN) {
+         *state = STATE_CHARC;
+
+    } else if (cp->tok == LPAREN) {
+        if (cp->pdepth + 1 > MAXNESTPARENS)
+            return RVM_ENEST;
+
+        stack_cat(cp->target, parens[0]);
+        parens[0] = create_stack();
+        parens[++cp->pdepth] = create_stack();
+
+        if (parens[0] == NULL || parens[cp->pdepth] == NULL)
+            return RVM_EMEM;
+
+        cp->target = parens[cp->pdepth];
+
+    } else if (cp->tok == RPAREN) {
+        if (cp->pdepth < 1) {
+            return RVM_BADPAREN;
+
+        } else {
+            stack_cat(cp->target, parens[0]);
+            if ((parens[0] = create_stack()) == NULL)
+                return RVM_EMEM;
+
+            cp->operand = parens[cp->pdepth]->tail;
+            cp->buf = parens[cp->pdepth--];
+            cp->target = (cp->pdepth < 1) ? cp->prog : parens[cp->pdepth];
+        }
+
+    } else if (cp->tok == CHARC_CLOSE) {
+        return RVM_BADCLASS;
+    }
+
+    return 0;
+}
+
+int stage1_charc_state(context_t *cp, stack_t *parens[], char charc[],
+                       int *state)
+{
+    int err;
+    inst_t inst;
+
+    if (cp->tok == LITERAL) {
+        charc[cp->clen++] = *lp1;
+    } else if (cp->tok == CHAR_RANGE) {
+        if ((err = expand_char_range(charc, &cp->clen)) != 0)
+            return err;
+
+    } else if (cp->tok == CHARC_CLOSE) {
+        charc[cp->clen] = '\0';
+        set_op_class(&inst, charc);
+
+        cp->operand = stack_add_head(parens[cp->pdepth], &inst);
+        cp->buf = parens[cp->pdepth];
+        cp->clen = 0;
+        charc[0] = '\0';
+        *state = STATE_START;
+    } else {
+        return RVM_EINVAL;
+    }
+
+    return 0;
+}
+
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates instructions for
  * the VM. The instructions returned by stage1 are incomplete;
@@ -234,24 +321,23 @@ int stage1 (char *input, stack_t **ret)
 {
     static char charc[MAXCHARCLEN];
     static int state;
-    static int charc_len;
     static int err;
 
     static context_t context, *cp;
     static stack_t *parens[MAXNESTPARENS];
     static inst_t inst;
 
+    cp = &context;
     *ret = create_stack();
+    cp->prog = *ret;
     parens[0] = create_stack();
 
     if (*ret == NULL || parens[0] == NULL)
         return RVM_EMEM;
 
     charc[0] = '\0';
-    charc_len = 0;
-    cp = &context;
     cp->pdepth = 0;
-    cp->target = *ret;
+    cp->target = cp->prog;
     state = STATE_START;
 
     while ((cp->tok = lex(&input)) != END) {
@@ -260,77 +346,13 @@ int stage1 (char *input, stack_t **ret)
 
         switch (state) {
             case STATE_START:
-                if (ISOP(cp->tok)) {
-                    if (cp->buf == NULL || cp->buf->head == NULL)
-                        return RVM_BADOP;
-
-                    if ((err = process_op(cp)) < 0)
-                        return err;
-
-                } else if (cp->tok == LITERAL) {
-                    set_op_char(&inst, *lp1);
-                    cp->operand = stack_add_head(parens[0], &inst);
-                    cp->buf = parens[0];
-
-                } else if (cp->tok == ANY) {
-                    set_op_any(&inst);
-                    cp->operand = stack_add_head(parens[0], &inst);
-                    cp->buf = parens[0];
-
-                } else if (cp->tok == CHARC_OPEN) {
-                    state = STATE_CHARC;
-
-                } else if (cp->tok == LPAREN) {
-                    if (cp->pdepth + 1 > MAXNESTPARENS)
-                        return RVM_ENEST;
-
-                    stack_cat(cp->target, parens[0]);
-                    parens[0] = create_stack();
-                    parens[++cp->pdepth] = create_stack();
-
-                    if (parens[0] == NULL || parens[cp->pdepth] == NULL)
-                        return RVM_EMEM;
-
-                    cp->target = parens[cp->pdepth];
-
-                } else if (cp->tok == RPAREN) {
-                    if (cp->pdepth < 1) {
-                        return RVM_BADPAREN;
-                    } else {
-                        stack_cat(cp->target, parens[0]);
-                        if ((parens[0] = create_stack()) == NULL)
-                            return RVM_EMEM;
-
-                        cp->operand = parens[cp->pdepth]->tail;
-                        cp->buf = parens[cp->pdepth--];
-                        cp->target = (cp->pdepth < 1) ? *ret :
-                                    parens[cp->pdepth];
-                    }
-
-                } else if (cp->tok == CHARC_CLOSE) {
-                    return RVM_BADCLASS;
-                }
+                if ((err = stage1_main_state(cp, parens, &state)) < 0)
+                    return err;
 
             break;
             case STATE_CHARC:
-                if (cp->tok == LITERAL) {
-                    charc[charc_len++] = *lp1;
-                } else if (cp->tok == CHAR_RANGE) {
-                    if ((err = expand_char_range(charc, &charc_len)) != 0)
-                        return err;
-
-                } else if (cp->tok == CHARC_CLOSE) {
-                    charc[charc_len] = '\0';
-                    set_op_class(&inst, charc);
-
-                    cp->operand = stack_add_head(parens[cp->pdepth], &inst);
-                    cp->buf = parens[cp->pdepth];
-                    charc_len = 0;
-                    charc[0] = '\0';
-                    state = STATE_START;
-                } else {
-                    return RVM_EINVAL;
-                }
+                if ((err = stage1_charc_state(cp, parens, charc, &state)) < 0)
+                    return err;
 
             break;
         }
@@ -344,11 +366,11 @@ int stage1 (char *input, stack_t **ret)
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(*ret, parens[0]);
+    stack_cat(cp->prog, parens[0]);
 
     /* Add the match instruction */
     set_op_match(&inst);
-    stack_add_head(*ret, &inst);
+    stack_add_head(cp->prog, &inst);
 
     return 0;
 }

@@ -50,10 +50,12 @@ struct inst {
 struct context {
     stack_t *target;
     stack_t *buf;
+    stack_t *prog;
     stackitem_t *operand;
     int tok;
     int lasttok;
     unsigned int pdepth;
+    unsigned int clen;
 };
 
 #endif
