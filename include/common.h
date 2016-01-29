@@ -1,8 +1,17 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define MAX_CHARC_LEN          512
-#define MAX_NEST_PARENS        512
+#ifdef MAX_CHARC_LEN
+#define MAXCHARCLEN          MAX_CHARC_LEN
+#else
+#define MAXCHARCLEN          512
+#endif
+
+#ifdef MAX_NEST_PARENS
+#define MAXNESTPARENS        MAX_NEST_PARENS
+#else
+#define MAXNESTPARENS        512
+#endif
 
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
@@ -28,13 +37,13 @@ enum {
 };
 
 /* instruction */
-typedef struct inst {
+struct inst {
     int op;
     int num;
     char c;
     char *ccs;
     stackitem_t *x;
     stackitem_t *y;
-} inst_t;
+};
 
 #endif

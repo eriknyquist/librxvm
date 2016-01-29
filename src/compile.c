@@ -213,7 +213,7 @@ int expand_char_range (char charc[], int *len)
         rlo = *lp1;
     }
 
-    if ((rhi - rlo) > MAX_CHARC_LEN - (*len + 1)) {
+    if ((rhi - rlo) > MAXCHARCLEN - (*len + 1)) {
         return RVM_ECLASSLEN;
     }
 
@@ -232,7 +232,7 @@ int expand_char_range (char charc[], int *len)
  * instructions. */
 int stage1 (char *input, stack_t **ret)
 {
-    char charc[MAX_CHARC_LEN];
+    char charc[MAXCHARCLEN];
     int state;
     int pdepth;
     int charc_len;
@@ -240,7 +240,7 @@ int stage1 (char *input, stack_t **ret)
     int err;
 
     stackitem_t *operand;
-    stack_t *parens[MAX_NEST_PARENS];
+    stack_t *parens[MAXNESTPARENS];
     stack_t *buf;
     stack_t *target;
     inst_t inst;
@@ -283,7 +283,7 @@ int stage1 (char *input, stack_t **ret)
                 } else if (tok == CHARC_OPEN) {
                     state = STATE_CHARC;
                 } else if (tok == LPAREN) {
-                    if (pdepth + 1 > MAX_NEST_PARENS)
+                    if (pdepth + 1 > MAXNESTPARENS)
                         return RVM_ENEST;
 
                     stack_cat(target, parens[0]);
