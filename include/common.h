@@ -16,6 +16,7 @@
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
 typedef struct stack stack_t;
+typedef struct context context_t;
 
 /*  one node in a list */
 struct stackitem {
@@ -44,6 +45,15 @@ struct inst {
     char *ccs;
     stackitem_t *x;
     stackitem_t *y;
+};
+
+struct context {
+    stack_t *target;
+    stack_t *buf;
+    stackitem_t *operand;
+    int tok;
+    int lasttok;
+    unsigned int pdepth;
 };
 
 #endif
