@@ -1,7 +1,7 @@
-REGEXC_NAME := regexc
-REGEXC_C_SRCS := $(wildcard src/*.c)
-REGEXC_OBJS := ${REGEXC_C_SRCS:.c=.o}
-REGEXC_INCLUDE_DIR := include
+RVM_NAME := regexvm
+RVM_C_SRCS := $(wildcard src/*.c)
+RVM_OBJS := ${RVM_C_SRCS:.c=.o}
+RVM_INCLUDE_DIR := include
 
 MAX_CHARC_LEN := 512
 MAX_NEST_PARENS := 512
@@ -11,14 +11,19 @@ MAX_CHARC_LEN=$(MAX_CHARC_LEN) \
 MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
 MACROS := $(addprefix -D , $(OPTS))
-CFLAGS := -Wall -g -I$(REGEXC_INCLUDE_DIR) $(MACROS)
+CFLAGS := -Wall -I$(RVM_INCLUDE_DIR) $(MACROS)
+DEBUG_FLAGS := -D DEBUG -g
 
-$(REGEXC_NAME): $(REGEXC_OBJS)
-	$(CC) $(REGEXC_OBJS) -o $(REGEXC_NAME) -I$(REGEXC_INCLUDE_DIR)
+all: $(RVM_NAME)
 
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: $(RVM_NAME)
+
+$(RVM_NAME): $(RVM_OBJS)
+	$(CC) $(RVM_OBJS) -o $(RVM_NAME) -I$(RVM_INCLUDE_DIR)
 
 clean:
-	@- $(RM) $(REGEXC_NAME)
-	@- $(RM) $(REGEXC_OBJS)
+	@- $(RM) $(RVM_NAME)
+	@- $(RM) $(RVM_OBJS)
 
 distclean: clean
