@@ -55,6 +55,8 @@ struct context {
     stackitem_t *dangling_cat;
     int tok;
     int lasttok;
+    stack_t *parens[MAXNESTPARENS];
+    unsigned int ddepth;
     unsigned int pdepth;
     unsigned int clen;
 };
