@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include "common.h"
 
+static unsigned int mcnt;
+
 stack_t *create_stack(void)
 {
     stack_t *newstack = malloc(sizeof(stack_t));
@@ -23,21 +25,26 @@ stackitem_t *create_item(inst_t *inst)
     stackitem_t *item;
     size_t dsize;
 
-    if (!(item = malloc(sizeof(stackitem_t))))
+    if ((item = malloc(sizeof(stackitem_t))) == NULL)
         return NULL;
 
-    item->inst = malloc(sizeof(inst_t));
+    if ((item->inst = malloc(sizeof(inst_t))) == NULL)
+        return NULL;
+
     item->inst->op = inst->op;
     item->inst->c = inst->c;
     item->inst->x = inst->x;
     item->inst->y = inst->y;
 
-    if (inst->ccs) {
-        dsize = ((sizeof(char) * strlen(inst->ccs))) + 1;
-        item->inst->ccs = malloc(dsize);
+    if (inst->ccs != NULL) {
+        dsize = (sizeof(char) * strlen(inst->ccs)) + 1;
+        if ((item->inst->ccs = malloc(dsize)) == NULL)
+            return NULL;
+
         strncpy(item->inst->ccs, inst->ccs, dsize);
     }
 
+    mcnt++;
     item->next = NULL;
     item->previous = NULL;
     return item;
@@ -104,15 +111,23 @@ void stack_cat (stack_t *stack1, stack_t *stack2)
 
 void stack_free (stack_t *stack)
 {
+    stackitem_t *i;
     stackitem_t *next;
 
+    printf("stackitems malloc'd: %u\n", mcnt);
     if (!stack->head) return;
-    while (stack->head != NULL) {
-        next = stack->head->next;
-        free(stack->head->inst->ccs);
-        free(stack->head->inst);
-        free(stack->head);
-        stack->head = next;
+    i = stack->head;
+    while (i != NULL) {
+        next = i->next;
+
+        if (i->inst->ccs != NULL)
+            free(i->inst->ccs);
+
+        if (i->inst != NULL)
+            free(i->inst);
+
+        free(i);
+        i = next;
     }
 
     free(stack);

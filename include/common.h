@@ -58,6 +58,7 @@ struct context {
     stack_t *parens[MAXNESTPARENS];
     unsigned int ddepth;
     unsigned int pdepth;
+    unsigned int hdepth;
     unsigned int clen;
 };
 

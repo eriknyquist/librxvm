@@ -18,6 +18,5 @@ enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
       ZERO, ONEZERO, CONCAT, ANY, LITERAL, INVALIDSYM, END};
 
 int lex (char **input);
-char *get_token_text (void);
 
 #endif

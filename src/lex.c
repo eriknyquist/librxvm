@@ -24,21 +24,6 @@ static inline int isprintable (char x)
     return (x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ? 1 : 0;
 }
 
-char *get_token_text (void)
-{
-    char *ret;
-    size_t size;
-    unsigned int i;
-
-    size = lpn - lp1;
-    ret = malloc(size + 1);
-    for (i = 0; i < size; i++)
-        ret[i] = lp1[i];
-
-    ret[size] = '\0';
-    return ret;
-}
-
 int simple_transition (int literal, char **input, int tok, int *ret)
 {
     int state;

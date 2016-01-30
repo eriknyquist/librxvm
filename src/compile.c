@@ -17,7 +17,7 @@ extern char *lpn;
 enum {STATE_START, STATE_CHARC};
 
 /* pretty-print an instruction (debug) */
-void print_inst (inst_t *inst, int num)
+static void print_inst (inst_t *inst, int num)
 {
     unsigned int i;
     size_t n;
@@ -52,11 +52,11 @@ void print_inst (inst_t *inst, int num)
 }
 
 /* pretty-print a list of instructions (debug) */
-void print_prog (stack_t *stack)
+static void print_prog (stack_t *stack)
 {
     int num = 0;
     stackitem_t *item;
-    inst_t *inst;
+    static inst_t *inst;
 
     if (stack == NULL) return;
 
@@ -79,49 +79,71 @@ void print_prog (stack_t *stack)
 /* set_op functions:
  * a bunch of convenience functions for populating
  * inst_t types for all instructions */
-void set_op_char (inst_t *inst, char c)
+static void set_op_char (inst_t *inst, char c)
 {
     inst->op = OP_CHAR;
     inst->c = c;
+    inst->ccs = NULL;
 }
 
-void set_op_class (inst_t *inst, char *ccs)
+static void set_op_class (inst_t *inst, char *ccs)
 {
     inst->op = OP_CLASS;
     inst->ccs = ccs;
 }
 
-void set_op_any (inst_t *inst)
+static void set_op_any (inst_t *inst)
 {
     inst->op = OP_ANY;
+    inst->ccs = NULL;
 }
 
-void set_op_branch (inst_t *inst, int x, int y)
+static void set_op_branch (inst_t *inst, int x, int y)
 {
     inst->op = OP_BRANCH;
     inst->x = x;
     inst->y = y;
+    inst->ccs = NULL;
 }
 
-void set_op_jmp (inst_t *inst, int x)
+static void set_op_jmp (inst_t *inst, int x)
 {
     inst->op = OP_JMP;
     inst->x = x;
+    inst->ccs = NULL;
 }
 
-void set_op_match (inst_t *inst)
+static void set_op_match (inst_t *inst)
 {
     inst->op = OP_MATCH;
+    inst->ccs = NULL;
 }
 
 /* stack_cat_from_item: appends items from a stack, starting from
  * stack item 'i', until stack item 'stop' is reached, onto stack1.*/
-void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
+static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 {
     while (1) {
         stack_point_new_head(stack1, i);
         if (i == stop) break;
         i = i->previous;
+    }
+}
+
+static inline void attach_cat (context_t *ctx, unsigned int size)
+{
+    if (ctx->dangling_cat != NULL) {
+        ctx->dangling_cat->inst->x = size + 1;
+        ctx->dangling_cat = NULL;
+    }
+}
+
+static inline void stack_free_struct (stack_t *stack)
+{
+    if (stack != NULL) {
+        stack->head = NULL;
+        stack->tail = NULL;
+        stack_free(stack);
     }
 }
 
@@ -197,8 +219,7 @@ static int process_op (context_t *cp)
         break;
     }
 
-    cp->buf->head = cp->buf->tail = NULL;
-    cp->buf->size = 0;
+    stack_free_struct(cp->buf);
     return 0;
 }
 
@@ -226,14 +247,6 @@ static int expand_char_range (char charc[], unsigned int *len)
     return 0;
 }
 
-static inline void attach_cat(context_t *ctx, unsigned int size)
-{
-    if (ctx->dangling_cat != NULL) {
-        ctx->dangling_cat->inst->x = size + 1;
-        ctx->dangling_cat = NULL;
-    }
-}
-
 static int stage1_main_state(context_t *cp, int *state)
 {
     int err;
@@ -251,7 +264,8 @@ static int stage1_main_state(context_t *cp, int *state)
         if (cp->tok == LITERAL) {
             set_op_char(&inst, *lp1);
             cp->operand = stack_add_head(cp->parens[0], &inst);
-            cp->buf = cp->parens[0];
+
+            cp->buf = cp->parens[0]; /* TODO: Memory leak!! */
 
         } else if (cp->tok == ANY) {
             set_op_any(&inst);
@@ -266,11 +280,17 @@ static int stage1_main_state(context_t *cp, int *state)
                 return RVM_ENEST;
 
             stack_cat(cp->target, cp->parens[0]);
+
+            stack_free_struct(cp->parens[0]);
             if ((cp->parens[0] = create_stack()) == NULL)
                 return RVM_EMEM;
 
-            if ((cp->parens[++cp->pdepth] = create_stack()) == NULL)
+            stack_free_struct(cp->parens[++cp->pdepth]);
+            if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
                 return RVM_EMEM;
+
+            if (cp->pdepth > cp->hdepth)
+                cp->hdepth = cp->pdepth;
 
             if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
                 return RVM_EMEM;
@@ -286,6 +306,8 @@ static int stage1_main_state(context_t *cp, int *state)
 
                 if ((cp->pdepth - 1) < cp->ddepth)
                     attach_cat(cp, cp->target->size);
+
+                stack_free_struct(cp->parens[0]);
                 if ((cp->parens[0] = create_stack()) == NULL)
                     return RVM_EMEM;
 
@@ -330,6 +352,16 @@ static int stage1_charc_state(context_t *cp, char charc[], int *state)
     return 0;
 }
 
+static void stage1_cleanup (context_t *cp)
+{
+    unsigned int i;
+
+    stack_free_struct(cp->parens[0]);
+    for (i = 1; i <= cp->hdepth; i++) {
+        stack_free_struct(cp->parens[i]);
+    }
+}
+
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates instructions for
  * the VM. The instructions returned by stage1 are incomplete;
@@ -342,13 +374,15 @@ int stage1 (char *input, stack_t **ret)
     static int state;
     static int err;
 
-    static context_t context;
     context_t *cp;
+    static context_t context;
     static inst_t inst;
 
     cp = &context;
     *ret = create_stack();
     cp->prog = *ret;
+
+    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
     cp->parens[0] = create_stack();
 
     if (*ret == NULL || cp->parens[0] == NULL)
@@ -397,6 +431,7 @@ int stage1 (char *input, stack_t **ret)
     /* Add the match instruction */
     set_op_match(&inst);
     stack_add_head(cp->prog, &inst);
+    stage1_cleanup(cp);
 
     return 0;
 }
@@ -420,5 +455,6 @@ int main (int argc, char *argv[])
     printf("after stage 1 compilation:\n\n");
     print_prog(prog);
     printf("size: %u\n", prog->size);
+    stack_free(prog);
     return 0;
 }
