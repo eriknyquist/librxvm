@@ -39,11 +39,11 @@ void print_inst (inst_t *inst, int num)
         break;
 
         case OP_BRANCH:
-            printf("%d\tbranch x x", num);
+            printf("%d\tbranch %d %d", num, num + inst->x, num + inst->y);
         break;
 
         case OP_JMP:
-            printf("%d\tjmp x", num);
+            printf("%d\tjmp %d", num, num + inst->x);
         break;
 
         case OP_MATCH:
@@ -83,49 +83,35 @@ void set_op_char (inst_t *inst, char c)
 {
     inst->op = OP_CHAR;
     inst->c = c;
-    inst->x = NULL;
-    inst->y = NULL;
-    inst->ccs = NULL;
 }
 
 void set_op_class (inst_t *inst, char *ccs)
 {
     inst->op = OP_CLASS;
     inst->ccs = ccs;
-    inst->x = NULL;
-    inst->y = NULL;
 }
 
 void set_op_any (inst_t *inst)
 {
     inst->op = OP_ANY;
-    inst->x = NULL;
-    inst->y = NULL;
-    inst->ccs = NULL;
 }
 
-void set_op_branch (inst_t *inst, stackitem_t *x, stackitem_t *y)
+void set_op_branch (inst_t *inst, int x, int y)
 {
     inst->op = OP_BRANCH;
     inst->x = x;
     inst->y = y;
-    inst->ccs = NULL;
 }
 
-void set_op_jmp (inst_t *inst, stackitem_t *x)
+void set_op_jmp (inst_t *inst, int x)
 {
     inst->op = OP_JMP;
     inst->x = x;
-    inst->y = NULL;
-    inst->ccs = NULL;
 }
 
 void set_op_match (inst_t *inst)
 {
     inst->op = OP_MATCH;
-    inst->x = NULL;
-    inst->y = NULL;
-    inst->ccs = NULL;
 }
 
 /* stack_cat_from_item: appends items from a stack, starting from
@@ -142,13 +128,16 @@ void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
 /* process_op: processes operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'item' and the
  * output is appended to 'prog' */
-int process_op (context_t *cp)
+static int process_op (context_t *cp)
 {
     stackitem_t *i;
-    inst_t inst;
     stackitem_t *x;
     stackitem_t *y;
+    unsigned int size;
+    unsigned int savedsize;
+    static inst_t inst;
 
+    savedsize = size = cp->buf->size;
     i = cp->buf->tail;
     x = NULL;
     y = NULL;
@@ -158,27 +147,29 @@ int process_op (context_t *cp)
     while (i != cp->operand) {
         stack_point_new_head(cp->target, i);
         i = i->previous;
+        size--;
     }
 
     /* Generate instructions for operator & operand (s) */
     switch (cp->tok) {
         case ONE:
-            set_op_branch(&inst, NULL, NULL);
+            set_op_branch(&inst, -(cp->buf->size), 1);
             stack_cat_from_item(cp->target, cp->buf->head, i);
             if (stack_add_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
         break;
         case ZERO:
-            set_op_branch(&inst, NULL, NULL);
+            set_op_branch(&inst, size + 2, 1);
             x = stack_add_head(cp->target, &inst);
             stack_cat_from_item(cp->target, cp->buf->head, i);
+            set_op_branch(&inst, 1, -(size));
             y = stack_add_head(cp->target, &inst);
 
             if (x == NULL || y == NULL)
                 return RVM_EMEM;
         break;
         case ONEZERO:
-            set_op_branch(&inst, NULL, NULL);
+            set_op_branch(&inst, 1, size + 1);
             if (stack_add_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
 
@@ -186,21 +177,23 @@ int process_op (context_t *cp)
         break;
         case CONCAT:
             if (i != NULL) stack_cat_from_item(cp->target, cp->buf->head, i);
-            set_op_branch(&inst, NULL, NULL);
+            set_op_branch(&inst, 1, savedsize + 2);
             x = stack_add_tail(cp->target, &inst);
-            set_op_jmp(&inst, NULL);
-            y = stack_add_head(cp->target, &inst);
+            set_op_jmp(&inst, 0);
+            cp->dangling_cat = stack_add_head(cp->target, &inst);
 
-            if (x == NULL || y == NULL)
+            if (x == NULL || cp->dangling_cat == NULL)
                 return RVM_EMEM;
+
         break;
     }
 
     cp->buf->head = cp->buf->tail = NULL;
+    cp->buf->size = 0;
     return 0;
 }
 
-int expand_char_range (char charc[], unsigned int *len)
+static int expand_char_range (char charc[], unsigned int *len)
 {
     char rhi;
     char rlo;
@@ -224,10 +217,18 @@ int expand_char_range (char charc[], unsigned int *len)
     return 0;
 }
 
-int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
+static inline void attach_cat(context_t *ctx, unsigned int size)
+{
+    if (ctx->dangling_cat != NULL) {
+        ctx->dangling_cat->inst->x = size + 1;
+        ctx->dangling_cat = NULL;
+    }
+}
+
+static int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
 {
     int err;
-    inst_t inst;
+    static inst_t inst;
 
     if (ISOP(cp->tok)) {
         if (cp->buf == NULL || cp->buf->head == NULL)
@@ -259,8 +260,11 @@ int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
                 return RVM_ENEST;
 
             stack_cat(cp->target, parens[0]);
-            parens[0] = create_stack();
-            parens[++cp->pdepth] = create_stack();
+            if ((parens[0] = create_stack()) == NULL)
+                return RVM_EMEM;
+
+            if ((parens[++cp->pdepth] = create_stack()) == NULL)
+                return RVM_EMEM;
 
             if (parens[0] == NULL || parens[cp->pdepth] == NULL)
                 return RVM_EMEM;
@@ -273,6 +277,7 @@ int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
 
             } else {
                 stack_cat(cp->target, parens[0]);
+                attach_cat(cp, cp->target->size);
                 if ((parens[0] = create_stack()) == NULL)
                     return RVM_EMEM;
 
@@ -289,11 +294,11 @@ int stage1_main_state(context_t *cp, stack_t *parens[], int *state)
     return 0;
 }
 
-int stage1_charc_state(context_t *cp, stack_t *parens[], char charc[],
+static int stage1_charc_state(context_t *cp, stack_t *parens[], char charc[],
                        int *state)
 {
     int err;
-    inst_t inst;
+    static inst_t inst;
 
     if (cp->tok == LITERAL) {
         charc[cp->clen++] = *lp1;
@@ -344,6 +349,7 @@ int stage1 (char *input, stack_t **ret)
     charc[0] = '\0';
     cp->pdepth = 0;
     cp->target = cp->prog;
+    cp->dangling_cat = NULL;
     state = STATE_START;
 
     while ((cp->tok = lex(&input)) != END) {
@@ -373,6 +379,8 @@ int stage1 (char *input, stack_t **ret)
         return RVM_EPAREN;
     if (state == STATE_CHARC)
         return RVM_ECLASS;
+
+    attach_cat(cp, parens[0]->size);
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */

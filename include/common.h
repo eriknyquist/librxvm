@@ -43,8 +43,8 @@ struct inst {
     int num;
     char c;
     char *ccs;
-    stackitem_t *x;
-    stackitem_t *y;
+    int x;
+    int y;
 };
 
 struct context {
@@ -52,6 +52,7 @@ struct context {
     stack_t *buf;
     stack_t *prog;
     stackitem_t *operand;
+    stackitem_t *dangling_cat;
     int tok;
     int lasttok;
     unsigned int pdepth;
