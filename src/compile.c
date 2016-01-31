@@ -131,7 +131,7 @@ static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
     }
 }
 
-static inline void attach_cat (context_t *ctx)
+static inline void attach_dangling_cat (context_t *ctx)
 {
     if (ctx->target->dangling_cat == NULL) {
         return;
@@ -140,7 +140,9 @@ static inline void attach_cat (context_t *ctx)
             (ctx->target->size - ctx->target->dsize) + 1;
 
         ctx->target->dangling_cat = NULL;
+#if (DEBUG)
         printf("dangling cat attached\n");
+#endif /* DEBUG */
     }
 }
 
@@ -154,6 +156,7 @@ static inline void stack_free_struct (stack_t *stack)
     }
 }
 
+#if (DEBUG)
 void print_tok(int tok)
 {
     const char *p;
@@ -200,6 +203,7 @@ void print_tok(int tok)
 
     printf("\ntok: %s\n", p);
 }
+#endif /* DEBUG */
 
 /* process_op: processes operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'item' and the
@@ -232,9 +236,11 @@ static int process_op (context_t *cp)
         }
     }
 
+#if (DEBUG)
     print_tok(cp->tok);
     printf("Here are my operands:\n");
     print_prog(cp->buf);
+#endif /* DEBUG */
 
     x = NULL;
     y = NULL;
@@ -266,6 +272,7 @@ static int process_op (context_t *cp)
         break;
         case CONCAT:
             if (i != NULL) stack_cat_from_item(cp->target, cp->buf->head, i);
+            attach_dangling_cat(cp);
             set_op_branch(&inst, 1, cp->target->size + 2);
             x = stack_add_tail(cp->target, &inst);
             set_op_jmp(&inst, 0);
@@ -362,7 +369,7 @@ static int stage1_main_state(context_t *cp, int *state)
 
             } else {
                 stack_cat(cp->target, cp->parens[0]);
-                attach_cat(cp);
+                attach_dangling_cat(cp);
 
                 stack_free_struct(cp->parens[0]);
                 if ((cp->parens[0] = create_stack()) == NULL)
@@ -478,15 +485,15 @@ int stage1 (char *input, stack_t **ret)
     if (state == STATE_CHARC)
         return RVM_ECLASS;
 
-    attach_cat(cp);
-
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
     stack_cat(cp->prog, cp->parens[0]);
+    attach_dangling_cat(cp);
 
     /* Add the match instruction */
     set_op_match(&inst);
     stack_add_head(cp->prog, &inst);
+
     stage1_cleanup(cp);
 
     return 0;
