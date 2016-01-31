@@ -6,8 +6,14 @@
 #include "common.h"
 
 #if (DEBUG)
-static unsigned int mcnt;
-static unsigned int fcnt;
+static unsigned mstackcnt;
+static unsigned mitemcnt;
+static unsigned minstcnt;
+static unsigned mccscnt;
+static unsigned fstackcnt;
+static unsigned fitemcnt;
+static unsigned finstcnt;
+static unsigned fccscnt;
 #endif /* DEBUG */
 
 stack_t *create_stack(void)
@@ -19,8 +25,9 @@ stack_t *create_stack(void)
     }
 
 #if (DEBUG)
-    mcnt++;
+    mstackcnt++;
 #endif /* DEBUG */
+
     newstack->head = NULL;
     newstack->tail = NULL;
     newstack->dangling_cat = NULL;
@@ -36,11 +43,15 @@ stackitem_t *create_item(inst_t *inst)
     if ((item = malloc(sizeof(stackitem_t))) == NULL)
         return NULL;
 
+#if (DEBUG)
+    mitemcnt++;
+#endif /* DEBUG */
+
     if ((item->inst = malloc(sizeof(inst_t))) == NULL)
         return NULL;
 
 #if (DEBUG)
-    mcnt += 2;
+    minstcnt++;
 #endif /* DEBUG */
 
     item->inst->op = inst->op;
@@ -54,8 +65,9 @@ stackitem_t *create_item(inst_t *inst)
             return NULL;
 
 #if (DEBUG)
-        mcnt++;
+        mccscnt++;
 #endif /* DEBUG */
+
         strncpy(item->inst->ccs, inst->ccs, dsize);
     }
 
@@ -136,33 +148,36 @@ void stack_free (stack_t *stack)
         if (i->inst->ccs != NULL) {
             free(i->inst->ccs);
 #if (DEBUG)
-            fcnt++;
+            fccscnt++;
 #endif /* DEBUG */
         }
 
         if (i->inst != NULL) {
             free(i->inst);
 #if (DEBUG)
-            fcnt++;
+            finstcnt++;
 #endif /* DEBUG */
         }
 
         free(i);
         i = next;
 #if (DEBUG)
-        fcnt++;
+        fitemcnt++;
 #endif /* DEBUG */
     }
 
     free(stack);
 #if (DEBUG)
-    fcnt++;
+    fstackcnt++;
 #endif /* DEBUG */
 }
 
 #if (DEBUG)
 void print_alloc_summary (void)
 {
-    printf("malloc() calls: %u\nfree() calls: %u\n", mcnt, fcnt);
+    printf("stack: malloc=%u free=%u\n", mstackcnt, fstackcnt);
+    printf("item : malloc=%u free=%u\n", mitemcnt, fitemcnt);
+    printf("inst : malloc=%u free=%u\n", minstcnt, finstcnt);
+    printf("ccs  : malloc=%u free=%u\n", mccscnt, fccscnt);
 }
 #endif /* DEBUG */

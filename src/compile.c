@@ -493,9 +493,15 @@ int stage1 (char *input, stack_t **ret)
     /* Add the match instruction */
     set_op_match(&inst);
     stack_add_head(cp->prog, &inst);
-
+# if (DEBUG)
+    printf("alloc summary before stage1_cleanup():\n");
+    print_alloc_summary();
+#endif /* DEBUG */
     stage1_cleanup(cp);
-
+#if (DEBUG)
+    printf("alloc summary after stage1_cleanup():\n");
+    print_alloc_summary();
+#endif /* DEBUG */
     return 0;
 }
 
@@ -518,8 +524,14 @@ int main (int argc, char *argv[])
     printf("after stage 1 compilation:\n\n");
     print_prog(prog);
     printf("size: %u\n", prog->size);
+
+#if (DEBUG)
+    printf("alloc summary before freeing prog:\n");
+    print_alloc_summary();
+#endif /* DEBUG */
     stack_free(prog);
 #if (DEBUG)
+    printf("alloc summary after freeing prog:\n");
     print_alloc_summary();
 #endif /* DEBUG */
     return 0;
