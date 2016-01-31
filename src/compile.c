@@ -121,7 +121,8 @@ static void set_op_match (inst_t *inst)
 
 /* stack_cat_from_item: appends items from a stack, starting from
  * stack item 'i', until stack item 'stop' is reached, onto stack1.*/
-static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t *i)
+static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
+                                stackitem_t *i)
 {
     while (1) {
         stack_point_new_head(stack1, i);
@@ -130,21 +131,82 @@ static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop, stackitem_t 
     }
 }
 
-static inline void attach_cat (context_t *ctx, unsigned int size)
+static inline void attach_cat (context_t *ctx)
 {
+    unsigned int size;
+
+    size = 0;
     if (ctx->dangling_cat != NULL) {
+
+        if (ctx->pdepth < 1 && ctx->ddepth < 1) {
+            size = 0; /* TODO: figure out how to calculate size at pdepth==0 */
+        } else if ((ctx->pdepth - 1) < ctx->ddepth) {
+            size = ctx->target->size - ctx->dsize;
+        } else {
+            return;
+        }
+
         ctx->dangling_cat->inst->x = size + 1;
         ctx->dangling_cat = NULL;
+        printf("dangling cat attached\n");
     }
 }
 
 static inline void stack_free_struct (stack_t *stack)
 {
     if (stack != NULL) {
+        stack->size = 0;
         stack->head = NULL;
         stack->tail = NULL;
         stack_free(stack);
     }
+}
+
+void print_tok(int tok)
+{
+    const char *p;
+    switch (tok) {
+        case CHARC_OPEN:
+            p = "CHARC_OPEN";
+        break;
+        case CHARC_CLOSE:
+            p = "CHARC_CLOSE";
+        break;
+        case CHAR_RANGE:
+            p = "CHAR_RANGE";
+        break;
+        case LPAREN:
+            p = "LPAREN";
+        break;
+        case RPAREN:
+            p = "RPAREN";
+        break;
+        case ONE:
+            p = "ONE";
+        break;
+        case ZERO:
+            p = "ZERO";
+        break;
+        case ONEZERO:
+            p = "ONEZERO";
+        break;
+        case CONCAT:
+            p = "CONCAT";
+        break;
+        case ANY:
+            p = "LITERAL";
+        break;
+        case INVALIDSYM:
+            p = "INVALIDSYM";
+        break;
+        case END:
+            p = "END";
+        break;
+        default:
+            p = "unknown token";
+    }
+
+    printf("\ntok: %s\n", p);
 }
 
 /* process_op: processes operator 'tok' against a buffer of
@@ -158,27 +220,32 @@ static int process_op (context_t *cp)
     unsigned int size;
     static inst_t inst;
 
-    if (cp->tok == CONCAT) {
-        if (cp->buf->head == NULL)
-            cp->buf = cp->parens[cp->pdepth];
-            cp->operand = cp->buf->tail;
-    } else {
-        if (cp->buf == NULL || cp->buf->head == NULL)
+    if (cp->buf == NULL || cp->buf->head == NULL) {
+        if (cp->tok == CONCAT) {
+            size = cp->parens[cp->pdepth]->size;
+            i = NULL;
+        } else {
             return RVM_BADOP;
+        }
+    } else {
+        size = cp->buf->size;
+        i = cp->buf->tail;
+
+        /* Add all literals from current buffer onto output, until
+         * the start of the operands is reached. */
+        while (i != cp->operand) {
+            stack_point_new_head(cp->target, i);
+            i = i->previous;
+            size--;
+        }
     }
 
-    size = cp->buf->size;
-    i = cp->buf->tail;
+    print_tok(cp->tok);
+    printf("Here are my operands:\n");
+    print_prog(cp->buf);
+
     x = NULL;
     y = NULL;
-
-    /* Add all literals from current buffer onto output, until
-     * the start of the operands is reached. */
-    while (i != cp->operand) {
-        stack_point_new_head(cp->target, i);
-        i = i->previous;
-        size--;
-    }
 
     /* Generate instructions for operator & operand (s) */
     switch (cp->tok) {
@@ -212,6 +279,7 @@ static int process_op (context_t *cp)
             set_op_jmp(&inst, 0);
             cp->dangling_cat = stack_add_head(cp->target, &inst);
             cp->ddepth = cp->pdepth;
+            cp->dsize = cp->target->size;
 
             if (x == NULL || cp->dangling_cat == NULL)
                 return RVM_EMEM;
@@ -303,9 +371,7 @@ static int stage1_main_state(context_t *cp, int *state)
 
             } else {
                 stack_cat(cp->target, cp->parens[0]);
-
-                if ((cp->pdepth - 1) < cp->ddepth)
-                    attach_cat(cp, cp->target->size);
+                attach_cat(cp);
 
                 stack_free_struct(cp->parens[0]);
                 if ((cp->parens[0] = create_stack()) == NULL)
@@ -422,7 +488,7 @@ int stage1 (char *input, stack_t **ret)
     if (state == STATE_CHARC)
         return RVM_ECLASS;
 
-    attach_cat(cp, cp->parens[0]->size);
+    attach_cat(cp);
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
@@ -438,13 +504,13 @@ int stage1 (char *input, stack_t **ret)
 
 int main (int argc, char *argv[])
 {
+    stack_t *prog;
+    int ret;
+
     if (argc != 2) {
         printf("Usage: %s <regex>\n", argv[0]);
         exit(1);
     }
-
-    stack_t *prog;
-    int ret;
 
     ret = stage1(argv[1], &prog);
 

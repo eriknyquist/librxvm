@@ -5,8 +5,6 @@
 #include <sys/stat.h>
 #include "common.h"
 
-static unsigned int mcnt;
-
 stack_t *create_stack(void)
 {
     stack_t *newstack = malloc(sizeof(stack_t));
@@ -44,7 +42,6 @@ stackitem_t *create_item(inst_t *inst)
         strncpy(item->inst->ccs, inst->ccs, dsize);
     }
 
-    mcnt++;
     item->next = NULL;
     item->previous = NULL;
     return item;
@@ -114,7 +111,6 @@ void stack_free (stack_t *stack)
     stackitem_t *i;
     stackitem_t *next;
 
-    printf("stackitems malloc'd: %u\n", mcnt);
     if (!stack->head) return;
     i = stack->head;
     while (i != NULL) {
