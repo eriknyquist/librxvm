@@ -14,6 +14,7 @@ stack_t *create_stack(void)
 
     newstack->head = NULL;
     newstack->tail = NULL;
+    newstack->dangling_cat = NULL;
     newstack->size = 0;
     return newstack;
 }

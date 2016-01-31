@@ -133,21 +133,13 @@ static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
 
 static inline void attach_cat (context_t *ctx)
 {
-    unsigned int size;
+    if (ctx->target->dangling_cat == NULL) {
+        return;
+    } else {
+        ctx->target->dangling_cat->inst->x =
+            (ctx->target->size - ctx->target->dsize) + 1;
 
-    size = 0;
-    if (ctx->dangling_cat != NULL) {
-
-        if (ctx->pdepth < 1 && ctx->ddepth < 1) {
-            size = 0; /* TODO: figure out how to calculate size at pdepth==0 */
-        } else if ((ctx->pdepth - 1) < ctx->ddepth) {
-            size = ctx->target->size - ctx->dsize;
-        } else {
-            return;
-        }
-
-        ctx->dangling_cat->inst->x = size + 1;
-        ctx->dangling_cat = NULL;
+        ctx->target->dangling_cat = NULL;
         printf("dangling cat attached\n");
     }
 }
@@ -277,11 +269,10 @@ static int process_op (context_t *cp)
             set_op_branch(&inst, 1, cp->target->size + 2);
             x = stack_add_tail(cp->target, &inst);
             set_op_jmp(&inst, 0);
-            cp->dangling_cat = stack_add_head(cp->target, &inst);
-            cp->ddepth = cp->pdepth;
-            cp->dsize = cp->target->size;
+            cp->target->dangling_cat = stack_add_head(cp->target, &inst);
+            cp->target->dsize = cp->target->size;
 
-            if (x == NULL || cp->dangling_cat == NULL)
+            if (x == NULL || cp->target->dangling_cat == NULL)
                 return RVM_EMEM;
 
         break;
@@ -326,7 +317,7 @@ static int stage1_main_state(context_t *cp, int *state)
 
     } else {
         if (cp->lasttok == RPAREN && cp->buf->size > 0) {
-            stack_cat(cp->prog, cp->buf);
+            stack_cat(cp->target, cp->buf);
         }
 
         if (cp->tok == LITERAL) {
@@ -406,8 +397,8 @@ static int stage1_charc_state(context_t *cp, char charc[], int *state)
         charc[cp->clen] = '\0';
         set_op_class(&inst, charc);
 
-        cp->operand = stack_add_head(cp->parens[cp->pdepth], &inst);
-        cp->buf = cp->parens[cp->pdepth];
+        cp->operand = stack_add_head(cp->parens[0], &inst);
+        cp->buf = cp->parens[0];
         cp->clen = 0;
         charc[0] = '\0';
         *state = STATE_START;
@@ -457,7 +448,6 @@ int stage1 (char *input, stack_t **ret)
     charc[0] = '\0';
     cp->pdepth = 0;
     cp->target = cp->prog;
-    cp->dangling_cat = NULL;
     state = STATE_START;
 
     while ((cp->tok = lex(&input)) != END) {

@@ -29,7 +29,9 @@ struct stackitem {
 struct stack {
     stackitem_t *head;
     stackitem_t *tail;
+    stackitem_t *dangling_cat;
     unsigned int size;
+    unsigned int dsize;
 };
 
 /* VM instruction types */
@@ -52,12 +54,9 @@ struct context {
     stack_t *buf;
     stack_t *prog;
     stackitem_t *operand;
-    stackitem_t *dangling_cat;
     int tok;
     int lasttok;
     stack_t *parens[MAXNESTPARENS];
-    unsigned int dsize;
-    unsigned int ddepth;
     unsigned int pdepth;
     unsigned int hdepth;
     unsigned int clen;
