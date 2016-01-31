@@ -5,13 +5,22 @@
 #include <sys/stat.h>
 #include "common.h"
 
+#if (DEBUG)
+static unsigned int mcnt;
+static unsigned int fcnt;
+#endif /* DEBUG */
+
 stack_t *create_stack(void)
 {
-    stack_t *newstack = malloc(sizeof(stack_t));
-    if (!newstack) {
+    stack_t *newstack;
+
+    if ((newstack = malloc(sizeof(stack_t))) == NULL) {
         return NULL;
     }
 
+#if (DEBUG)
+    mcnt++;
+#endif /* DEBUG */
     newstack->head = NULL;
     newstack->tail = NULL;
     newstack->dangling_cat = NULL;
@@ -30,6 +39,10 @@ stackitem_t *create_item(inst_t *inst)
     if ((item->inst = malloc(sizeof(inst_t))) == NULL)
         return NULL;
 
+#if (DEBUG)
+    mcnt += 2;
+#endif /* DEBUG */
+
     item->inst->op = inst->op;
     item->inst->c = inst->c;
     item->inst->x = inst->x;
@@ -40,6 +53,9 @@ stackitem_t *create_item(inst_t *inst)
         if ((item->inst->ccs = malloc(dsize)) == NULL)
             return NULL;
 
+#if (DEBUG)
+        mcnt++;
+#endif /* DEBUG */
         strncpy(item->inst->ccs, inst->ccs, dsize);
     }
 
@@ -117,15 +133,36 @@ void stack_free (stack_t *stack)
     while (i != NULL) {
         next = i->next;
 
-        if (i->inst->ccs != NULL)
+        if (i->inst->ccs != NULL) {
             free(i->inst->ccs);
+#if (DEBUG)
+            fcnt++;
+#endif /* DEBUG */
+        }
 
-        if (i->inst != NULL)
+        if (i->inst != NULL) {
             free(i->inst);
+#if (DEBUG)
+            fcnt++;
+#endif /* DEBUG */
+        }
 
         free(i);
         i = next;
+#if (DEBUG)
+        fcnt++;
+#endif /* DEBUG */
     }
 
     free(stack);
+#if (DEBUG)
+    fcnt++;
+#endif /* DEBUG */
 }
+
+#if (DEBUG)
+void print_alloc_summary (void)
+{
+    printf("malloc() calls: %u\nfree() calls: %u\n", mcnt, fcnt);
+}
+#endif /* DEBUG */

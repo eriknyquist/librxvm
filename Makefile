@@ -16,7 +16,6 @@ VALGRIND_ARGS := \
 --track-origins=yes \
 --leak-check-heuristics=all
 MEMCHECK_REGEX := "aa?(bb*(.cc+(dd?)*)+)?"
-#MEMCHECK_REGEX := "aaa"
 
 MACROS := $(addprefix -D , $(OPTS))
 CFLAGS := -Wall -pedantic -I$(RVM_INCLUDE_DIR) $(MACROS)

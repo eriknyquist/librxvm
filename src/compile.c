@@ -519,5 +519,8 @@ int main (int argc, char *argv[])
     print_prog(prog);
     printf("size: %u\n", prog->size);
     stack_free(prog);
+#if (DEBUG)
+    print_alloc_summary();
+#endif /* DEBUG */
     return 0;
 }
