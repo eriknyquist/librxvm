@@ -12,7 +12,7 @@ MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
 VALGRIND_BIN := valgrind
 VALGRIND_ARGS := \
---leak-check=full --show-leak-kinds=all \
+-v --leak-check=full --show-leak-kinds=all \
 --track-origins=yes --leak-check-heuristics=all
 MEMCHECK_REGEX := "aa?(bb*(.cc+(dd?)*(ab*)?)+)?"
 

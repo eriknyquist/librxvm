@@ -246,12 +246,6 @@ static int process_op (context_t *cp)
         }
     }
 
-#if (DEBUG)
-    print_tok(cp->tok);
-    printf("Here are my operands:\n");
-    print_prog(cp->buf);
-#endif /* DEBUG */
-
     x = NULL;
     y = NULL;
 
@@ -427,7 +421,6 @@ static void stage1_cleanup (context_t *cp)
 
     free(cp->parens[0]);
     for (i = 1; i <= cp->hdepth; i++) {
-        printf("freeing paren #%u\n", i);
         free(cp->parens[i]);
     }
 }
@@ -449,10 +442,11 @@ int stage1 (char *input, stack_t **ret)
     inst_t inst;
 
     cp = &context;
+    memset(cp, 0, sizeof(context_t));
+    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
+
     *ret = create_stack();
     cp->prog = *ret;
-
-    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
     cp->parens[0] = create_stack();
     cp->buf = cp->parens[0];
 
@@ -501,16 +495,8 @@ int stage1 (char *input, stack_t **ret)
     /* Add the match instruction */
     set_op_match(&inst);
     stack_add_head(cp->prog, &inst);
-    print_inst(cp->prog->head->inst, -1);
-# if (DEBUG)
-    printf("Heap summary before stage1_cleanup():\n");
-    print_alloc_summary();
-#endif /* DEBUG */
+
     stage1_cleanup(cp);
-#if (DEBUG)
-    printf("Heap summary after stage1_cleanup():\n");
-    print_alloc_summary();
-#endif /* DEBUG */
     return 0;
 }
 
@@ -534,14 +520,6 @@ int main (int argc, char *argv[])
     print_prog(prog);
     printf("size: %u\n", prog->size);
 
-#if (DEBUG)
-    printf("Heap summary before freeing prog:\n");
-    print_alloc_summary();
-#endif /* DEBUG */
     stack_free(prog);
-#if (DEBUG)
-    printf("Heap summary after freeing prog:\n");
-    print_alloc_summary();
-#endif /* DEBUG */
     return 0;
 }
