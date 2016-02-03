@@ -12,10 +12,9 @@ MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
 VALGRIND_BIN := valgrind
 VALGRIND_ARGS := \
--v --leak-check=full --show-leak-kinds=all \
---track-origins=yes \
---leak-check-heuristics=all
-MEMCHECK_REGEX := "aa?(bb*(.cc+(dd?)*)+)?"
+--leak-check=full --show-leak-kinds=all \
+--track-origins=yes --leak-check-heuristics=all
+MEMCHECK_REGEX := "aa?(bb*(.cc+(dd?)*(ab*)?)+)?"
 
 MACROS := $(addprefix -D , $(OPTS))
 CFLAGS := -Wall -pedantic -I$(RVM_INCLUDE_DIR) $(MACROS)

@@ -140,7 +140,7 @@ void stack_free (stack_t *stack)
     stackitem_t *i;
     stackitem_t *next;
 
-    if (!stack->head) return;
+    if (!stack) return;
     i = stack->head;
     while (i != NULL) {
         next = i->next;
