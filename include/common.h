@@ -42,7 +42,6 @@ enum {
 /* instruction */
 struct inst {
     int op;
-    int num;
     char c;
     char *ccs;
     int x;
@@ -56,7 +55,7 @@ struct context {
     stackitem_t *operand;
     int tok;
     int lasttok;
-    stack_t *parens[MAXNESTPARENS];
+    stack_t *parens[MAXNESTPARENS + 1];
     unsigned int pdepth;
     unsigned int hdepth;
     unsigned int clen;

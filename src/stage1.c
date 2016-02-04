@@ -53,7 +53,7 @@ static void print_inst (inst_t *inst, int num)
 }
 
 /* pretty-print a list of instructions (debug) */
-static void print_prog (stack_t *stack)
+void print_prog (stack_t *stack)
 {
     int num = 0;
     stackitem_t *item;
@@ -426,11 +426,7 @@ static void stage1_cleanup (context_t *cp)
 }
 
 /* Stage 1 compiler: takes the input expression string,
- * runs it through the lexer and generates instructions for
- * the VM. The instructions returned by stage1 are incomplete;
- * branch and jmp instructions have dangling pointers. It is
- * the job of Stage 2 to assign these pointers to the correct
- * instructions. */
+ * runs it through the lexer and generates an IR for stage 2. */
 int stage1 (char *input, stack_t **ret)
 {
     char charc[MAXCHARCLEN];
@@ -497,29 +493,5 @@ int stage1 (char *input, stack_t **ret)
     stack_add_head(cp->prog, &inst);
 
     stage1_cleanup(cp);
-    return 0;
-}
-
-int main (int argc, char *argv[])
-{
-    stack_t *prog;
-    int ret;
-
-    if (argc != 2) {
-        printf("Usage: %s <regex>\n", argv[0]);
-        exit(1);
-    }
-
-    ret = stage1(argv[1], &prog);
-
-    printf("return code: %d\n", ret);
-    if (ret < 0) exit(ret);
-
-    printf("Input expression: %s\n", argv[1]);
-    printf("after stage 1 compilation:\n\n");
-    print_prog(prog);
-    printf("size: %u\n", prog->size);
-
-    stack_free(prog);
     return 0;
 }
