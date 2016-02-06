@@ -10,12 +10,12 @@
 #define ZERO_SYM             '*'
 #define ANY_SYM              '.'
 #define ONEZERO_SYM          '?'
-#define CONCAT_SYM           '|'
+#define ALT_SYM              '|'
 #define DEREF_SYM            '\\'
 
 /* lexer return tokens */
 enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
-      ZERO, ONEZERO, CONCAT, ANY, LITERAL, INVALIDSYM, END};
+      ZERO, ONEZERO, ALT, ANY, LITERAL, INVALIDSYM, END};
 
 int lex (char **input);
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lex.h"
-#include "err.h"
+#include "regexvm_err.h"
 
 #define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
 #define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
@@ -78,8 +78,8 @@ int lex (char **input)
                     state = simple_transition(literal, input, ZERO, &ret);
                 } else if (**input == ANY_SYM) {
                     state = simple_transition(literal, input, ANY, &ret);
-                } else if (**input == CONCAT_SYM) {
-                    state = simple_transition(literal, input, CONCAT, &ret);
+                } else if (**input == ALT_SYM) {
+                    state = simple_transition(literal, input, ALT, &ret);
                 } else if (isprintable(**input)) {
                     state = STATE_LITERAL;
                 } else {

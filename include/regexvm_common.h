@@ -1,17 +1,19 @@
-#ifndef COMMON_H_
-#define COMMON_H_
+#ifndef REGEXVM_COMMON_H_
+#define REGEXVM_COMMON_H_
 
-#ifdef MAX_CHARC_LEN
-#define MAXCHARCLEN          MAX_CHARC_LEN
+#if (MAX_CHARC_LEN)
+#define MAXCHARCLEN           MAX_CHARC_LEN
 #else
-#define MAXCHARCLEN          512
+#define MAXCHARCLEN           512
 #endif
 
-#ifdef MAX_NEST_PARENS
-#define MAXNESTPARENS        MAX_NEST_PARENS
+#if (MAX_NEST_PARENS)
+#define MAXNESTPARENS         MAX_NEST_PARENS
 #else
-#define MAXNESTPARENS        512
+#define MAXNESTPARENS         512
 #endif
+
+#include "regexvm_err.h"
 
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
@@ -29,7 +31,7 @@ struct stackitem {
 struct stack {
     stackitem_t *head;
     stackitem_t *tail;
-    stackitem_t *dangling_cat;
+    stackitem_t *dangling_alt;
     unsigned int size;
     unsigned int dsize;
 };

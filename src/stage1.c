@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lex.h"
-#include "err.h"
-#include "common.h"
+#include "regexvm_err.h"
+#include "regexvm_common.h"
 #include "stack.h"
 
 #define ISOP(x) \
-((x == ONE || x == ZERO || x == ONEZERO || x == CONCAT) ? 1 : 0)
+((x == ONE || x == ZERO || x == ONEZERO || x == ALT) ? 1 : 0)
 
 /* pointers for the start & end of text in
  * input string for the current token */
@@ -142,18 +142,20 @@ static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
     }
 }
 
-static void attach_dangling_cat (context_t *ctx)
+/* when an alternation operator "|" is seen, it leaves a 'jmp'
+ * instructuction with an unset pointer. This pointer marks the end of
+ * that alternation, and attach_dangling_alt is called to set this
+ * pointer when 1) another "| alt. token is seen, 2) a right-paren.
+ * token is seen, or 3) the end of the input string is reached. */
+static void attach_dangling_alt (context_t *cp)
 {
-    if (ctx->target->dangling_cat == NULL) {
+    if (cp->target->dangling_alt == NULL) {
         return;
     } else {
-        ctx->target->dangling_cat->inst->x =
-            (ctx->target->size - ctx->target->dsize) + 1;
+        cp->target->dangling_alt->inst->x =
+            (cp->target->size - cp->target->dsize) + 1;
 
-        ctx->target->dangling_cat = NULL;
-#if (DEBUG)
-        printf("dangling cat attached\n");
-#endif /* DEBUG */
+        cp->target->dangling_alt = NULL;
     }
 }
 
@@ -195,8 +197,8 @@ void print_tok(int tok)
         case ONEZERO:
             p = "ONEZERO";
         break;
-        case CONCAT:
-            p = "CONCAT";
+        case ALT:
+            p = "ALT";
         break;
         case ANY:
             p = "LITERAL";
@@ -227,7 +229,7 @@ static int process_op (context_t *cp)
     inst_t inst;
 
     if (cp->buf == NULL || cp->buf->head == NULL) {
-        if (cp->tok == CONCAT) {
+        if (cp->tok == ALT) {
             size = cp->parens[cp->pdepth]->size;
             i = NULL;
         } else {
@@ -274,16 +276,16 @@ static int process_op (context_t *cp)
 
             stack_cat_from_item(cp->target, cp->buf->head, i);
         break;
-        case CONCAT:
+        case ALT:
             if (i != NULL) stack_cat_from_item(cp->target, cp->buf->head, i);
-            attach_dangling_cat(cp);
+            attach_dangling_alt(cp);
             set_op_branch(&inst, 1, cp->target->size + 2);
             x = stack_add_tail(cp->target, &inst);
             set_op_jmp(&inst, 0);
-            cp->target->dangling_cat = stack_add_head(cp->target, &inst);
+            cp->target->dangling_alt = stack_add_head(cp->target, &inst);
             cp->target->dsize = cp->target->size;
 
-            if (x == NULL || cp->target->dangling_cat == NULL)
+            if (x == NULL || cp->target->dangling_alt == NULL)
                 return RVM_EMEM;
 
         break;
@@ -319,6 +321,9 @@ static int expand_char_range (char charc[], unsigned int *len)
     return 0;
 }
 
+/* stage1_main_state: main logic for adding incoming literals to a stack
+ * (multiple stacks, if parenthesis groups are used) so that process_op()
+ * can operate on them, should any operators be seen. */
 static int stage1_main_state(context_t *cp, int *state)
 {
     int err;
@@ -328,67 +333,73 @@ static int stage1_main_state(context_t *cp, int *state)
         if ((err = process_op(cp)) < 0)
             return err;
 
-    } else {
-        if (cp->lasttok == RPAREN && cp->buf->size > 0) {
-            stack_cat(cp->target, cp->buf);
+        return 0;
+    }
+
+    /* in the event that a parenthesis group is closed, and the following
+     * token is not an operator, the buffer for the just-closed group needs
+     * to be flushed into cp->target (otherwise done by process_op()) */
+    if (cp->lasttok == RPAREN && cp->buf->size > 0) {
+        stack_cat(cp->target, cp->buf);
+    }
+
+    if (cp->tok == LITERAL) {
+        set_op_char(&inst, *lp1);
+        cp->operand = stack_add_head(cp->buf, &inst);
+
+    } else if (cp->tok == ANY) {
+        set_op_any(&inst);
+        cp->operand = stack_add_head(cp->buf, &inst);
+
+    } else if (cp->tok == CHARC_OPEN) {
+        *state = STATE_CHARC;
+
+    } else if (cp->tok == LPAREN) {
+        if (cp->pdepth + 1 > MAXNESTPARENS)
+            return RVM_ENEST;
+
+        stack_cat(cp->target, cp->parens[0]);
+        stack_reset(cp->parens[0]);
+
+        if (cp->parens[++cp->pdepth] == NULL) {
+            if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
+                return RVM_EMEM;
         }
 
-        if (cp->tok == LITERAL) {
-            set_op_char(&inst, *lp1);
-            cp->operand = stack_add_head(cp->buf, &inst);
+        if (cp->pdepth > cp->hdepth)
+            cp->hdepth = cp->pdepth;
 
-        } else if (cp->tok == ANY) {
-            set_op_any(&inst);
-            cp->operand = stack_add_head(cp->buf, &inst);
+        if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
+            return RVM_EMEM;
 
-        } else if (cp->tok == CHARC_OPEN) {
-            *state = STATE_CHARC;
+        cp->target = cp->parens[cp->pdepth];
 
-        } else if (cp->tok == LPAREN) {
-            if (cp->pdepth + 1 > MAXNESTPARENS)
-                return RVM_ENEST;
+    } else if (cp->tok == RPAREN) {
+        if (cp->pdepth < 1) {
+            return RVM_BADPAREN;
 
+        } else {
             stack_cat(cp->target, cp->parens[0]);
+            attach_dangling_alt(cp);
 
             stack_reset(cp->parens[0]);
 
-            if (cp->parens[++cp->pdepth] == NULL) {
-                if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
-                    return RVM_EMEM;
-            }
-
-            if (cp->pdepth > cp->hdepth)
-                cp->hdepth = cp->pdepth;
-
-            if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
-                return RVM_EMEM;
-
-            cp->target = cp->parens[cp->pdepth];
-
-        } else if (cp->tok == RPAREN) {
-            if (cp->pdepth < 1) {
-                return RVM_BADPAREN;
-
-            } else {
-                stack_cat(cp->target, cp->parens[0]);
-                attach_dangling_cat(cp);
-
-                stack_reset(cp->parens[0]);
-
-                cp->operand = cp->parens[cp->pdepth]->tail;
-                cp->buf = cp->parens[cp->pdepth--];
-                cp->target = (cp->pdepth < 1) ?
-                    cp->prog : cp->parens[cp->pdepth];
-            }
-
-        } else if (cp->tok == CHARC_CLOSE) {
-            return RVM_BADCLASS;
+            cp->operand = cp->parens[cp->pdepth]->tail;
+            cp->buf = cp->parens[cp->pdepth--];
+            cp->target = (cp->pdepth < 1) ? cp->prog : cp->parens[cp->pdepth];
         }
+
+    } else if (cp->tok == CHARC_CLOSE) {
+        return RVM_BADCLASS;
     }
 
     return 0;
 }
 
+/* stage1_charc_state: called repeatedly when the character class open token
+ * "[" is seen, consuming tokens until the closing character "]" is seen.
+ * Generates a single "class" instruction which is added to the shared
+ * buffer parens[0]. */
 static int stage1_charc_state(context_t *cp, char charc[], int *state)
 {
     int err;
@@ -455,17 +466,21 @@ int stage1 (char *input, stack_t **ret)
     cp->target = cp->prog;
     state = STATE_START;
 
+    /* get the next token */
     while ((cp->tok = lex(&input)) != END) {
         if (cp->tok < 0)
             return cp->tok;
 
         switch (state) {
             case STATE_START:
+                /* if it's not a character class, then all the
+                 * metacharacters apply-- run the main state. */
                 if ((err = stage1_main_state(cp, &state)) < 0)
                     return err;
 
             break;
             case STATE_CHARC:
+                /* inside character class-- run character class state */
                 if ((err = stage1_charc_state(cp, charc, &state)) < 0)
                     return err;
 
@@ -486,7 +501,7 @@ int stage1 (char *input, stack_t **ret)
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
     stack_cat(cp->prog, cp->parens[0]);
-    attach_dangling_cat(cp);
+    attach_dangling_alt(cp);
 
     /* Add the match instruction */
     set_op_match(&inst);

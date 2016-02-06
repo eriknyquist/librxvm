@@ -1,5 +1,5 @@
-#ifndef ERR_H_
-#define ERR_H_
+#ifndef REGEXVM_ERR_H_
+#define REGEXVM_ERR_H_
 
 #define RVM_BADOP      -1   /* Operator used incorrectly */
 #define RVM_BADCLASS   -2   /* Unexpected character class closing character */

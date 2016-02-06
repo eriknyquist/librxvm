@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "common.h"
+#include "regexvm_common.h"
 
 stack_t *create_stack(void)
 {
@@ -15,7 +15,7 @@ stack_t *create_stack(void)
 
     newstack->head = NULL;
     newstack->tail = NULL;
-    newstack->dangling_cat = NULL;
+    newstack->dangling_alt = NULL;
     newstack->size = 0;
     return newstack;
 }
