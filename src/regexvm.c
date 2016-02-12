@@ -19,6 +19,88 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
     return 0;
 }
 
+int ccs_match(char *ccs, char c)
+{
+    while (*ccs) {
+        if (*ccs == c)
+            return 1;
+        ++ccs;
+    }
+
+    return 0;
+}
+
+int regexvm_match(regexvm_t *compiled, char *input)
+{
+    unsigned int *np;
+    unsigned int *cp;
+    unsigned int *temp;
+    unsigned int nsize;
+    unsigned int csize;
+    unsigned int t;
+    unsigned int ii;
+    inst_t *ip;
+    char *sp;
+
+    if ((cp = malloc(sizeof(int) * compiled->size)) == NULL)
+        return RVM_EMEM;
+
+    if ((np = malloc(sizeof(int) * compiled->size)) == NULL)
+        return RVM_EMEM;
+
+    nsize = 0;
+    csize = 0;
+    cp[csize++] = 0;
+
+    for (sp = input; *sp; ++sp) {
+
+        /* run all the threads for this input character */
+        for (t = 0; t < csize; ++t) {
+            ii = cp[t];             /* index of current instruction */
+            ip = compiled->exe[ii]; /* pointer to instruction data */
+
+            switch (ip->op) {
+                case OP_CHAR:
+                    if (*sp == ip->c)
+                        np[nsize++] = ii + 1;
+                break;
+                case OP_ANY:
+                    np[nsize++] = ii + 1;
+                break;
+                case OP_CLASS:
+                    if (ccs_match(ip->ccs, *sp))
+                        np[nsize++] = ii + 1;
+                break;
+                case OP_BRANCH:
+                    cp[csize++] = ip->y;
+                    cp[csize++] = ip->x;
+                break;
+                case OP_JMP:
+                    cp[csize++] = ip->x;
+                break;
+                case OP_MATCH:
+                    free(cp);
+                    free(np);
+                    return 1;
+                break;
+            }
+        }
+
+        /* Threads saved for the next input character
+         * are now threads for the current character.
+         * Threads for the next character are empty again.*/
+        temp = cp;
+        cp = np;
+        np = temp;
+        csize = nsize;
+        nsize = 0;
+    }
+
+    free(cp);
+    free(np);
+    return 0;
+}
+
 void regexvm_print (regexvm_t *compiled)
 {
     unsigned int i;

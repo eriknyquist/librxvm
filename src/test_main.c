@@ -7,8 +7,8 @@ int main (int argc, char *argv[])
     int ret;
     regexvm_t compiled;
 
-    if (argc != 2) {
-        printf("Usage: %s <regex>\n", argv[0]);
+    if (argc != 3) {
+        printf("Usage: %s <regex> <input>\n", argv[0]);
         exit(1);
     }
 
@@ -17,9 +17,13 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
-    printf("Input expression: %s\n", argv[1]);
-    printf("after compilation:\n\n");
     regexvm_print(&compiled);
+
+    if (regexvm_match(&compiled, argv[2])) {
+        printf("Match!\n");
+    } else {
+        printf("No match.\n");
+    }
 
     regexvm_free(&compiled);
     return 0;

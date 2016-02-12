@@ -13,6 +13,7 @@
 #define MAXNESTPARENS         512
 #endif
 
+#include <stdint.h>
 #include "regexvm_err.h"
 
 typedef struct stackitem stackitem_t;
@@ -32,8 +33,8 @@ struct stack {
     stackitem_t *head;
     stackitem_t *tail;
     stackitem_t *dangling_alt;
-    unsigned int size;
-    unsigned int dsize;
+    unsigned short size;
+    unsigned short dsize;
 };
 
 /* VM instruction types */
@@ -43,11 +44,11 @@ enum {
 
 /* instruction */
 struct inst {
-    int op;
-    char c;
     char *ccs;
-    int x;
-    int y;
+    short x;
+    short y;
+    char c;
+    uint8_t op;
 };
 
 struct context {
@@ -55,9 +56,9 @@ struct context {
     stack_t *buf;
     stack_t *prog;
     stackitem_t *operand;
+    stack_t *parens[MAXNESTPARENS + 1];
     int tok;
     int lasttok;
-    stack_t *parens[MAXNESTPARENS + 1];
     unsigned int pdepth;
     unsigned int hdepth;
     unsigned int clen;
