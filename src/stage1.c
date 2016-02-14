@@ -168,58 +168,9 @@ static void stack_reset (stack_t *stack)
     }
 }
 
-#if (DEBUG)
-void print_tok(int tok)
-{
-    const char *p;
-    switch (tok) {
-        case CHARC_OPEN:
-            p = "CHARC_OPEN";
-        break;
-        case CHARC_CLOSE:
-            p = "CHARC_CLOSE";
-        break;
-        case CHAR_RANGE:
-            p = "CHAR_RANGE";
-        break;
-        case LPAREN:
-            p = "LPAREN";
-        break;
-        case RPAREN:
-            p = "RPAREN";
-        break;
-        case ONE:
-            p = "ONE";
-        break;
-        case ZERO:
-            p = "ZERO";
-        break;
-        case ONEZERO:
-            p = "ONEZERO";
-        break;
-        case ALT:
-            p = "ALT";
-        break;
-        case ANY:
-            p = "LITERAL";
-        break;
-        case INVALIDSYM:
-            p = "INVALIDSYM";
-        break;
-        case END:
-            p = "END";
-        break;
-        default:
-            p = "unknown token";
-    }
-
-    printf("\ntok: %s\n", p);
-}
-#endif /* DEBUG */
-
 /* process_op: processes operator 'tok' against a buffer of
- * literals 'buf', where the first operand is 'item' and the
- * output is appended to 'prog' */
+ * literals 'buf', where the first operand is 'operand' and the
+ * instructions generated are appended to 'target' */
 static int process_op (context_t *cp)
 {
     stackitem_t *i;
@@ -251,16 +202,22 @@ static int process_op (context_t *cp)
     x = NULL;
     y = NULL;
 
-    /* Generate instructions for operator & operand (s) */
+    /* Generate instructions for operator & operand(s) */
     switch (cp->tok) {
         case ONE:
+            /* x = current position MINUS size of operand buf
+             * y = current position PLUS 1 */
             set_op_branch(&inst, -(size), 1);
+
             stack_cat_from_item(cp->target, cp->buf->head, i);
             if (stack_add_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
         break;
         case ZERO:
+            /* x = current position PLUS size of operand buf PLUS 2
+             * y = current position PLUS 1 */
             set_op_branch(&inst, size + 2, 1);
+
             x = stack_add_head(cp->target, &inst);
             stack_cat_from_item(cp->target, cp->buf->head, i);
             set_op_branch(&inst, 1, -(size));
@@ -270,16 +227,25 @@ static int process_op (context_t *cp)
                 return RVM_EMEM;
         break;
         case ONEZERO:
+            /* x = current position PLUS 1
+             * y = current position PLUS size of operand buf PLUS 1 */
             set_op_branch(&inst, 1, size + 1);
+
             if (stack_add_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
 
             stack_cat_from_item(cp->target, cp->buf->head, i);
         break;
         case ALT:
-            if (i != NULL) stack_cat_from_item(cp->target, cp->buf->head, i);
+            if (i != NULL)
+                stack_cat_from_item(cp->target, cp->buf->head, i);
+
             attach_dangling_alt(cp);
+
+            /* x = current position PLUS 1
+             * y = current position PLUS size of target buf PLUS 2 */
             set_op_branch(&inst, 1, cp->target->size + 2);
+
             x = stack_add_tail(cp->target, &inst);
             set_op_jmp(&inst, 0);
             cp->target->dangling_alt = stack_add_head(cp->target, &inst);
