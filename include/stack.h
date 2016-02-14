@@ -8,8 +8,4 @@ void stack_point_new_head (stack_t *stack, stackitem_t *new);
 void stack_cat (stack_t *stack1, stack_t *stack2);
 void stack_free (stack_t *stack);
 
-#if (DEBUG)
-void print_alloc_summary (void);
-#endif /* DEBUG */
-
 #endif
