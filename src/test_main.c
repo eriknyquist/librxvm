@@ -13,18 +13,17 @@ int main (int argc, char *argv[])
     }
 
     if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
+#if (DEBUG)
         regexvm_print_err(ret);
+#endif /* DEBUG */
         exit(ret);
     }
-
-    printf("compiled size: %d\n", sizeof(inst_t) * compiled.size);
 
     if (regexvm_match(&compiled, argv[2])) {
         printf("Match!\n");
     } else {
         printf("No match.\n");
     }
-
     regexvm_free(&compiled);
     return 0;
 }

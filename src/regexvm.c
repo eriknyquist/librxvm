@@ -178,6 +178,7 @@ void regexvm_free (regexvm_t *compiled)
     free(compiled->exe);
 }
 
+#if (DEBUG)
 void regexvm_print_err (int err)
 {
     const char *msg;
@@ -219,3 +220,4 @@ void regexvm_print_err (int err)
 
     printf("Error %d: %s\n", err, msg);
 }
+#endif /* DEBUG */
