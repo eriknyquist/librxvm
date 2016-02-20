@@ -17,7 +17,7 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
-    regexvm_print(&compiled);
+    printf("compiled size: %d\n", sizeof(inst_t) * compiled.size);
 
     if (regexvm_match(&compiled, argv[2])) {
         printf("Match!\n");

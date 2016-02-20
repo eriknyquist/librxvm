@@ -16,6 +16,7 @@ extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
 
+#if (DEBUG)
 /* pretty-print an instruction (debug) */
 static void print_inst (inst_t *inst, int num)
 {
@@ -76,6 +77,7 @@ void print_prog (stack_t *stack)
         item = item->previous;
     }
 }
+#endif /* DEBUG */
 
 /* set_op functions:
  * a bunch of convenience functions for populating

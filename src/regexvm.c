@@ -39,6 +39,8 @@ int regexvm_match(regexvm_t *compiled, char *input)
     unsigned int csize;
     unsigned int t;
     unsigned int ii;
+    int ret;
+    char *lastmatch;
     inst_t *ip;
     char *sp;
 
@@ -51,9 +53,9 @@ int regexvm_match(regexvm_t *compiled, char *input)
     nsize = 0;
     csize = 0;
     cp[csize++] = 0;
+    lastmatch = NULL;
 
     for (sp = input; *sp; ++sp) {
-
         /* run all the threads for this input character */
         for (t = 0; t < csize; ++t) {
             ii = cp[t];             /* index of current instruction */
@@ -63,6 +65,7 @@ int regexvm_match(regexvm_t *compiled, char *input)
                 case OP_CHAR:
                     if (*sp == ip->c)
                         np[nsize++] = ii + 1;
+
                 break;
                 case OP_ANY:
                     np[nsize++] = ii + 1;
@@ -79,11 +82,18 @@ int regexvm_match(regexvm_t *compiled, char *input)
                     cp[csize++] = ip->x;
                 break;
                 case OP_MATCH:
-                    free(cp);
-                    free(np);
-                    return 1;
+                    lastmatch = sp;
                 break;
             }
+
+        }
+
+        /* if no threads are queued for the next input
+         * character, then the expression cannot match, so exit */
+        if (!nsize) {
+            free(cp);
+            free(np);
+            return 0;
         }
 
         /* Threads saved for the next input character
@@ -96,9 +106,28 @@ int regexvm_match(regexvm_t *compiled, char *input)
         nsize = 0;
     }
 
+    for (t = 0; t < csize; t++) {
+        ii = cp[t];
+        ip = compiled->exe[ii];
+
+        switch (ip->op) {
+            case OP_BRANCH:
+                cp[csize++] = ip->y;
+                cp[csize++] = ip->x;
+            break;
+            case OP_JMP:
+                cp[csize++] = ip->x;
+            break;
+            case OP_MATCH:
+                lastmatch = sp;
+            break;
+        }
+    }
+
+    ret = (lastmatch == NULL || lastmatch < sp) ? 0 : 1;
     free(cp);
     free(np);
-    return 0;
+    return ret;
 }
 
 void regexvm_print (regexvm_t *compiled)
