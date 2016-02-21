@@ -10,8 +10,9 @@ OPTS := \
 MAX_CHARC_LEN=$(MAX_CHARC_LEN) \
 MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
-MEMCHECK_REGEX := "aa?|(bb*[abC-Z]|\\.|\\*|(.\\\\cc+(dd?[+*.?])*(ab*)?)+)?"
-MEMCHECK_PATTERN := "x\\ccccccccccccccccccccccdd?d?dd?d?d*d+d?ab"
+MEMCHECK_REGEX := \
+"ww|(xx)aa(yy)?(bb*[abC-Z]|\\.|\\*|(.\\\\cc+(dd?[+*.?])*(ab*)?)+)?"
+MEMCHECK_PATTERN := "xxaayy@\\ccccccccccccccccccccccdd?d?dd?d?d*d+d?ab"
 
 VALGRIND_BIN := valgrind
 VALGRIND_ARGS := \

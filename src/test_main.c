@@ -15,7 +15,7 @@ int main (int argc, char *argv[])
     if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
 #if (DEBUG)
         regexvm_print_err(ret);
-#endif /* DEBUG */
+#endif
         exit(ret);
     }
 

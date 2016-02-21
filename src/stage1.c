@@ -309,6 +309,8 @@ static int stage1_main_state(context_t *cp, int *state)
      * to be flushed into cp->target (otherwise done by process_op()) */
     if (cp->lasttok == RPAREN && cp->buf->size > 0) {
         stack_cat(cp->target, cp->buf);
+        stack_reset(cp->buf);
+        cp->buf = cp->parens[0];
     }
 
     if (cp->tok == LITERAL) {
@@ -476,5 +478,8 @@ int stage1 (char *input, stack_t **ret)
     stack_add_head(cp->prog, &inst);
 
     stage1_cleanup(cp);
+#if DEBUG
+    print_prog(cp->prog);
+#endif
     return 0;
 }
