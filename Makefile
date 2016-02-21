@@ -1,7 +1,13 @@
-RVM_NAME := regexvm
+TESTS := regexvm_test
+TESTAPP_NAME := regexvm
+TESTAPP_SRCS := tests/testapp/test_main.c
+TESTAPP_OBJS := ${TESTAPP_SRCS:.c=.o}
 RVM_C_SRCS := $(wildcard src/*.c)
+TEST_SRCS := $(wildcard tests/src/*.c)
 RVM_OBJS := ${RVM_C_SRCS:.c=.o}
-RVM_INCLUDE_DIR := include
+TEST_OBJS := ${TEST_SRCS:.c=.o}
+RVM_INC := include
+TEST_INC := tests/include
 
 MAX_CHARC_LEN := 512
 MAX_NEST_PARENS := 512
@@ -18,27 +24,35 @@ VALGRIND_BIN := valgrind
 VALGRIND_ARGS := \
 -v --leak-check=full --show-leak-kinds=all \
 --track-origins=yes --leak-check-heuristics=all \
-./$(RVM_NAME) $(MEMCHECK_REGEX) $(MEMCHECK_PATTERN)
+./$(TESTAPP_NAME) $(MEMCHECK_REGEX) $(MEMCHECK_PATTERN)
 
 MACROS := $(addprefix -D , $(OPTS))
-CFLAGS := -Wall -pedantic -I$(RVM_INCLUDE_DIR) $(MACROS)
+CFLAGS := -Wall -pedantic -I$(RVM_INC) $(MACROS)
+TESTFLAGS := -Wall -I$(RVM_INC) -I$(TEST_INC) $(MACROS)
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -D DEBUG -g -O0
 
 all: CFLAGS += $(RELEASE_FLAGS)
-all: $(RVM_NAME)
+all: testapp
 
 debug: CFLAGS += $(DEBUG_FLAGS)
-debug: $(RVM_NAME)
+debug: testapp
 
-$(RVM_NAME): $(RVM_OBJS)
-	$(CC) $(RVM_OBJS) -o $(RVM_NAME) -I$(RVM_INCLUDE_DIR)
+testapp: $(RVM_OBJS) $(TESTAPP_OBJS)
+	$(CC) $(RVM_OBJS) $(TESTAPP_OBJS) -o $(TESTAPP_NAME)
+
+test: CFLAGS = $(TESTFLAGS)
+test: $(RVM_OBJS) $(TEST_OBJS)
+	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
+	@- ./$(TESTS)
 
 memcheck: debug
 	$(VALGRIND_BIN) $(VALGRIND_ARGS)
 
 clean:
-	@- $(RM) $(RVM_NAME)
+	@- $(RM) $(EXE_NAME)
 	@- $(RM) $(RVM_OBJS)
+	@- $(RM) $(TEST_OBJS)
+	@- $(RM) $(TESTAPP_OBJS)
 
-distclean: clean
+Gdistclean: clean

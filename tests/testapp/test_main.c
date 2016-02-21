@@ -4,6 +4,7 @@
 
 int main (int argc, char *argv[])
 {
+    size_t size;
     int ret;
     regexvm_t compiled;
 
@@ -18,6 +19,9 @@ int main (int argc, char *argv[])
 #endif
         exit(ret);
     }
+
+    size = sizeof(regexvm_t) + (sizeof(inst_t) * compiled.size);
+    printf("inst_t size: %lu\ncompiled size: %lu\n", sizeof(inst_t), size);
 
     if (regexvm_match(&compiled, argv[2])) {
         printf("Match!\n");
