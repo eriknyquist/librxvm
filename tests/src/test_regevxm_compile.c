@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUM_TESTS 6
+#define NUM_TESTS 8
 
 typedef struct compv compv_t;
 
@@ -48,9 +48,27 @@ static const compv_t test_6_basic_6 = {
     .len = 11
 };
 
+static const compv_t test_7_nest_1 = {
+    .rgx = "(a|b|c+)*b(x+|y(zs?(dd[A-F0-9]|bb)*)+)?",
+    .cmp = "b10,1:b2,7:b3,5:la:j6:lb:j9:lc:b7,9:b10,1:lb:b12,30:b13,16:lx"
+           ":b13,15:j30:ly:lz:b19,20:ls:b29,21:b22,26:ld:ld:cABCDEF0123456789"
+           ":j28:lb:lb:b29,21:b17,30:m",
+    .len = 31
+};
+
+static const compv_t test_8_nest_2 = {
+    .rgx = "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p(q)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*",
+    .cmp = "la:b49,2:lb:b48,4:lc:b47,6:ld:b46,8:le:b45,10:lf:b44,12:lg:b43,14"
+           ":lh:b42,16:li:b41,18:lj:b40,20:lk:b39,22:ll:b38,24:lm:b37,26:ln"
+           ":b36,28:lo:b35,30:lp:b34,32:lq:b34,32:b35,30:b36,28:b37,26:b38,24"
+           ":b39,22:b40,20:b41,18:b42,16:b43,14:b44,12:b45,10:b46,8:b47,6"
+           ":b48,4:b49,2:m",
+    .len = 50
+};
+
 static const compv_t *tests[NUM_TESTS] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
-    &test_5_basic_5, &test_6_basic_6
+    &test_5_basic_5, &test_6_basic_6, &test_7_nest_1, &test_8_nest_2
 };
 
 unsigned int parse_int (char **str)
