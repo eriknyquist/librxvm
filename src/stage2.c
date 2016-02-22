@@ -9,7 +9,7 @@ int stage2 (stack_t *ir, regexvm_t *ret)
     unsigned int i;
 
     /* array to hold pointers to the already-allocated instructions */
-    if ((ret->exe = malloc(sizeof(stack_t *) * ir->size)) == NULL)
+    if ((ret->exe = malloc(sizeof(inst_t *) * ir->size)) == NULL)
         return RVM_EMEM;
 
     item = ir->tail;

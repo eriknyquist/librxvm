@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUM_TESTS 5
+#define NUM_TESTS 6
 
 typedef struct compv compv_t;
 
@@ -13,9 +13,9 @@ struct compv {
 };
 
 static const compv_t test_1_basic_1 = {
-    .rgx = "ab*",
-    .cmp = "la:b4,2:lb:b4,2:m",
-    .len = 4
+    .rgx = "aab*",
+    .cmp = "la:la:b5,3:lb:b5,3:m",
+    .len = 6
 };
 
 static const compv_t test_2_basic_2 = {
@@ -42,9 +42,15 @@ static const compv_t test_5_basic_5 = {
     .len = 13
 };
 
+static const compv_t test_6_basic_6 = {
+    .rgx = "\\**\\++\\??\\.\\\\[*+?.\\\\]",
+    .cmp = "b3,1:l*:b3,1:l+:b3,5:b6,7:l?:l.:l\\:c*+?.\\:m",
+    .len = 11
+};
+
 static const compv_t *tests[NUM_TESTS] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
-    &test_5_basic_5
+    &test_5_basic_5, &test_6_basic_6
 };
 
 unsigned int parse_int (char **str)
@@ -63,9 +69,8 @@ unsigned int parse_int (char **str)
     return ret;
 }
 
-char *ccs_alloc (char **str)
+int ccs_alloc (inst_t *inst, char **str)
 {
-    char *ret;
     unsigned int len;
     unsigned int i;
     char *start;
@@ -74,19 +79,21 @@ char *ccs_alloc (char **str)
     start = *str;
 
     while (**str && **str != ':') {
-        ++*str;
+        ++(*str);
         ++len;
     }
 
-    if ((ret = malloc(sizeof(char) * (len + 1))) == NULL)
-        return NULL;
-
-    for (i = 0; i < len; i++) {
-        ret[i] = start[i];
+    if ((inst->ccs = malloc(sizeof(char) * (len + 1))) == NULL) {
+        fprintf(stderr, "Failed to allocate mem. for ccs\n");
+        return 1;
     }
 
-    ret[len] = '\0';
-    return ret;
+    for (i = 0; i < len; i++) {
+        inst->ccs[i] = start[i];
+    }
+
+    inst->ccs[len] = '\0';
+    return 0;
 }
 
 inst_t *alloc_inst (void)
@@ -108,13 +115,11 @@ inst_t *alloc_inst (void)
 
 int str_to_prog (char *str, regexvm_t *prog, unsigned int len)
 {
-    size_t exesize;
     inst_t *inst;
 
     prog->size = 0;
-    exesize = sizeof(inst_t *) * len;
 
-    if ((prog->exe = malloc(exesize)) == NULL) {
+    if ((prog->exe = malloc(sizeof(inst_t *) * len)) == NULL) {
         fprintf(stderr, "Failed to allocate mem. for exe list\n");
         return 1;
     }
@@ -143,7 +148,8 @@ int str_to_prog (char *str, regexvm_t *prog, unsigned int len)
             case 'c':
                 inst->op = OP_CLASS;
                 ++str;
-                inst->ccs = ccs_alloc(&str);
+                if (ccs_alloc(inst, &str))
+                    return 1;
             break;
             case 'a':
                 inst->op = OP_ANY;
@@ -161,6 +167,26 @@ int str_to_prog (char *str, regexvm_t *prog, unsigned int len)
     return 0;
 }
 
+int cmpccs (char *ap, char *bp)
+{
+    int ret = 0;
+
+    while (*ap) {
+        if (!*bp) {
+            ret = 1;
+            break;
+        }
+
+        if (*(ap++) != *(bp++))
+            ret = 1;
+    }
+
+    if (*bp)
+        ret = 1;
+
+    return ret;
+}
+
 int cmpinst (inst_t *a, inst_t *b)
 {
     int ret;
@@ -175,17 +201,7 @@ int cmpinst (inst_t *a, inst_t *b)
                 ret = 1;
         break;
         case OP_CLASS:
-            while (*a->ccs) {
-                if (!*b->ccs) {
-                    ret = 1;
-                    break;
-                }
-
-                if (*(a->ccs++) != *(b->ccs++))
-                    ret = 1;
-            }
-
-            if (*b->ccs)
+            if (cmpccs(a->ccs, b->ccs))
                 ret = 1;
         break;
         case OP_BRANCH:
@@ -241,8 +257,8 @@ int verify_regexvm_cmp (char *regex, char *expected, unsigned int len)
         ret = 0;
     }
 
-    regexvm_free(&compiled);
     regexvm_free(&ex);
+    regexvm_free(&compiled);
     return ret;
 }
 

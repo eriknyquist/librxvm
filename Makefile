@@ -28,7 +28,7 @@ VALGRIND_ARGS := \
 
 MACROS := $(addprefix -D , $(OPTS))
 CFLAGS := -Wall -pedantic -I$(RVM_INC) $(MACROS)
-TESTFLAGS := -Wall -I$(RVM_INC) -I$(TEST_INC) $(MACROS)
+TESTFLAGS := -Wall -I$(RVM_INC) -I$(TEST_INC) $(MACROS) -O3
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -D DEBUG -g -O0
 
