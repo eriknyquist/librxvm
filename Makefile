@@ -16,15 +16,15 @@ OPTS := \
 MAX_CHARC_LEN=$(MAX_CHARC_LEN) \
 MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
-MEMCHECK_REGEX := \
+MCHK_REGEX := \
 "ww|(xx)aa(yy)?(bb*[abC-Z]|\\.|\\*|(.\\\\cc+(dd?[+*.?])*(ab*)?)+)?"
-MEMCHECK_PATTERN := "xxaayy@\\ccccccccccccccccccccccdd?d?dd?d?d*d+d?ab"
+MCHK_PATTERN := "xxaayy@\\ccccccccccccccccccccccdd?d?dd?d?d*d+d?ab"
+MCHK_ARGS := $(MCHK_REGEX) $(MCHK_PATTERN)
 
 VALGRIND_BIN := valgrind
 VALGRIND_ARGS := \
 -v --leak-check=full --show-leak-kinds=all \
---track-origins=yes --leak-check-heuristics=all \
-./$(TESTAPP_NAME) $(MEMCHECK_REGEX) $(MEMCHECK_PATTERN)
+--track-origins=yes --leak-check-heuristics=all
 
 MACROS := $(addprefix -D , $(OPTS))
 CFLAGS := -Wall -pedantic -I$(RVM_INC) $(MACROS)
@@ -47,7 +47,7 @@ test: $(RVM_OBJS) $(TEST_OBJS)
 	@- ./$(TESTS)
 
 memcheck: debug
-	$(VALGRIND_BIN) $(VALGRIND_ARGS)
+	$(VALGRIND_BIN) $(VALGRIND_ARGS) ./$(TESTAPP_NAME) $(MCHK_ARGS)
 
 clean:
 	@- $(RM) $(EXE_NAME)
