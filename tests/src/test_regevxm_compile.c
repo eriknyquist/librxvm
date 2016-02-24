@@ -9,43 +9,36 @@ typedef struct compv compv_t;
 struct compv {
     char *rgx;
     char *cmp;
-    unsigned int len;
 };
 
 static const compv_t test_1_basic_1 = {
     .rgx = "aab*",
     .cmp = "la:la:b5,3:lb:b5,3:m",
-    .len = 6
 };
 
 static const compv_t test_2_basic_2 = {
     .rgx = "ab+|d*(xx)?",
     .cmp = "b1,5:la:lb:b2,4:j11:b8,6:ld:b8,6:b9,11:lx:lx:m",
-    .len = 12
 };
 
 static const compv_t test_3_basic_3 = {
     .rgx = "aa|bb|cc|dd",
     .cmp = "b1,12:b2,9:b3,6:la:la:j8:lb:lb:j11:lc:lc:j14:ld:ld:m",
-    .len = 15
 };
 
 static const compv_t test_4_basic_4 = {
     .rgx = "(aa)bb(cc)",
     .cmp = "la:la:lb:lb:lc:lc:m",
-    .len = 7
 };
 
 static const compv_t test_5_basic_5 = {
     .rgx = "(aa)bb(cc(dd(ee(ff))))",
     .cmp = "la:la:lb:lb:lc:lc:ld:ld:le:le:lf:lf:m",
-    .len = 13
 };
 
 static const compv_t test_6_basic_6 = {
     .rgx = "\\**\\++\\??\\.\\\\[*+?.\\\\]",
     .cmp = "b3,1:l*:b3,1:l+:b3,5:b6,7:l?:l.:l\\:c*+?.\\:m",
-    .len = 11
 };
 
 static const compv_t test_7_nest_1 = {
@@ -53,7 +46,6 @@ static const compv_t test_7_nest_1 = {
     .cmp = "b10,1:b2,7:b3,5:la:j6:lb:j9:lc:b7,9:b10,1:lb:b12,30:b13,16:lx"
            ":b13,15:j30:ly:lz:b19,20:ls:b29,21:b22,26:ld:ld:cABCDEF0123456789"
            ":j28:lb:lb:b29,21:b17,30:m",
-    .len = 31
 };
 
 static const compv_t test_8_nest_2 = {
@@ -63,7 +55,6 @@ static const compv_t test_8_nest_2 = {
            ":b36,28:lo:b35,30:lp:b34,32:lq:b34,32:b35,30:b36,28:b37,26:b38,24"
            ":b39,22:b40,20:b41,18:b42,16:b43,14:b44,12:b45,10:b46,8:b47,6"
            ":b48,4:b49,2:m",
-    .len = 50
 };
 
 static const compv_t *tests[NUM_TESTS] = {
@@ -87,195 +78,150 @@ unsigned int parse_int (char **str)
     return ret;
 }
 
-int ccs_alloc (inst_t *inst, char **str)
+int ccs_cmp (inst_t *inst, char **str)
 {
-    unsigned int len;
-    unsigned int i;
-    char *start;
 
-    len = 0;
-    start = *str;
+    int i;
 
-    while (**str && **str != ':') {
-        ++(*str);
-        ++len;
+    i = 0;
+    while (inst->ccs[i]) {
+        if (!**str || **str == ':'|| inst->ccs[i] != **str)
+            return 1;
+        ++*str;
+        ++i;
     }
 
-    if ((inst->ccs = malloc(sizeof(char) * (len + 1))) == NULL) {
-        fprintf(stderr, "Failed to allocate mem. for ccs\n");
-        return 1;
-    }
-
-    for (i = 0; i < len; i++) {
-        inst->ccs[i] = start[i];
-    }
-
-    inst->ccs[len] = '\0';
-    return 0;
+    return (**str == ':') ? 0 : 1;
 }
 
-inst_t *alloc_inst (void)
+int cmpexe (char *str, regexvm_t *prog)
 {
+    int i;
     inst_t *inst;
 
-    if ((inst = malloc(sizeof(inst_t))) == NULL) {
-        fprintf(stderr, "Failed to allocate mem. for instruction\n");
-    }
+    for (i = 0; i < prog->size; i++) {
+        inst = prog->exe[i];
 
-    inst->op = 0;
-    inst->c = 0;
-    inst->ccs = NULL;
-    inst->x = 0;
-    inst->y = 0;
-
-    return inst;
-}
-
-int str_to_prog (char *str, regexvm_t *prog, unsigned int len)
-{
-    inst_t *inst;
-
-    prog->size = 0;
-
-    if ((prog->exe = malloc(sizeof(inst_t *) * len)) == NULL) {
-        fprintf(stderr, "Failed to allocate mem. for exe list\n");
-        return 1;
-    }
-
-    while (*str) {
-        inst = alloc_inst();
+        if (!*str)
+            return 1;
 
         switch (*str) {
             case 'l':
-                inst->op = OP_CHAR;
-                inst->c = *(++str);
-                do { ++str; } while (*str && *str != ':');
+                if (inst->op != OP_CHAR || inst->c != *(++str))
+                    return 1;
+                ++str;
             break;
             case 'b':
-                inst->op = OP_BRANCH;
+                if (inst->op != OP_BRANCH)
+                    return 1;
                 ++str;
-                inst->x = parse_int(&str);
+                if (inst->x != parse_int(&str))
+                    return 1;
                 ++str;
-                inst->y = parse_int(&str);
+                if (inst->y != parse_int(&str))
+                    return 1;
             break;
             case 'j':
-                inst->op = OP_JMP;
+                if (inst->op != OP_JMP)
+                    return 1;
                 ++str;
-                inst->x = parse_int(&str);
+                if (inst->x != parse_int(&str))
+                    return 1;
             break;
             case 'c':
-                inst->op = OP_CLASS;
+                if (inst->op != OP_CLASS)
+                    return 1;
                 ++str;
-                if (ccs_alloc(inst, &str))
+                if (ccs_cmp(inst, &str))
                     return 1;
             break;
             case 'a':
-                inst->op = OP_ANY;
+                if (inst->op != OP_ANY)
+                    return 1;
             break;
             case 'm':
-                inst->op = OP_MATCH;
+                if (inst->op != OP_MATCH)
+                    return 1;
             break;
         }
 
-        prog->exe[prog->size] = inst;
-        ++prog->size;
-        ++str;
+        if (*str)
+            ++str;
     }
 
-    return 0;
+    return (*str) ? 1 : 0;
 }
 
-int cmpccs (char *ap, char *bp)
-{
-    int ret = 0;
-
-    while (*ap) {
-        if (!*bp) {
-            ret = 1;
-            break;
-        }
-
-        if (*(ap++) != *(bp++))
-            ret = 1;
-    }
-
-    if (*bp)
-        ret = 1;
-
-    return ret;
-}
-
-int cmpinst (inst_t *a, inst_t *b)
-{
-    int ret;
-
-    ret = 0;
-    if (a->op != b->op)
-        return 1;
-
-    switch (a->op) {
-        case OP_CHAR:
-            if (a->c != b->c)
-                ret = 1;
-        break;
-        case OP_CLASS:
-            if (cmpccs(a->ccs, b->ccs))
-                ret = 1;
-        break;
-        case OP_BRANCH:
-            if (a->x != b->x || a->y != b->y)
-                ret = 1;
-        break;
-        case OP_JMP:
-            if (a->x != b->x)
-                ret = 1;
-        break;
-    }
-
-    return ret;
-}
-
-int cmpexe (regexvm_t *compiled, regexvm_t *expected)
+void print_prog_str (char *str)
 {
     int i;
 
-    if (compiled->size != expected->size)
-        return 1;
+    i = 1;
 
-    for (i = 0; i < compiled->size; i++) {
-        if (cmpinst(compiled->exe[i], expected->exe[i]))
-            return 1;
+    printf("0\t");
+    while(*str) {
+        if (*str == ':')
+            printf("\n%d\t", i++);
+        else
+            printf("%c", *str);
+        ++str;
     }
-
-    return 0;
+    printf("\n");
 }
 
-int verify_regexvm_cmp (char *regex, char *expected, unsigned int len)
+void print_prog_cmp (regexvm_t *compiled)
+{
+    int i;
+    inst_t *inst;
+
+    for (i = 0; i < compiled->size; i++) {
+        inst = compiled->exe[i];
+
+        switch(inst->op) {
+            case OP_CHAR:
+                printf("%d\tl%c\n", i, inst->c);
+            break;
+            case OP_ANY:
+                printf("%d\ta\n", i);
+            break;
+            case OP_CLASS:
+                printf("%d\tc%s\n", i, inst->ccs);
+            break;
+            case OP_BRANCH:
+                printf("%d\tb%d,%d\n", i, inst->x, inst->y);
+            break;
+            case OP_JMP:
+                printf("%d\tj%d\n", i, inst->x);
+            break;
+            case OP_MATCH:
+                printf("%d\tm\n", i);
+            break;
+        }
+    }
+    printf("\n");
+}
+
+int verify_regexvm_cmp (char *expected, char *regex)
 {
     int ret;
     regexvm_t compiled;
-    regexvm_t ex;
 
-    if (str_to_prog(expected, &ex, len) != 0)
-        return 1;
-
-    printf("Testing pattern: %s\n", regex);
     if ((ret = regexvm_compile(&compiled, regex)) < 0)
         return ret;
 
-    if (cmpexe(&compiled, &ex) != 0) {
+    printf("Testing pattern: %s\n", regex);
+    if (cmpexe(expected, &compiled) != 0) {
         fprintf(stderr, "\nFail: instructions do not match expected\n");
-        fprintf(stderr, "\nexpected:\n");
-        regexvm_print(&ex);
-        fprintf(stderr, "\nactual:\n");
-        regexvm_print(&compiled);
+        printf("\nexpected:\n\n");
+        print_prog_str(expected);
+        printf("\nseen:\n\n");
+        print_prog_cmp(&compiled);
         ret = 1;
     } else {
         printf("Passed.\n");
         ret = 0;
     }
 
-    regexvm_free(&ex);
     regexvm_free(&compiled);
     return ret;
 }
@@ -287,7 +233,7 @@ int test_regexvm_compile(void)
 
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
-        ret += verify_regexvm_cmp(tests[i]->rgx, tests[i]->cmp, tests[i]->len);
+        ret += verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx);
     }
 
     return ret;
