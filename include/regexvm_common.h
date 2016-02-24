@@ -27,13 +27,13 @@
 #if (MAX_CHARC_LEN)
 #define MAXCHARCLEN           MAX_CHARC_LEN
 #else
-#define MAXCHARCLEN           512
+#define MAXCHARCLEN           256
 #endif
 
 #if (MAX_NEST_PARENS)
 #define MAXNESTPARENS         MAX_NEST_PARENS
 #else
-#define MAXNESTPARENS         512
+#define MAXNESTPARENS         64
 #endif
 
 #include <stdint.h>
