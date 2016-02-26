@@ -50,9 +50,7 @@ memcheck: debug
 	$(VALGRIND_BIN) $(VALGRIND_ARGS) ./$(TESTAPP_NAME) $(MCHK_ARGS)
 
 clean:
-	@- $(RM) $(EXE_NAME)
-	@- $(RM) $(RVM_OBJS)
-	@- $(RM) $(TEST_OBJS)
-	@- $(RM) $(TESTAPP_OBJS)
+	@- $(RM) $(EXE_NAME) $(TESTS) $(TESTAPP_NAME)
+	@- $(RM) $(RVM_OBJS) $(TEST_OBJS) $(TESTAPP_OBJS)
 
 Gdistclean: clean
