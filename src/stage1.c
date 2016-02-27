@@ -429,6 +429,40 @@ static void stage1_cleanup (context_t *cp)
     }
 }
 
+static void stage1_err_cleanup (context_t *cp)
+{
+    unsigned int i;
+
+    stack_free(cp->parens[0]);
+    for (i = 1; i <= cp->hdepth; i++) {
+        stack_free(cp->parens[i]);
+    }
+
+    stack_free(cp->prog);
+}
+
+static int context_init (context_t *cp, stack_t **ret)
+{
+    memset(cp, 0, sizeof(context_t));
+    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
+
+    *ret = create_stack();
+    cp->prog = *ret;
+    cp->parens[0] = create_stack();
+    cp->buf = cp->parens[0];
+
+    if (cp->prog == NULL || cp->parens[0] == NULL) {
+        free(cp->prog);
+        free(cp->parens[0]);
+        return RVM_EMEM;
+    }
+
+    cp->pdepth = 0;
+    cp->hdepth = 0;
+    cp->target = cp->prog;
+    return 0;
+}
+
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates an IR for stage 2. */
 int stage1 (char *input, stack_t **ret)
@@ -442,21 +476,11 @@ int stage1 (char *input, stack_t **ret)
     inst_t inst;
 
     cp = &context;
-    memset(cp, 0, sizeof(context_t));
-    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
-
-    *ret = create_stack();
-    cp->prog = *ret;
-    cp->parens[0] = create_stack();
-    cp->buf = cp->parens[0];
-
-    if (*ret == NULL || cp->parens[0] == NULL)
-        return RVM_EMEM;
-
     charc[0] = '\0';
-    cp->pdepth = 0;
-    cp->hdepth = 0;
-    cp->target = cp->prog;
+
+    if ((err = context_init(cp, ret)) < 0)
+        return err;
+
     state = STATE_START;
 
     /* get the next token */
@@ -468,14 +492,18 @@ int stage1 (char *input, stack_t **ret)
             case STATE_START:
                 /* if it's not a character class, then all the
                  * metacharacters apply-- run the main state. */
-                if ((err = stage1_main_state(cp, &state)) < 0)
+                if ((err = stage1_main_state(cp, &state)) < 0) {
+                    stage1_err_cleanup(cp);
                     return err;
+                }
 
             break;
             case STATE_CHARC:
                 /* inside character class-- run character class state */
-                if ((err = stage1_charc_state(cp, charc, &state)) < 0)
+                if ((err = stage1_charc_state(cp, charc, &state)) < 0) {
+                    stage1_err_cleanup(cp);
                     return err;
+                }
 
             break;
         }
@@ -486,10 +514,13 @@ int stage1 (char *input, stack_t **ret)
         stack_cat(cp->prog, cp->buf);
     }
 
-    if (cp->pdepth)
+    if (cp->pdepth) {
+        stage1_err_cleanup(cp);
         return RVM_EPAREN;
-    if (state == STATE_CHARC)
+    } else if (state == STATE_CHARC) {
+        stage1_err_cleanup(cp);
         return RVM_ECLASS;
+    }
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
