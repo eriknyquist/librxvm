@@ -32,8 +32,12 @@ debug: testapp
 testapp: $(RVM_OBJS) $(TESTAPP_OBJS)
 	$(CC) $(RVM_OBJS) $(TESTAPP_OBJS) -o $(TESTAPP_NAME)
 
+testbin: CFLAGS = $(TESTFLAGS)
+testbin: $(RVM_OBJS) $(TEST_OBJS)
+	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
+
 test: CFLAGS = $(TESTFLAGS)
-test: testapp $(TEST_OBJS)
+test: testapp testbin
 	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
 	./$(MEMCHECK) $(TESTAPP_NAME)
 	./$(MEMCHECK) $(TESTS)
