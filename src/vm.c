@@ -26,6 +26,8 @@
 #include <string.h>
 #include "regexvm.h"
 
+uint8_t *cp_lookup;
+
 static int ccs_match (char *ccs, char c)
 {
     while (*ccs) {
@@ -37,6 +39,16 @@ static int ccs_match (char *ccs, char c)
     return 0;
 }
 
+static void add_thread(uint8_t op, int *list, int *size, int val)
+{
+    /* if instruction is not marked as executed */
+    if (op != OP_BRANCH || !cp_lookup[val]) {
+        cp_lookup[val] = 1;             /* mark as executed */
+        list[*size] = val;              /* add the new thread */
+        ++(*size);
+    }
+}
+
 int vm (regexvm_t *compiled, char *input)
 {
     int *np;
@@ -44,7 +56,6 @@ int vm (regexvm_t *compiled, char *input)
     int *temp;
     int nsize;
     int csize;
-    uint8_t *cp_lookup;
 
     int t;
     int ii;
@@ -81,31 +92,26 @@ int vm (regexvm_t *compiled, char *input)
 
             switch (ip->op) {
                 case OP_CHAR:
-                    if (*input == ip->c)
-                        np[nsize++] = ii + 1;
+                    if (*input == ip->c) {
+                        add_thread(ip->op, np, &nsize, ii + 1);
+                    }
 
                 break;
                 case OP_ANY:
-                    np[nsize++] = ii + 1;
+                    add_thread(ip->op, np, &nsize, ii + 1);
                 break;
                 case OP_CLASS:
-                    if (ccs_match(ip->ccs, *input))
-                        np[nsize++] = ii + 1;
+                    if (ccs_match(ip->ccs, *input)) {
+                        add_thread(ip->op, np, &nsize, ii + 1);
+                    }
+
                 break;
                 case OP_BRANCH:
-                    if (!cp_lookup[ip->x]) {
-                        cp_lookup[ip->x] = 1;
-                        cp[csize++] = ip->x;
-                    }
-
-                    if (!cp_lookup[ip->y]) {
-                        cp_lookup[ip->y] = 1;
-                        cp[csize++] = ip->y;
-                    }
-
+                    add_thread(ip->op, cp, &csize, ip->x);
+                    add_thread(ip->op, cp, &csize, ip->y);
                 break;
                 case OP_JMP:
-                    cp[csize++] = ip->x;
+                    add_thread(ip->op, cp, &csize, ip->x);
                 break;
                 case OP_MATCH:
                     lastmatch = input;
