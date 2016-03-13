@@ -41,16 +41,14 @@ int vm (regexvm_t *compiled, char *input)
 {
     int *np;
     int *cp;
-    uint8_t *cp_lookup;
     int *temp;
     int nsize;
     int csize;
+    uint8_t *cp_lookup;
 
     int t;
     int ii;
     int ret;
-
-    char *sp;
     char *lastmatch;
     inst_t *ip;
 
@@ -70,7 +68,7 @@ int vm (regexvm_t *compiled, char *input)
     lastmatch = NULL;
     memset(cp_lookup, 0, compiled->size);
 
-    for (sp = input; *sp; ++sp) {
+    do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
         if (!csize)
@@ -83,7 +81,7 @@ int vm (regexvm_t *compiled, char *input)
 
             switch (ip->op) {
                 case OP_CHAR:
-                    if (*sp == ip->c)
+                    if (*input == ip->c)
                         np[nsize++] = ii + 1;
 
                 break;
@@ -91,7 +89,7 @@ int vm (regexvm_t *compiled, char *input)
                     np[nsize++] = ii + 1;
                 break;
                 case OP_CLASS:
-                    if (ccs_match(ip->ccs, *sp))
+                    if (ccs_match(ip->ccs, *input))
                         np[nsize++] = ii + 1;
                 break;
                 case OP_BRANCH:
@@ -110,7 +108,7 @@ int vm (regexvm_t *compiled, char *input)
                     cp[csize++] = ip->x;
                 break;
                 case OP_MATCH:
-                    lastmatch = sp;
+                    lastmatch = input;
                 break;
             }
 
@@ -125,35 +123,9 @@ int vm (regexvm_t *compiled, char *input)
         csize = nsize;
         nsize = 0;
         memset(cp_lookup, 0, compiled->size);
-    }
+    } while (*(input++));
 
-    for (t = 0; t < csize; t++) {
-        ii = cp[t];
-        ip = compiled->exe[ii];
-
-        switch (ip->op) {
-            case OP_BRANCH:
-                if (!cp_lookup[ip->x]) {
-                    cp_lookup[ip->x] = 1;
-                    cp[csize++] = ip->x;
-                }
-
-                if (!cp_lookup[ip->y]) {
-                    cp_lookup[ip->y] = 1;
-                    cp[csize++] = ip->y;
-                }
-
-            break;
-            case OP_JMP:
-                cp[csize++] = ip->x;
-            break;
-            case OP_MATCH:
-                lastmatch = sp;
-            break;
-        }
-    }
-
-    ret = (lastmatch == NULL || lastmatch < sp) ? 0 : 1;
+    ret = (lastmatch == NULL || lastmatch < (input - 1)) ? 0 : 1;
 
 cleanup:
     if (cp)
