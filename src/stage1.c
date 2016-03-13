@@ -39,69 +39,6 @@ extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
 
-#if (DEBUG)
-/* pretty-print an instruction (debug) */
-static void print_inst (inst_t *inst, int num)
-{
-    unsigned int i;
-    size_t n;
-
-    switch (inst->op) {
-        case OP_CHAR:
-            printf("%d\tchar %c", num, inst->c);
-        break;
-
-        case OP_ANY:
-            printf("%d\tany", num);
-        break;
-
-        case OP_CLASS:
-            n = strlen(inst->ccs);
-            printf("%d\tclass ", num);
-            for (i = 0; i < n; i++)
-                printf("%c", inst->ccs[i]);
-        break;
-
-        case OP_BRANCH:
-            printf("%d\tbranch %d %d", num, num + inst->x, num + inst->y);
-        break;
-
-        case OP_JMP:
-            printf("%d\tjmp %d", num, num + inst->x);
-        break;
-
-        case OP_MATCH:
-            printf("%d\tmatch", num);
-        break;
-    }
-}
-
-/* pretty-print a list of instructions (debug) */
-void print_prog (stack_t *stack)
-{
-    int num = 0;
-    stackitem_t *item;
-    inst_t *inst;
-
-    if (stack == NULL) return;
-
-    item = stack->tail;
-    while (item != NULL) {
-        inst = item->inst;
-        print_inst(inst, num++);
-        if (item == stack->tail) {
-            printf(" (tail)\n");
-        } else if (item == stack->head) {
-            printf(" (head)\n");
-        } else {
-            printf("\n");
-        }
-
-        item = item->previous;
-    }
-}
-#endif /* DEBUG */
-
 /* set_op functions:
  * a bunch of convenience functions for populating
  * inst_t types for all instructions */
@@ -532,8 +469,5 @@ int stage1 (char *input, stack_t **ret)
     stack_add_head(cp->prog, &inst);
 
     stage1_cleanup(cp);
-#if DEBUG
-    print_prog(cp->prog);
-#endif
     return 0;
 }

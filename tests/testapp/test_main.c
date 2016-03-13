@@ -9,6 +9,48 @@ char *test_rgx =
 "ww|(xx)aa(yy)?(bb*[abC-Z]|\\.|\\*|(.\\\\cc+(dd?[+*.?])*(ab*)?)+)?";
 char *test_input = "xxaayy@\\ccccccccccccccccccccccdd?d?dd?d?d*d+d?ab";
 
+void regexvm_print_err (int err)
+{
+    const char *msg;
+
+    switch (err) {
+        case RVM_BADOP:
+            msg = "Operator used incorrectly";
+        break;
+        case RVM_BADCLASS:
+            msg = "Unexpected character class closing character";
+        break;
+        case RVM_BADPAREN:
+            msg = "Unexpected parenthesis group closing character";
+        break;
+        case RVM_EPAREN:
+            msg = "Unterminated parenthesis group";
+        break;
+        case RVM_ECLASS:
+            msg = "Unterminated character class";
+        break;
+        case RVM_ETRAIL:
+            msg = "Trailing escape character";
+        break;
+        case RVM_EMEM:
+            msg = "Failed to allocate memory";
+        break;
+        case RVM_ENEST:
+            msg = "Too many nested parenthesis groups";
+        break;
+        case RVM_ECLASSLEN:
+            msg = "Too many elements in character class";
+        break;
+        case RVM_EINVAL:
+            msg = "Unrecognised symbol";
+        break;
+        default:
+            msg = "Unrecognised error code";
+    }
+
+    printf("Error %d: %s\n", err, msg);
+}
+
 int main (int argc, char *argv[])
 {
     size_t size;
@@ -27,12 +69,11 @@ int main (int argc, char *argv[])
     }
 
     if ((ret = regexvm_compile(&compiled, rgx)) < 0) {
-#if (DEBUG)
         regexvm_print_err(ret);
-#endif
         exit(ret);
     }
 
+    regexvm_print(&compiled);
     size = sizeof(regexvm_t) + (sizeof(inst_t) * compiled.size);
     printf("inst_t size: %lu\ncompiled size: %lu\n", sizeof(inst_t), size);
 
