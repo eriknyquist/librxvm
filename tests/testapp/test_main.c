@@ -57,6 +57,7 @@ int main (int argc, char *argv[])
     int ret;
     regexvm_t compiled;
 
+    ret = 0;
     if (argc == 1) {
         rgx = test_rgx;
         input = test_input;
@@ -81,7 +82,8 @@ int main (int argc, char *argv[])
         printf("Match!\n");
     } else {
         printf("No match.\n");
+        ret = 1;
     }
     regexvm_free(&compiled);
-    return 0;
+    return ret;
 }
