@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "regexvm.h"
 
 int ccs_match (char *ccs, char c)
@@ -38,30 +39,43 @@ int ccs_match (char *ccs, char c)
 
 int vm (regexvm_t *compiled, char *input)
 {
-    unsigned int *np;
-    unsigned int *cp;
-    unsigned int *temp;
-    unsigned int nsize;
-    unsigned int csize;
-    unsigned int t;
-    unsigned int ii;
+    int *np;
+    int *cp;
+    uint8_t *cp_lookup;
+    int *temp;
+    int nsize;
+    int csize;
+
+    int t;
+    int ii;
     int ret;
+
+    char *sp;
     char *lastmatch;
     inst_t *ip;
-    char *sp;
 
-    if ((cp = malloc(sizeof(int) * compiled->size)) == NULL)
-        return RVM_EMEM;
+    cp = malloc(sizeof(int) * compiled->size);
+    np = malloc(sizeof(int) * compiled->size);
+    cp_lookup = malloc(sizeof(uint8_t) * compiled->size);
 
-    if ((np = malloc(sizeof(int) * compiled->size)) == NULL)
-        return RVM_EMEM;
+    if (cp == NULL || np == NULL || cp_lookup == NULL) {
+        ret = RVM_EMEM;
+        goto cleanup;
+    }
 
     nsize = 0;
     csize = 0;
+    ret = 0;
     cp[csize++] = 0;
     lastmatch = NULL;
+    memset(cp_lookup, 0, compiled->size);
 
     for (sp = input; *sp; ++sp) {
+        /* if no threads are queued for this input character,
+         * then the expression cannot match, so exit */
+        if (!csize)
+            goto cleanup;
+
         /* run all the threads for this input character */
         for (t = 0; t < csize; ++t) {
             ii = cp[t];             /* index of current instruction */
@@ -81,8 +95,16 @@ int vm (regexvm_t *compiled, char *input)
                         np[nsize++] = ii + 1;
                 break;
                 case OP_BRANCH:
-                    cp[csize++] = ip->y;
-                    cp[csize++] = ip->x;
+                    if (!cp_lookup[ip->x]) {
+                        cp_lookup[ip->x] = 1;
+                        cp[csize++] = ip->x;
+                    }
+
+                    if (!cp_lookup[ip->y]) {
+                        cp_lookup[ip->y] = 1;
+                        cp[csize++] = ip->y;
+                    }
+
                 break;
                 case OP_JMP:
                     cp[csize++] = ip->x;
@@ -94,14 +116,6 @@ int vm (regexvm_t *compiled, char *input)
 
         }
 
-        /* if no threads are queued for the next input
-         * character, then the expression cannot match, so exit */
-        if (!nsize) {
-            free(cp);
-            free(np);
-            return 0;
-        }
-
         /* Threads saved for the next input character
          * are now threads for the current character.
          * Threads for the next character are empty again.*/
@@ -110,6 +124,7 @@ int vm (regexvm_t *compiled, char *input)
         np = temp;
         csize = nsize;
         nsize = 0;
+        memset(cp_lookup, 0, compiled->size);
     }
 
     for (t = 0; t < csize; t++) {
@@ -118,8 +133,16 @@ int vm (regexvm_t *compiled, char *input)
 
         switch (ip->op) {
             case OP_BRANCH:
-                cp[csize++] = ip->y;
-                cp[csize++] = ip->x;
+                if (!cp_lookup[ip->x]) {
+                    cp_lookup[ip->x] = 1;
+                    cp[csize++] = ip->x;
+                }
+
+                if (!cp_lookup[ip->y]) {
+                    cp_lookup[ip->y] = 1;
+                    cp[csize++] = ip->y;
+                }
+
             break;
             case OP_JMP:
                 cp[csize++] = ip->x;
@@ -131,7 +154,14 @@ int vm (regexvm_t *compiled, char *input)
     }
 
     ret = (lastmatch == NULL || lastmatch < sp) ? 0 : 1;
-    free(cp);
-    free(np);
+
+cleanup:
+    if (cp)
+        free(cp);
+    if (np)
+        free(np);
+    if (cp_lookup)
+        free(cp_lookup);
+
     return ret;
 }

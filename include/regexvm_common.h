@@ -68,8 +68,8 @@ enum {
 /* instruction */
 struct inst {
     char *ccs;
-    short x;
-    short y;
+    int x;
+    int y;
     char c;
     uint8_t op;
 };
