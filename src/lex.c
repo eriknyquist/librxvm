@@ -47,7 +47,7 @@ static inline int isprintable (char x)
     return (x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ? 1 : 0;
 }
 
-int simple_transition (int literal, char **input, int tok, int *ret)
+static int simple_transition (int literal, char **input, int tok, int *ret)
 {
     int state;
 

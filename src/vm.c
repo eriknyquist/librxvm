@@ -26,7 +26,7 @@
 #include <string.h>
 #include "regexvm.h"
 
-int ccs_match (char *ccs, char c)
+static int ccs_match (char *ccs, char c)
 {
     while (*ccs) {
         if (*ccs == c)

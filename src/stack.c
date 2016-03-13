@@ -28,22 +28,7 @@
 #include <sys/stat.h>
 #include "regexvm_common.h"
 
-stack_t *create_stack(void)
-{
-    stack_t *newstack;
-
-    if ((newstack = malloc(sizeof(stack_t))) == NULL) {
-        return NULL;
-    }
-
-    newstack->head = NULL;
-    newstack->tail = NULL;
-    newstack->dangling_alt = NULL;
-    newstack->size = 0;
-    return newstack;
-}
-
-stackitem_t *create_item(inst_t *inst)
+static stackitem_t *create_item(inst_t *inst)
 {
     stackitem_t *item;
     size_t dsize;
@@ -72,6 +57,21 @@ stackitem_t *create_item(inst_t *inst)
     item->next = NULL;
     item->previous = NULL;
     return item;
+}
+
+stack_t *create_stack(void)
+{
+    stack_t *newstack;
+
+    if ((newstack = malloc(sizeof(stack_t))) == NULL) {
+        return NULL;
+    }
+
+    newstack->head = NULL;
+    newstack->tail = NULL;
+    newstack->dangling_alt = NULL;
+    newstack->size = 0;
+    return newstack;
 }
 
 void stack_point_new_head(stack_t *stack, stackitem_t *new)
