@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "test_regexvm_compile.h"
+#include "test_regexvm.h"
 
 int main (void)
 {
+    const char *msg;
 	int ret;
 
-    if ((ret = test_regexvm_compile()) == 0) {
-        printf("Test run passed.\n");
-    } else {
-        printf("Test run failed.\n");
-    }
+    ret = 0;
+    ret += test_regexvm_compile();
+    ret += test_regexvm();
 
+    msg = (ret == 0) ? "passed" : "failed";
+    printf("Test run %s\n", msg);
 	return ret;
 }
