@@ -232,7 +232,6 @@ int verify_regexvm_cmp (char *expected, char *regex)
     if ((ret = regexvm_compile(&compiled, regex)) < 0)
         return ret;
 
-    printf("Testing pattern: %s\n", regex);
     if ((err = cmpexe(expected, &compiled)) != 0) {
         fprintf(stderr, "\nFail: instructions do not match expected\n");
         printf("\nexpected:\n\n");
@@ -241,7 +240,6 @@ int verify_regexvm_cmp (char *expected, char *regex)
         print_prog_cmp(&compiled, err);
         ret = 1;
     } else {
-        printf("Passed.\n");
         ret = 0;
     }
 
@@ -257,6 +255,7 @@ int test_regexvm_compile(void)
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
         ret += verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx);
+        if (!ret) printf("%s: passed %s\n", __func__, tests[i]->rgx);
     }
 
     return ret;
