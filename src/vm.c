@@ -26,9 +26,8 @@
 #include <string.h>
 #include "regexvm.h"
 
-#define add_thread(list, size, val) list[*size] = val; ++(*size)
-
 uint8_t *cp_lookup;
+uint8_t *np_lookup;
 
 static int ccs_match (char *ccs, char c)
 {
@@ -41,11 +40,20 @@ static int ccs_match (char *ccs, char c)
     return 0;
 }
 
+static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
+{
+    if (!lookup[val]) {
+        lookup[val] = 1;
+        list[(*lsize)++] = val;
+    }
+}
+
 int vm (regexvm_t *compiled, char *input)
 {
     int *np;
     int *cp;
-    int *temp;
+    int *dtemp;
+    uint8_t *ltemp;
     int nsize;
     int csize;
 
@@ -55,11 +63,12 @@ int vm (regexvm_t *compiled, char *input)
     char *lastmatch;
     inst_t *ip;
 
-    cp = malloc(sizeof(int) * compiled->size);
-    np = malloc(sizeof(int) * compiled->size);
-    cp_lookup = malloc(sizeof(uint8_t) * compiled->size);
+    cp = malloc(compiled->size * sizeof(int));
+    np = malloc(compiled->size * sizeof(int));
+    cp_lookup = malloc(compiled->size);
+    np_lookup = malloc(compiled->size);
 
-    if (cp == NULL || np == NULL || cp_lookup == NULL) {
+    if (cp == NULL || np == NULL || cp_lookup == NULL || np_lookup == NULL) {
         ret = RVM_EMEM;
         goto cleanup;
     }
@@ -67,14 +76,15 @@ int vm (regexvm_t *compiled, char *input)
     nsize = 0;
     csize = 0;
     ret = 0;
-    cp[csize++] = 0;
     lastmatch = NULL;
     memset(cp_lookup, 0, compiled->size);
+    memset(np_lookup, 0, compiled->size);
 
+    add_thread(cp, cp_lookup, &csize, 0);
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
-        if (!csize) {
+        if (input && !csize) {
             goto cleanup;
         }
 
@@ -86,53 +96,51 @@ int vm (regexvm_t *compiled, char *input)
             switch (ip->op) {
                 case OP_CHAR:
                     if (*input == ip->c) {
-                        add_thread(np, &nsize, ii + 1);
+                        add_thread(np, np_lookup, &nsize, ii + 1);
                     }
 
                 break;
                 case OP_ANY:
-                    add_thread(np, &nsize, ii + 1);
+                    add_thread(np, np_lookup, &nsize, ii + 1);
                 break;
                 case OP_CLASS:
                     if (ccs_match(ip->ccs, *input)) {
-                        add_thread(np, &nsize, ii + 1);
+                        add_thread(np, np_lookup, &nsize, ii + 1);
                     }
 
                 break;
                 case OP_BRANCH:
-                    if (!cp_lookup[ip->x]) {
-                        cp_lookup[ip->x] = 1;
-                        add_thread(cp, &csize, ip->x);
-                    }
-
-                    if (!cp_lookup[ip->y]) {
-                        cp_lookup[ip->y] = 1;
-                        add_thread(cp, &csize, ip->y);
-                    }
-
+                    add_thread(cp, cp_lookup, &csize, ip->x);
+                    add_thread(cp, cp_lookup, &csize, ip->y);
                 break;
                 case OP_JMP:
-                    add_thread(cp, &csize, ip->x);
+                    add_thread(cp, cp_lookup, &csize, ip->x);
                 break;
                 case OP_MATCH:
                     lastmatch = input;
                 break;
             }
-
         }
 
         /* Threads saved for the next input character
          * are now threads for the current character.
          * Threads for the next character are empty again.*/
-        temp = cp;
+        dtemp = cp;
         cp = np;
-        np = temp;
+        np = dtemp;
         csize = nsize;
         nsize = 0;
-        memset(cp_lookup, 0, compiled->size);
+
+        /* swap lookup tables */
+        ltemp = cp_lookup;
+        cp_lookup = np_lookup;
+        np_lookup = ltemp;
+
+        memset(np_lookup, 0, compiled->size);
+
     } while (*(input++));
 
-    ret = (lastmatch == NULL || lastmatch < (input - 1)) ? 0 : 1;
+    ret = (lastmatch < (input - 1) || lastmatch == NULL) ? 0 : 1;
 
 cleanup:
     if (cp)
@@ -141,6 +149,8 @@ cleanup:
         free(np);
     if (cp_lookup)
         free(cp_lookup);
+    if (np_lookup)
+        free(np_lookup);
 
     return ret;
 }
