@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUMTESTS             5
+#define NUMTESTS             9
 #define NUMVARIATIONS        5
 
 char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
@@ -15,6 +15,10 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "q", "qq", "qqq", "qqqqqqqqqqqqqqqqqqqqqqqqqq",
         "qd", "pq", "x", "qqqqqqqqqqqqqqq7qq", NULL},
 
+    {"(c?)+",
+        "", "c", "cc", "ccc", "cccccccccccccccccccccccc",
+        "ccccccccccccccccd", "cd", "d", NULL, NULL},
+
     {"[A-Za-z]+",
         "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxkmskxmskxmsuaaGIC",
         "AlpLPSLPDPLdDUVXVIHEINEBD",
@@ -24,9 +28,21 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "abcde", "bcde", "cde", "bbcdecde", "bbbbbbbbbbbcdecdecde",
         "aabcde", "abcd", "ab", "a", "cdec"},
 
-    {"(c?)+",
-        "", "c", "cc", "ccc", "cccccccccccccccccccccccc",
-        "ccccccccccccccccd", "cd", "d", NULL, NULL}
+    {"a*|b+",
+        "a", "aaaaaaaaaa", "", "b", "bbbbbb",
+        "ab", "aaaaaaaaaaaaab", "bbbbbbbbba", "ba"},
+
+    {"ab|xyz|q|xx",
+        "ab", "xyz", "q", "xx", NULL,
+        "abxyzqxx", "abb", "xyza", "xxq", ""},
+
+    {"a(b(c(d(e(f(g)*)*)*)*)*)*",
+        "a", "abcdefg", "abcccdddefffggggggggggg", "abccccc", "abbbbbbbbb",
+        "abcdefggggggggga", "aa", "accccccccccch", " ", "."},
+
+    {"a*[?*]+|x(yY|Y&(tt*[.+]?|(qq)+)*)",
+     "aaa?*???", "xyY", "xY&tqqtt.qqqqtttt.", "xY&tttt+tttqqqqt.qq", "*",
+     "a", "xyYY", "xY&?", "xY&tt++", "xY&ttt.qqq"}
 };
 
 int test_regexvm(void)
