@@ -1,5 +1,7 @@
 TESTS := regexvm_test
-TESTAPP_NAME := regexvm
+NAME := regexvm
+LIB := lib$(NAME).a
+TESTAPP := $(NAME)
 TESTAPP_SRCS := tests/testapp/test_main.c
 TESTAPP_OBJS := ${TESTAPP_SRCS:.c=.o}
 RVM_C_SRCS := $(wildcard src/*.c)
@@ -18,33 +20,38 @@ MAX_CHARC_LEN=$(MAX_CHARC_LEN) \
 MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 
 MACROS := $(addprefix -D , $(OPTS))
-CFLAGS := -Wall -pedantic -I$(RVM_INC) $(MACROS)
-TESTFLAGS := -Wall -I$(RVM_INC) -I$(TEST_INC) $(MACROS) -O0 -g
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -D DEBUG -g -O0
+CFLAGS := -Wall -Wpedantic -I$(RVM_INC) $(MACROS)
+STATIC := -static -L. -l$(NAME)
+TESTFLAGS := \
+-Wall -I$(RVM_INC) -I$(TEST_INC) $(MACROS) -O0 -g
 
 all: CFLAGS += $(RELEASE_FLAGS)
-all: testapp
+all: lib
 
 debug: CFLAGS += $(DEBUG_FLAGS)
-debug: testapp
+debug: lib
 
-testapp: $(RVM_OBJS) $(TESTAPP_OBJS)
-	$(CC) $(RVM_OBJS) $(TESTAPP_OBJS) -o $(TESTAPP_NAME)
+lib: $(RVM_OBJS)
+	$(AR) rcs $(LIB) $(RVM_OBJS)
 
-testbin: CFLAGS = $(TESTFLAGS)
-testbin: $(RVM_OBJS) $(TEST_OBJS)
-	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
+testbin: CFLAGS = $(STATIC) $(TESTFLAGS)
+testbin: $(TEST_OBJS)
+	$(CC) $(TEST_OBJS) $(STATIC) -o $(TESTS)
 
-test: CFLAGS = $(TESTFLAGS)
-test: testapp testbin
-	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
-	./$(MEMCHECK) $(TESTAPP_NAME)
-	./$(MEMCHECK) $(TESTS)
+test: all testbin
 	./$(TESTS)
 
+memcheck: CFLAGS = $(TESTFLAGS)
+memcheck: $(RVM_OBJS) $(TEST_OBJS) $(TESTAPP_OBJS)
+	$(CC) $(RVM_OBJS) $(TESTAPP_OBJS) -o $(TESTAPP)
+	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
+	./$(MEMCHECK) $(TESTAPP)
+	./$(MEMCHECK) $(TESTS)
+
 clean:
-	@- $(RM) $(EXE_NAME) $(TESTS) $(TESTAPP_NAME)
+	@- $(RM) $(EXE_NAME) $(TESTS) $(TESTAPP) $(LIB)
 	@- $(RM) $(RVM_OBJS) $(TEST_OBJS) $(TESTAPP_OBJS)
 
 distclean: clean
