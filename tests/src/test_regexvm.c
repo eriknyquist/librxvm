@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUMTESTS             3
+#define NUMTESTS             5
 #define NUMVARIATIONS        5
 
-const char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
+char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
 {
     {"abc",
         "abc", NULL, NULL, NULL, NULL,
@@ -15,6 +15,15 @@ const char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "q", "qq", "qqq", "qqqqqqqqqqqqqqqqqqqqqqqqqq",
         "qd", "pq", "x", "qqqqqqqqqqqqqqq7qq", NULL},
 
+    {"[A-Za-z]+",
+        "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxkmskxmskxmsuaaGIC",
+        "AlpLPSLPDPLdDUVXVIHEINEBD",
+        "", "0", "0490", "$", "}"},
+
+    {"a?b*(cde)+",
+        "abcde", "bcde", "cde", "bbcdecde", "bbbbbbbbbbbcdecdecde",
+        "aabcde", "abcd", "ab", "a", "cdec"},
+
     {"(c?)+",
         "", "c", "cc", "ccc", "cccccccccccccccccccccccc",
         "ccccccccccccccccd", "cd", "d", NULL, NULL}
@@ -23,11 +32,15 @@ const char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
 int test_regexvm(void)
 {
     regexvm_t compiled;
+    char *msg;
     int ret;
+    int total_err;
+    int test_err;
     int i;
     int j;
 
-    ret = 0;
+    total_err = 0;
+    test_err = 0;
     for (i = 0; i < NUMTESTS; ++i) {
         if ((ret = regexvm_compile(&compiled, tests[i][0])) < 0) {
             fprintf(stderr, "Error: compilation failed (%d): %s\n",
@@ -41,7 +54,7 @@ int test_regexvm(void)
                 fprintf(stderr, "Error: matching input %s against expression "
                         "%s falsely reports non-matching input\n", tests[i][j],
                         tests[i][0]);
-                ++ret;
+                ++test_err;
             }
         }
 
@@ -51,13 +64,22 @@ int test_regexvm(void)
                 fprintf(stderr, "Error: non-matching input %s against "
                         "expression %s falsely reports matching input\n",
                         tests[i][j], tests[i][0]);
-                ++ret;
+                ++test_err;
             }
         }
 
         regexvm_free(&compiled);
-        printf("%s: passed %s\n", __func__, tests[i][0]);
+
+        if (test_err) {
+            msg = "failed";
+            total_err += test_err;
+            test_err = 0;
+        } else {
+            msg = "passed";
+        }
+
+        printf("%s: %s %s\n", __func__, msg, tests[i][0]);
     }
 
-    return ret;
+    return total_err;
 }

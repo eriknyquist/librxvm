@@ -84,6 +84,7 @@ int main (int argc, char *argv[])
         printf("No match.\n");
         ret = 1;
     }
+
     regexvm_free(&compiled);
     return ret;
 }
