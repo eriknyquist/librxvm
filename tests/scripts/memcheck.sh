@@ -16,4 +16,4 @@ then
 fi
 
 $VBIN -v --leak-check=full --show-leak-kinds=all --track-origins=yes \
---leak-check-heuristics=all ./"$@"
+--leak-check-heuristics=all --error-exitcode=1 ./"$@"
