@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUMTESTS             9
+#define NUMTESTS             10
 #define NUMVARIATIONS        5
 
 char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
@@ -42,7 +42,12 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
 
     {"a*[?*]+|x(yY|Y&(tt*[.+]?|(qq)+)*)",
      "aaa?*???", "xyY", "xY&tqqtt.qqqqtttt.", "xY&tttt+tttqqqqt.qq", "*",
-     "a", "xyYY", "xY&?", "xY&tt++", "xY&ttt.qqq"}
+     "a", "xyYY", "xY&?", "xY&tt++", "xY&ttt.qqq"},
+
+    {"qwerty(\\*+\\+*[*?.+])*",
+        "qwerty*.*?", "qwerty******+.*?*?*?*?*?", "qwerty", "qwerty****+++++++++++",
+        "qwerty***************************************",
+        "qwert", "qwerty+", "qwerty*+..", "qwerty*?+", "qwertyy"}
 };
 
 int test_regexvm(void)
