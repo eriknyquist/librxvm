@@ -63,15 +63,21 @@ int vm (regexvm_t *compiled, char *input)
     char *lastmatch;
     inst_t *ip;
 
-    cp = malloc(compiled->size * sizeof(int));
-    np = malloc(compiled->size * sizeof(int));
-    cp_lookup = malloc(compiled->size);
-    np_lookup = malloc(compiled->size);
+    cp = NULL;
+    np = NULL;
 
-    if (cp == NULL || np == NULL || cp_lookup == NULL || np_lookup == NULL) {
-        ret = RVM_EMEM;
+    ret = RVM_EMEM;
+    if ((cp = malloc(compiled->size * sizeof(int))) == NULL)
         goto cleanup;
-    }
+
+    if ((np = malloc(compiled->size * sizeof(int))) == NULL)
+        goto cleanup;
+
+    if ((cp_lookup = malloc(compiled->size)) == NULL)
+        goto cleanup;
+
+    if ((np_lookup = malloc(compiled->size)) == NULL)
+        goto cleanup;
 
     nsize = 0;
     csize = 0;
@@ -140,7 +146,8 @@ int vm (regexvm_t *compiled, char *input)
 
     } while (*(input++));
 
-    ret = (lastmatch < (input - 1) || lastmatch == NULL) ? 0 : 1;
+    if (lastmatch == (input - 1))
+        ret = 1;
 
 cleanup:
     if (cp)
