@@ -46,7 +46,7 @@ typedef struct context context_t;
 
 /*  one node in a list */
 struct stackitem {
-    inst_t *inst;
+    void *data;
     stackitem_t *next;
     stackitem_t *previous;
 };

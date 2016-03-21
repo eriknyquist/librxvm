@@ -92,6 +92,42 @@ static void set_op_match (inst_t *inst)
     inst->x = inst->y = 0;
 }
 
+static inst_t *create_inst (inst_t *inst)
+{
+    size_t dsize;
+    inst_t *new;
+
+    if ((new = malloc(sizeof(inst_t))) == NULL)
+        return NULL;
+
+    memset(new, 0, sizeof(inst_t));
+
+    new->op = inst->op;
+    new->c = inst->c;
+    new->x = inst->x;
+    new->y = inst->y;
+
+    if (inst->ccs != NULL) {
+        dsize = (sizeof(char) * strlen(inst->ccs)) + 1;
+        if ((new->ccs = malloc(dsize)) == NULL)
+            return NULL;
+
+        strncpy(new->ccs, inst->ccs, dsize);
+    }
+
+    return new;
+}
+
+static stackitem_t *stack_add_inst_head (stack_t *stack, inst_t *inst)
+{
+    return stack_add_head(stack, (void *) create_inst(inst));
+}
+
+static stackitem_t *stack_add_inst_tail (stack_t *stack, inst_t *inst)
+{
+    return stack_add_tail(stack, (void *) create_inst(inst));
+}
+
 /* stack_cat_from_item: appends items from a stack, starting from
  * stack item 'i', until stack item 'stop' is reached, onto stack1.*/
 static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
@@ -111,11 +147,13 @@ static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
  * token is seen, or 3) the end of the input string is reached. */
 static void attach_dangling_alt (context_t *cp)
 {
+    inst_t *inst;
+
     if (cp->target->dangling_alt == NULL) {
         return;
     } else {
-        cp->target->dangling_alt->inst->x =
-            (cp->target->size - cp->target->dsize) + 1;
+        inst = (inst_t *) cp->target->dangling_alt->data;
+        inst->x = (cp->target->size - cp->target->dsize) + 1;
 
         cp->target->dangling_alt = NULL;
     }
@@ -172,7 +210,7 @@ static int process_op (context_t *cp)
             set_op_branch(&inst, -(size), 1);
 
             stack_cat_from_item(cp->target, cp->buf->head, i);
-            if (stack_add_head(cp->target, &inst) == NULL)
+            if (stack_add_inst_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
         break;
         case ZERO:
@@ -180,10 +218,10 @@ static int process_op (context_t *cp)
              * y = current position PLUS 1 */
             set_op_branch(&inst, size + 2, 1);
 
-            x = stack_add_head(cp->target, &inst);
+            x = stack_add_inst_head(cp->target, &inst);
             stack_cat_from_item(cp->target, cp->buf->head, i);
             set_op_branch(&inst, 1, -(size));
-            y = stack_add_head(cp->target, &inst);
+            y = stack_add_inst_head(cp->target, &inst);
 
             if (x == NULL || y == NULL)
                 return RVM_EMEM;
@@ -193,7 +231,7 @@ static int process_op (context_t *cp)
              * y = current position PLUS size of operand buf PLUS 1 */
             set_op_branch(&inst, 1, size + 1);
 
-            if (stack_add_head(cp->target, &inst) == NULL)
+            if (stack_add_inst_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
 
             stack_cat_from_item(cp->target, cp->buf->head, i);
@@ -208,9 +246,9 @@ static int process_op (context_t *cp)
              * y = current position PLUS size of target buf PLUS 2 */
             set_op_branch(&inst, 1, cp->target->size + 2);
 
-            x = stack_add_tail(cp->target, &inst);
+            x = stack_add_inst_tail(cp->target, &inst);
             set_op_jmp(&inst, 0);
-            cp->target->dangling_alt = stack_add_head(cp->target, &inst);
+            cp->target->dangling_alt = stack_add_inst_head(cp->target, &inst);
             cp->target->dsize = cp->target->size;
 
             if (x == NULL || cp->target->dangling_alt == NULL)
@@ -275,11 +313,11 @@ static int stage1_main_state(context_t *cp, int *state)
 
     if (cp->tok == LITERAL) {
         set_op_char(&inst, *lp1);
-        cp->operand = stack_add_head(cp->buf, &inst);
+        cp->operand = stack_add_inst_head(cp->buf, &inst);
 
     } else if (cp->tok == ANY) {
         set_op_any(&inst);
-        cp->operand = stack_add_head(cp->buf, &inst);
+        cp->operand = stack_add_inst_head(cp->buf, &inst);
 
     } else if (cp->tok == CHARC_OPEN) {
         *state = STATE_CHARC;
@@ -345,7 +383,7 @@ static int stage1_charc_state(context_t *cp, char charc[], int *state)
         charc[cp->clen] = '\0';
         set_op_class(&inst, charc);
 
-        cp->operand = stack_add_head(cp->parens[0], &inst);
+        cp->operand = stack_add_inst_head(cp->parens[0], &inst);
         cp->clen = 0;
         charc[0] = '\0';
         *state = STATE_START;
@@ -366,16 +404,29 @@ static void stage1_cleanup (context_t *cp)
     }
 }
 
+static void inst_stack_cleanup (void *data)
+{
+    inst_t *inst;
+
+    inst = (inst_t *) data;
+
+    if (inst->ccs != NULL)
+        free(inst->ccs);
+
+    if (inst != NULL)
+        free(inst);
+}
+
 static void stage1_err_cleanup (context_t *cp)
 {
     unsigned int i;
 
-    stack_free(cp->parens[0]);
+    stack_free(cp->parens[0], inst_stack_cleanup);
     for (i = 1; i <= cp->hdepth; i++) {
-        stack_free(cp->parens[i]);
+        stack_free(cp->parens[i], inst_stack_cleanup);
     }
 
-    stack_free(cp->prog);
+    stack_free(cp->prog, inst_stack_cleanup);
 }
 
 static int context_init (context_t *cp, stack_t **ret)
@@ -466,7 +517,7 @@ int stage1 (char *input, stack_t **ret)
 
     /* Add the match instruction */
     set_op_match(&inst);
-    stack_add_head(cp->prog, &inst);
+    stack_add_inst_head(cp->prog, &inst);
 
     stage1_cleanup(cp);
     return 0;
