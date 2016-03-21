@@ -132,8 +132,8 @@ static stackitem_t *stack_add_inst_tail (stack_t *stack, inst_t *inst)
 
 /* stack_cat_from_item: append items from a stack, starting from
  * stack item 'i', until stack item 'stop' is reached, onto stack1. */
-static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
-                                stackitem_t *i)
+static void stack_cat_from_item (stack_t *stack1, stackitem_t *stop,
+                                 stackitem_t *i)
 {
     while (1) {
         stack_point_new_head(stack1, i);
@@ -292,7 +292,7 @@ static int expand_char_range (char charc[], unsigned int *len)
 /* stage1_main_state: main logic for adding incoming literals to a stack
  * (multiple stacks, if parenthesis groups are used) so that process_op()
  * can operate on them, should any operators be seen. */
-static int stage1_main_state(context_t *cp, int *state)
+static int stage1_main_state (context_t *cp, int *state)
 {
     int err;
     inst_t inst;
@@ -370,7 +370,7 @@ static int stage1_main_state(context_t *cp, int *state)
  * "[" is seen, consuming tokens until the closing character "]" is seen.
  * Generates a single "class" instruction which is added to the shared
  * buffer parens[0]. */
-static int stage1_charc_state(context_t *cp, char charc[], int *state)
+static int stage1_charc_state (context_t *cp, char charc[], int *state)
 {
     int err;
     inst_t inst;

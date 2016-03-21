@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include "regexvm_common.h"
 
-static stackitem_t *create_item(void *data)
+static stackitem_t *create_item (void *data)
 {
     stackitem_t *item;
 
@@ -41,7 +41,7 @@ static stackitem_t *create_item(void *data)
     return item;
 }
 
-stack_t *create_stack(void)
+stack_t *create_stack (void)
 {
     stack_t *newstack;
 
