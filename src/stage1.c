@@ -92,6 +92,8 @@ static void set_op_match (inst_t *inst)
     inst->x = inst->y = 0;
 }
 
+/* create_inst: allocate space for an inst_t, populate it
+   with the data in 'inst' and return a pointer to it */
 static inst_t *create_inst (inst_t *inst)
 {
     size_t dsize;
@@ -128,8 +130,8 @@ static stackitem_t *stack_add_inst_tail (stack_t *stack, inst_t *inst)
     return stack_add_tail(stack, (void *) create_inst(inst));
 }
 
-/* stack_cat_from_item: appends items from a stack, starting from
- * stack item 'i', until stack item 'stop' is reached, onto stack1.*/
+/* stack_cat_from_item: append items from a stack, starting from
+ * stack item 'i', until stack item 'stop' is reached, onto stack1. */
 static void stack_cat_from_item(stack_t *stack1, stackitem_t *stop,
                                 stackitem_t *i)
 {
@@ -168,9 +170,9 @@ static void stack_reset (stack_t *stack)
     }
 }
 
-/* process_op: processes operator 'tok' against a buffer of
- * literals 'buf', where the first operand is 'operand' and the
- * instructions generated are appended to 'target' */
+/* process_op: process operator 'tok' against a buffer of
+ * literals 'buf', where the first operand is 'operand', and
+ * append the generated instructions to 'target' */
 static int process_op (context_t *cp)
 {
     stackitem_t *i;
