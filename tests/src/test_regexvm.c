@@ -12,24 +12,24 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "ab", "", "abcc", "abcd", "dabc"},
 
     {"q*",
-        "", "q", "qq", "qqq", "qqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "", "q", "qq", "qqqqqq", "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
         "qd", "pq", "x", "qqqqqqqqqqqqqqq7qq", NULL},
 
     {"(c?)+",
-        "", "c", "cc", "ccc", "cccccccccccccccccccccccc",
+        "", "c", "cc", "ccc", "cccccccccccccccccccccccccccccccccccccccccccccc",
         "ccccccccccccccccd", "cd", "d", NULL, NULL},
 
     {"[A-Za-z]+",
-        "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxkmskxmskxmsuaaGIC",
-        "AlpLPSLPDPLdDUVXVIHEINEBD",
+        "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxskmskxmsqkoxmqsuaaGIC",
+        "dyRHdilhjHRJiFIfniFNJgzrdgggrhyjfjfrrrrrhhhthhnzmrhdlIUKJFghfKMUFNIN",
         "", "0", "0490", "$", "}"},
 
     {"a?b*(cde)+",
-        "abcde", "bcde", "cde", "bbcdecde", "bbbbbbbbbbbcdecdecde",
+        "abcde", "bcde", "cde", "bbcdecde", "abbbbbbbbbbbbbbbbbbbbbbcdecdecde",
         "aabcde", "abcd", "ab", "a", "cdec"},
 
     {"a*|b+",
-        "a", "aaaaaaaaaa", "", "b", "bbbbbb",
+        "a", "aaaaaaaaaa", "", "b", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "ab", "aaaaaaaaaaaaab", "bbbbbbbbba", "ba"},
 
     {"ab|xyz|q|xx",
@@ -37,15 +37,15 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "abxyzqxx", "abb", "xyza", "xxq", ""},
 
     {"a(b(c(d(e(f(g)*)*)*)*)*)*",
-        "a", "abcdefg", "abcccdddefffggggggggggg", "abccccc", "abbbbbbbbb",
+        "a", "abcdefg", "abcccdddefffggggggggggg", "abccccccccc", "abbbbbbbbb",
         "abcdefggggggggga", "aa", "accccccccccch", " ", "."},
 
     {"a*[?*]+|x(yY|Y&(tt*[.+]?|(qq)+)*)",
-     "aaa?*???", "xyY", "xY&tqqtt.qqqqtttt.", "xY&tttt+tttqqqqt.qq", "*",
+     "aaa?*???", "xyY", "xY&tqqtt.qqqqtttt.", "xY&tttttttt+tttqqqqqqt.qq", "*",
      "a", "xyYY", "xY&?", "xY&tt++", "xY&ttt.qqq"},
 
     {"qwerty(\\*+\\+*[*?.+])*",
-        "qwerty*.*?", "qwerty******+.*?*?*?*?*?", "qwerty", "qwerty****+++++++++++",
+        "qwerty*.*?", "qwerty******+.*?*?*?*?*?", "qwerty", "qwerty****++++++",
         "qwerty***************************************",
         "qwert", "qwerty+", "qwerty*+..", "qwerty*?+", "qwertyy"}
 };
