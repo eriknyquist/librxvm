@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUMTESTS             10
+#define NUMTESTS             11
 #define NUMVARIATIONS        5
 
 char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
@@ -47,7 +47,11 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
     {"qwerty(\\*+\\+*[*?.+])*",
         "qwerty*.*?", "qwerty******+.*?*?*?*?*?", "qwerty", "qwerty****++++++",
         "qwerty***************************************",
-        "qwert", "qwerty+", "qwerty*+..", "qwerty*?+", "qwertyy"}
+        "qwert", "qwerty+", "qwerty*+..", "qwerty*?+", "qwertyy"},
+
+    {"[A-Fa-f@0-9]+",
+        "A", "AbCdEfFfF", "aB0F75EEeeEe12@3456ffff", "@", "9",
+        "G", "", "abcdefg", "AbCdEFz", "+"}
 };
 
 int test_regexvm(void)
