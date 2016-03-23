@@ -289,6 +289,38 @@ static int expand_char_range (char charc[], unsigned int *len)
     return 0;
 }
 
+static char map_escaped_char (char c)
+{
+    char ret;
+
+    ret = c;
+    switch (c) {
+        case 'n':
+            ret = '\n';
+        break;
+        case 't':
+            ret = '\t';
+        break;
+        case 'v':
+            ret = '\v';
+        break;
+        case 'b':
+            ret = '\b';
+        break;
+        case 'r':
+            ret = '\r';
+        break;
+        case 'f':
+            ret = '\f';
+        break;
+        case 'a':
+            ret = '\a';
+        break;
+    }
+
+    return ret;
+}
+
 /* stage1_main_state: main logic for adding incoming literals to a stack
  * (multiple stacks, if parenthesis groups are used) so that process_op()
  * can operate on them, should any operators be seen. */
@@ -315,6 +347,10 @@ static int stage1_main_state (context_t *cp, int *state)
 
     if (cp->tok == LITERAL) {
         set_op_char(&inst, *lp1);
+        cp->operand = stack_add_inst_head(cp->buf, &inst);
+
+    } else if (cp->tok == ESCAPED) {
+        set_op_char(&inst, map_escaped_char(*lp1));
         cp->operand = stack_add_inst_head(cp->buf, &inst);
 
     } else if (cp->tok == ANY) {
@@ -373,27 +409,35 @@ static int stage1_main_state (context_t *cp, int *state)
 static int stage1_charc_state (context_t *cp, char charc[], int *state)
 {
     int err;
+    int ret;
     inst_t inst;
 
-    if (cp->tok == LITERAL) {
-        charc[cp->clen++] = *lp1;
-    } else if (cp->tok == CHAR_RANGE) {
-        if ((err = expand_char_range(charc, &cp->clen)) != 0)
-            return err;
+    ret = 0;
+    switch (cp->tok) {
+        case LITERAL:
+            charc[cp->clen++] = *lp1;
+        break;
+        case ESCAPED:
+            charc[cp->clen++] = map_escaped_char(*lp1);
+        break;
+        case CHAR_RANGE:
+            if ((err = expand_char_range(charc, &cp->clen)) != 0)
+                ret = err;
+        break;
+        case CHARC_CLOSE:
+            charc[cp->clen] = '\0';
+            set_op_class(&inst, charc);
 
-    } else if (cp->tok == CHARC_CLOSE) {
-        charc[cp->clen] = '\0';
-        set_op_class(&inst, charc);
-
-        cp->operand = stack_add_inst_head(cp->parens[0], &inst);
-        cp->clen = 0;
-        charc[0] = '\0';
-        *state = STATE_START;
-    } else {
-        return RVM_EINVAL;
+            cp->operand = stack_add_inst_head(cp->parens[0], &inst);
+            cp->clen = 0;
+            charc[0] = '\0';
+            *state = STATE_START;
+        break;
+        default:
+            ret = RVM_EINVAL;
     }
 
-    return 0;
+    return ret;
 }
 
 static void stage1_cleanup (context_t *cp)

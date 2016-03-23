@@ -129,7 +129,7 @@ int lex (char **input)
                 if (!**input) {
                     return RVM_EINVAL;
                 } else {
-                    ret = LITERAL;
+                    ret = ESCAPED;
                     lp1++;
                 }
 
