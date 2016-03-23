@@ -1,13 +1,17 @@
+# output executable files
 TESTS := regexvm_test
 NAME := regexvm
 LIB := lib$(NAME).a
 TESTAPP := $(NAME)
+
+# source & object files
 TESTAPP_SRCS := tests/testapp/test_main.c
 TESTAPP_OBJS := ${TESTAPP_SRCS:.c=.o}
 RVM_C_SRCS := $(wildcard src/*.c)
 TEST_SRCS := $(wildcard tests/src/*.c)
 RVM_OBJS := ${RVM_C_SRCS:.c=.o}
 TEST_OBJS := ${TEST_SRCS:.c=.o}
+
 RVM_INC := include
 TEST_INC := tests/include
 MEMCHECK := tests/scripts/memcheck.sh
