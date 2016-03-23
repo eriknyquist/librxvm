@@ -32,7 +32,7 @@ all: lib
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: lib
 
-lib: CFLAGS += -Wpedantic
+lib: CFLAGS += -pedantic
 lib: $(RVM_OBJS)
 	$(AR) rcs $(LIB) $(RVM_OBJS)
 
