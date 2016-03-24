@@ -26,8 +26,8 @@ MAX_NEST_PARENS=$(MAX_NEST_PARENS)
 MACROS := $(addprefix -D , $(OPTS))
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -D DEBUG -g -O0
-CFLAGS := -Wall $(MACROS) -I$(RVM_INC)
-STATIC := -static -L. -l$(NAME)
+CFLAGS := -Wall -I$(RVM_INC)
+STATIC := -L. -l$(NAME)
 TESTFLAGS := -I$(TEST_INC)
 
 all: CFLAGS += $(RELEASE_FLAGS)
@@ -36,18 +36,18 @@ all: lib
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: lib
 
-lib: CFLAGS += -pedantic
+lib: CFLAGS += $(MACROS) -pedantic
 lib: $(RVM_OBJS)
 	$(AR) rcs $(LIB) $(RVM_OBJS)
 
-testbin: CFLAGS += $(STATIC) $(TESTFLAGS)
+testbin: CFLAGS += $(TESTFLAGS)
 testbin: $(TEST_OBJS)
 	$(CC) $(TEST_OBJS) $(STATIC) -o $(TESTS)
 
 test: all testbin
 	./$(TESTS)
 
-memcheck: CFLAGS += $(TESTFLAGS)
+memcheck: CFLAGS += $(TESTFLAGS) $(DEBUG_FLAGS)
 memcheck: $(RVM_OBJS) $(TEST_OBJS) $(TESTAPP_OBJS)
 	$(CC) $(RVM_OBJS) $(TESTAPP_OBJS) -o $(TESTAPP)
 	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
