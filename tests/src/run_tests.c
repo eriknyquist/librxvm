@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "test_regexvm_compile.h"
+#include "test_regexvm_err.h"
 #include "test_regexvm.h"
 
 int main (void)
@@ -10,6 +11,7 @@ int main (void)
 
     ret = 0;
     ret += test_regexvm_compile();
+    ret += test_regexvm_err();
     ret += test_regexvm();
 
     msg = (ret == 0) ? "passed" : "failed";
