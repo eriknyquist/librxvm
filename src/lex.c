@@ -28,6 +28,8 @@
 
 #define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
 #define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
+#define WS_LOW             '\a' /* ASCII 0x07 */
+#define WS_HIGH            '\r' /* ASCII 0x0D */
 
 char *lp1;
 char *lpn;
@@ -44,7 +46,8 @@ static inline int isreserved (char x)
 
 static inline int isprintable (char x)
 {
-    return (x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ? 1 : 0;
+    return ((x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ||
+        (x >= WS_LOW && x <= WS_HIGH)) ? 1 : 0;
 }
 
 static int simple_transition (int literal, char **input, int tok, int *ret)
@@ -129,7 +132,7 @@ int lex (char **input)
                 if (!**input) {
                     return RVM_EINVAL;
                 } else {
-                    ret = ESCAPED;
+                    ret = LITERAL;
                     lp1++;
                 }
 
