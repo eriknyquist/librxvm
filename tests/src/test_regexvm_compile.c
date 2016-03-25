@@ -255,7 +255,8 @@ int test_regexvm_compile(void)
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
         ret += verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx);
-        if (!ret) printf("%s: passed %s\n", __func__, tests[i]->rgx);
+        printf("%s: test %d %s\n", __func__, i + 1,
+            (ret) ? "failed" : "passed");
     }
 
     return ret;

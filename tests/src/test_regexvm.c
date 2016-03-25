@@ -112,7 +112,7 @@ int test_regexvm(void)
             msg = "passed";
         }
 
-        printf("%s: %s %s\n", __func__, msg, tests[i][0]);
+        printf("%s: test %d %s\n", __func__, i + 1, msg);
     }
 
     return total_err;

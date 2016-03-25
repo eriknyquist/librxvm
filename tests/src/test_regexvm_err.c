@@ -93,7 +93,8 @@ int test_regexvm_err (void)
         if (err == 0)
                 regexvm_free(&compiled);
 
-        printf("%s: %s %s\n", __func__, (ret) ? "failed" : "passed", test->rgx);
+        printf("%s: test %d %s\n", __func__, i + 1,
+            (ret) ? "failed" : "passed");
     }
 
     return ret;
