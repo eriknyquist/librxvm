@@ -480,8 +480,10 @@ int stage1 (char *input, stack_t **ret)
 
     /* get the next token */
     while ((cp->tok = lex(&input)) != END) {
-        if (cp->tok < 0)
+        if (cp->tok < 0) {
+            stage1_err_cleanup(cp);
             return cp->tok;
+        }
 
         switch (state) {
             case STATE_START:
