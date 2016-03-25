@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "regexvm.h"
 
-#define NUMTESTS             13
+#define NUMTESTS             17
 #define NUMVARIATIONS        5
 
 char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
@@ -19,11 +19,23 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "q", "qq", "qqqqqq", "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
         "qd", "pq", "x", "qqqqqqqqqqqqqqq7qq", NULL},
 
-    {"(c?)+",
-        "", "c", "cc", "ccc", "cccccccccccccccccccccccccccccccccccccccccccccc",
-        "ccccccccccccccccd", "cd", "d", NULL, NULL},
+    {"((cc)?)+",
+        "", "cc", "cccc", "cccccc",
+        "cccccccccccccccccccccccccccccccccccccccccccccc",
+        "ccccccccccccd", "ccc", "d", NULL, NULL},
+
+    {"(cc)*",
+        "", "cc", "cccc", "cccccc",
+        "cccccccccccccccccccccccccccccccccccccccccccccc",
+        "ccccccccccccd", "ccc", "d", NULL, NULL},
 
     {"[A-Za-z]+",
+        "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxskmskxmsqkoxmqsuaaGIC",
+        "dyRHdilhjHRJiFIfniFNJgzrdgggrhyjfjfrrrrrhhhthhnzmrhdlIUKJFghfKMUFNIN",
+        "", "0", "0490", "$", "}"},
+
+    {"(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|X|Y|Z|a|b|c|d|e|f|g|h|i|j"
+     "|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)+",
         "h", "ssefsnfugb", "uHuiBIJHBHgDDb", "AJIJIFHUsxskmskxmsqkoxmqsuaaGIC",
         "dyRHdilhjHRJiFIfniFNJgzrdgggrhyjfjfrrrrrhhhthhnzmrhdlIUKJFghfKMUFNIN",
         "", "0", "0490", "$", "}"},
@@ -60,7 +72,15 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
     {"[\t\r\v\f\b]\n\a\n\\?\\*\\+\\?\\\\[+*?.]",
         "\t\n\a\n?*+?\\+", "\r\n\a\n?*+?\\*", "\v\n\a\n?*+?\\?",
         "\f\n\a\n?*+?\\.", "\b\n\a\n?*+?\\.",
-        "b\n\a\n?*+?\\?", "\t\n\an?*+?\\+", "\t\n\a\n?*+?\\++"}
+        "b\n\a\n?*+?\\?", "\t\n\an?*+?\\+", "\t\n\a\n?*+?\\++"},
+
+    {"(a|s|d|f|g|h|j|k|l)+",
+        "a", "asd", "kdfg", "asdfghjk", "asgsdhjdhfgsdhjfgakdsjfkdslfskj",
+        "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL},
+
+    {"[asdfghjkl]+",
+        "a", "asd", "kdfg", "asdfghjk", "asgsdhjdhfgsdhjfgakdsjfkdslfskj",
+        "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
 };
 
 int test_regexvm(void)
