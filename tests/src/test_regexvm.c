@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "test_common.h"
 #include "regexvm.h"
 
 #define NUMTESTS             17
@@ -83,7 +84,7 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
 };
 
-int test_regexvm(void)
+int test_regexvm(results_t *results)
 {
     regexvm_t compiled;
     char *msg;
@@ -128,8 +129,10 @@ int test_regexvm(void)
             msg = "failed";
             total_err += test_err;
             test_err = 0;
+            ++(results->failed);
         } else {
             msg = "passed";
+            ++(results->passed);
         }
 
         printf("%s: test %d %s\n", __func__, i + 1, msg);

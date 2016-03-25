@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "test_common.h"
 #include "regexvm.h"
 
 #define NUMTESTS             22
@@ -131,10 +132,11 @@ static const errtest_t *tests[NUMTESTS] = {
     &test_err_eclass_20, &test_err_eclass_21, &test_err_etrail_22
 };
 
-int test_regexvm_err (void)
+int test_regexvm_err (results_t *results)
 {
     regexvm_t compiled;
     const errtest_t *test;
+    const char *msg;
     int ret;
     int err;
     int i;
@@ -142,17 +144,21 @@ int test_regexvm_err (void)
     ret = 0;
     for (i = 0; i < NUMTESTS; ++i) {
         test = tests[i];
-        if ((err = regexvm_compile(&compiled, test->rgx)) != test->err) {
+        if ((err = regexvm_compile(&compiled, test->rgx)) == test->err) {
+            msg = "passed";
+            ++(results->passed);
+        } else {
             fprintf(stderr, "On compilation of regex %s:\ngot return code %d,"
                             " expecting %d\n", test->rgx, err, test->err);
-            ret++;
+            msg = "failed";
+            ++(results->failed);
+            ++ret;
         }
 
         if (err == 0)
                 regexvm_free(&compiled);
 
-        printf("%s: test %d %s\n", __func__, i + 1,
-            (err == 0) ? "failed" : "passed");
+        printf("%s: test %d %s\n", __func__, i + 1, msg);
     }
 
     return ret;

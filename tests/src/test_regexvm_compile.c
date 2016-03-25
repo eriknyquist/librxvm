@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "test_common.h"
 #include "regexvm.h"
 
 #define NUM_TESTS 10
@@ -247,16 +248,25 @@ int verify_regexvm_cmp (char *expected, char *regex)
     return ret;
 }
 
-int test_regexvm_compile(void)
+int test_regexvm_compile(results_t *results)
 {
+    const char *msg;
     int ret;
+    int err;
     int i;
 
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
-        ret += verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx);
-        printf("%s: test %d %s\n", __func__, i + 1,
-            (ret) ? "failed" : "passed");
+        if ((err = verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx))) {
+            ret += err;
+            msg = "failed";
+            ++(results->failed);
+        } else {
+            msg = "passed";
+            ++(results->passed);
+        }
+
+        printf("%s: test %d %s\n", __func__, i + 1, msg);
     }
 
     return ret;
