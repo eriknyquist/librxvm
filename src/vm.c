@@ -34,7 +34,7 @@ static int ccs_match (char *ccs, char c)
     while (*ccs) {
         if (*ccs == c)
             return 1;
-        ++ccs;
+        ccs += 1;
     }
 
     return 0;

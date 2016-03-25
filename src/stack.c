@@ -65,8 +65,8 @@ void stack_point_new_head (stack_t *stack, stackitem_t *new)
         new->next = stack->head;
     }
 
-    stack->size++;
     stack->head = new;
+    stack->size += 1;
 }
 
 void stack_point_new_tail (stack_t *stack, stackitem_t *new)
@@ -79,7 +79,7 @@ void stack_point_new_tail (stack_t *stack, stackitem_t *new)
     }
 
     stack->tail = new;
-    stack->size++;
+    stack->size += 1;
 }
 
 stackitem_t *stack_add_head (stack_t *stack, void *data)

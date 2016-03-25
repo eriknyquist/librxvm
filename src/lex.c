@@ -59,7 +59,7 @@ static int simple_transition (int literal, char **input, int tok, int *ret)
     } else {
         state = STATE_END;
         *ret = tok;
-        (*input)++;
+        *input += 1;
     }
 
     return state;
@@ -78,19 +78,19 @@ int lex (char **input)
             case STATE_START:
                 if (**input == DEREF_SYM) {
                     state = STATE_DEREF;
-                    (*input)++;
+                    *input += 1;
 
                 } else if (**input == CHARC_OPEN_SYM) {
                     state = STATE_END;
                     ret = CHARC_OPEN;
                     literal = 1;
-                    (*input)++;
+                    *input += 1;
 
                 } else if (**input == CHARC_CLOSE_SYM) {
                     state = STATE_END;
                     ret = CHARC_CLOSE;
                     literal = 0;
-                    (*input)++;
+                    *input += 1;
 
                 } else if (**input == LPAREN_SYM) {
                     state = simple_transition(literal, input, LPAREN, &ret);
@@ -123,7 +123,7 @@ int lex (char **input)
                 } else {
                     state = STATE_END;
                     ret = LITERAL;
-                    (*input)++;
+                    *input += 1;
                 }
 
             break;
@@ -133,10 +133,10 @@ int lex (char **input)
                     return RVM_EINVAL;
                 } else {
                     ret = LITERAL;
-                    lp1++;
+                    lp1 += 1;
                 }
 
-                (*input)++;
+                *input += 1;
                 state = STATE_END;
             break;
 
@@ -144,7 +144,7 @@ int lex (char **input)
                 if (isprintable(**input) && !isreserved(**input)) {
                     state = STATE_END;
                     ret = CHAR_RANGE;
-                    (*input)++;
+                    *input += 1;
                 } else {
                     return RVM_EINVAL;
                 }
