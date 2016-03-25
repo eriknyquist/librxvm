@@ -294,14 +294,10 @@ static int expand_char_range (char charc[], unsigned int *len)
  * can operate on them, should any operators be seen. */
 static int stage1_main_state (context_t *cp, int *state)
 {
-    int err;
     inst_t inst;
 
     if (ISOP(cp->tok)) {
-        if ((err = process_op(cp)) < 0)
-            return err;
-
-        return 0;
+        return process_op(cp);
     }
 
     /* in the event that a parenthesis group is closed, and the following
@@ -313,54 +309,57 @@ static int stage1_main_state (context_t *cp, int *state)
         cp->buf = cp->parens[0];
     }
 
-    if (cp->tok == LITERAL) {
-        set_op_char(&inst, *lp1);
-        cp->operand = stack_add_inst_head(cp->buf, &inst);
+    switch (cp->tok) {
+        case LITERAL:
+            set_op_char(&inst, *lp1);
+            cp->operand = stack_add_inst_head(cp->buf, &inst);
+        break;
+        case ANY:
+            set_op_any(&inst);
+            cp->operand = stack_add_inst_head(cp->buf, &inst);
+        break;
+        case CHARC_OPEN:
+            *state = STATE_CHARC;
+        break;
+        case LPAREN:
+            if (cp->pdepth + 1 > MAXNESTPARENS)
+                return RVM_ENEST;
 
-    } else if (cp->tok == ANY) {
-        set_op_any(&inst);
-        cp->operand = stack_add_inst_head(cp->buf, &inst);
-
-    } else if (cp->tok == CHARC_OPEN) {
-        *state = STATE_CHARC;
-
-    } else if (cp->tok == LPAREN) {
-        if (cp->pdepth + 1 > MAXNESTPARENS)
-            return RVM_ENEST;
-
-        stack_cat(cp->target, cp->parens[0]);
-        stack_reset(cp->parens[0]);
-
-        if (cp->parens[++cp->pdepth] == NULL) {
-            if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
-                return RVM_EMEM;
-        }
-
-        if (cp->pdepth > cp->hdepth)
-            cp->hdepth = cp->pdepth;
-
-        if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
-            return RVM_EMEM;
-
-        cp->target = cp->parens[cp->pdepth];
-
-    } else if (cp->tok == RPAREN) {
-        if (cp->pdepth < 1) {
-            return RVM_BADPAREN;
-
-        } else {
             stack_cat(cp->target, cp->parens[0]);
-            attach_dangling_alt(cp);
-
             stack_reset(cp->parens[0]);
 
-            cp->operand = cp->parens[cp->pdepth]->tail;
-            cp->buf = cp->parens[cp->pdepth--];
-            cp->target = (cp->pdepth < 1) ? cp->prog : cp->parens[cp->pdepth];
-        }
+            if (cp->parens[++cp->pdepth] == NULL) {
+                if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
+                    return RVM_EMEM;
+            }
 
-    } else if (cp->tok == CHARC_CLOSE) {
-        return RVM_BADCLASS;
+            if (cp->pdepth > cp->hdepth)
+                cp->hdepth = cp->pdepth;
+
+            if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
+                return RVM_EMEM;
+
+            cp->target = cp->parens[cp->pdepth];
+        break;
+        case RPAREN:
+            if (cp->pdepth < 1) {
+                return RVM_BADPAREN;
+
+            } else {
+                stack_cat(cp->target, cp->parens[0]);
+                attach_dangling_alt(cp);
+
+                stack_reset(cp->parens[0]);
+
+                cp->operand = cp->parens[cp->pdepth]->tail;
+                cp->buf = cp->parens[cp->pdepth--];
+                cp->target = (cp->pdepth < 1) ?
+                    cp->prog : cp->parens[cp->pdepth];
+            }
+        break;
+        case CHARC_CLOSE:
+            return RVM_BADCLASS;
+        break;
     }
 
     return 0;
