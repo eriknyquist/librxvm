@@ -136,28 +136,34 @@ static int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
     return 0;
 }
 
+static int vm_init (threads_t *tm, unsigned int size)
+{
+    tm->cp_lookup = tm->np_lookup = NULL;
+    tm->cp = tm->np = NULL;
+
+    if ((tm->cp = malloc(size * sizeof(int))) == NULL)
+        return RVM_EMEM;
+
+    if ((tm->np = malloc(size * sizeof(int))) == NULL)
+        return RVM_EMEM;
+
+    if ((tm->cp_lookup = malloc(size)) == NULL)
+        return RVM_EMEM;
+
+    if ((tm->np_lookup = malloc(size)) == NULL)
+        return RVM_EMEM;
+
+    return 0;
+}
+
 int vm (regexvm_t *compiled, char *input)
 {
     threads_t tm;
     int ret;
 
-    tm.cp_lookup = tm.np_lookup = NULL;
-    tm.cp = tm.np = NULL;
-
-    ret = RVM_EMEM;
-    if ((tm.cp = malloc(compiled->size * sizeof(int))) == NULL)
+    if ((ret = vm_init(&tm, compiled->size)) != 0)
         goto cleanup;
 
-    if ((tm.np = malloc(compiled->size * sizeof(int))) == NULL)
-        goto cleanup;
-
-    if ((tm.cp_lookup = malloc(compiled->size)) == NULL)
-        goto cleanup;
-
-    if ((tm.np_lookup = malloc(compiled->size)) == NULL)
-        goto cleanup;
-
-    ret = 0;
     if (vm_execute(&tm, compiled, &input))
         goto cleanup;
 
