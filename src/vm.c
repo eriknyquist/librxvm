@@ -26,8 +26,17 @@
 #include <string.h>
 #include "regexvm.h"
 
-uint8_t *cp_lookup;
-uint8_t *np_lookup;
+typedef struct threads threads_t;
+
+struct threads {
+    int *cp;             /* Threads for current input char. */
+    int *np;             /* Threads for next input char. */
+    uint8_t *cp_lookup;  /* Lookup table for current input char. */
+    uint8_t *np_lookup;  /* Lookup table for next input char. */
+    char *lastmatch;     /* Last input char. to match expression */
+    int csize;           /* No. of threads queued for current input char. */
+    int nsize;           /* No. of threads queued for next input. char. */
+};
 
 static int ccs_match (char *ccs, char c)
 {
@@ -48,82 +57,61 @@ static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
     }
 }
 
-int vm (regexvm_t *compiled, char *input)
+static int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
 {
-    int *np;
-    int *cp;
-    int *dtemp;
-    uint8_t *ltemp;
-    int nsize;
-    int csize;
-
     int t;
     int ii;
-    int ret;
-    char *lastmatch;
+    int *dtemp;
+    uint8_t *ltemp;
     inst_t *ip;
 
-    cp = NULL;
-    np = NULL;
+    tm->nsize = 0;
+    tm->csize = 0;
+    tm->lastmatch = NULL;
 
-    ret = RVM_EMEM;
-    if ((cp = malloc(compiled->size * sizeof(int))) == NULL)
-        goto cleanup;
+    memset(tm->cp_lookup, 0, compiled->size);
+    memset(tm->np_lookup, 0, compiled->size);
+    memset(tm->cp, 0, compiled->size);
+    memset(tm->np, 0, compiled->size);
 
-    if ((np = malloc(compiled->size * sizeof(int))) == NULL)
-        goto cleanup;
-
-    if ((cp_lookup = malloc(compiled->size)) == NULL)
-        goto cleanup;
-
-    if ((np_lookup = malloc(compiled->size)) == NULL)
-        goto cleanup;
-
-    nsize = 0;
-    csize = 0;
-    ret = 0;
-    lastmatch = NULL;
-    memset(cp_lookup, 0, compiled->size);
-    memset(np_lookup, 0, compiled->size);
-
-    add_thread(cp, cp_lookup, &csize, 0);
+    add_thread(tm->cp, tm->cp_lookup, &tm->csize, 0);
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
-        if (input && !csize) {
-            goto cleanup;
+        if (**input && !tm->csize) {
+            return 1;
         }
 
         /* run all the threads for this input character */
-        for (t = 0; t < csize; ++t) {
-            ii = cp[t];             /* index of current instruction */
+        for (t = 0; t < tm->csize; ++t) {
+            ii = tm->cp[t];    /* index of current instruction */
             ip = compiled->exe[ii]; /* pointer to instruction data */
 
             switch (ip->op) {
                 case OP_CHAR:
-                    if (*input == ip->c) {
-                        add_thread(np, np_lookup, &nsize, ii + 1);
+                    if (**input == ip->c) {
+                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                     }
 
                 break;
                 case OP_ANY:
-                    add_thread(np, np_lookup, &nsize, ii + 1);
+                    add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                 break;
                 case OP_CLASS:
-                    if (ccs_match(ip->ccs, *input)) {
-                        add_thread(np, np_lookup, &nsize, ii + 1);
+                    if (ccs_match(ip->ccs, **input)) {
+                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                     }
 
                 break;
                 case OP_BRANCH:
-                    add_thread(cp, cp_lookup, &csize, ip->x);
-                    add_thread(cp, cp_lookup, &csize, ip->y);
+                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->x);
+                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->y);
                 break;
                 case OP_JMP:
-                    add_thread(cp, cp_lookup, &csize, ip->x);
+                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->x);
                 break;
                 case OP_MATCH:
-                    lastmatch = input;
+                    tm->lastmatch = *input;
                 break;
             }
         }
@@ -131,33 +119,60 @@ int vm (regexvm_t *compiled, char *input)
         /* Threads saved for the next input character
          * are now threads for the current character.
          * Threads for the next character are empty again.*/
-        dtemp = cp;
-        cp = np;
-        np = dtemp;
-        csize = nsize;
-        nsize = 0;
+        dtemp = tm->cp;
+        tm->cp = tm->np;
+        tm->np = dtemp;
+        tm->csize = tm->nsize;
+        tm->nsize = 0;
 
         /* swap lookup tables */
-        ltemp = cp_lookup;
-        cp_lookup = np_lookup;
-        np_lookup = ltemp;
+        ltemp = tm->cp_lookup;
+        tm->cp_lookup = tm->np_lookup;
+        tm->np_lookup = ltemp;
 
-        memset(np_lookup, 0, compiled->size);
+        memset(tm->np_lookup, 0, compiled->size);
 
-    } while (*(input++));
+    } while (*(*input)++);
+    return 0;
+}
 
-    if (lastmatch == (input - 1))
+int vm (regexvm_t *compiled, char *input)
+{
+    threads_t tm;
+    int ret;
+
+    tm.cp_lookup = tm.np_lookup = NULL;
+    tm.cp = tm.np = NULL;
+
+    ret = RVM_EMEM;
+    if ((tm.cp = malloc(compiled->size * sizeof(int))) == NULL)
+        goto cleanup;
+
+    if ((tm.np = malloc(compiled->size * sizeof(int))) == NULL)
+        goto cleanup;
+
+    if ((tm.cp_lookup = malloc(compiled->size)) == NULL)
+        goto cleanup;
+
+    if ((tm.np_lookup = malloc(compiled->size)) == NULL)
+        goto cleanup;
+
+    ret = 0;
+    if (vm_execute(&tm, compiled, &input))
+        goto cleanup;
+
+    if (tm.lastmatch == (input - 1))
         ret = 1;
 
 cleanup:
-    if (cp)
-        free(cp);
-    if (np)
-        free(np);
-    if (cp_lookup)
-        free(cp_lookup);
-    if (np_lookup)
-        free(np_lookup);
+    if (tm.cp)
+        free(tm.cp);
+    if (tm.np)
+        free(tm.np);
+    if (tm.cp_lookup)
+        free(tm.cp_lookup);
+    if (tm.np_lookup)
+        free(tm.np_lookup);
 
     return ret;
 }
