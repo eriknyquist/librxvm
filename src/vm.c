@@ -146,3 +146,15 @@ int vm_init (threads_t *tm, unsigned int size)
 
     return 0;
 }
+
+void vm_free(threads_t *tm)
+{
+    if (tm->cp)
+        free(tm->cp);
+    if (tm->np)
+        free(tm->np);
+    if (tm->cp_lookup)
+        free(tm->cp_lookup);
+    if (tm->np_lookup)
+        free(tm->np_lookup);
+}

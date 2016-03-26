@@ -33,9 +33,6 @@ char *iter_tests[NUMTESTS][3] =
 
 static int substring_match (char *string, char *start, char *end)
 {
-    int i;
-
-    i = 0;
     while (*string) {
         if (*(string++) != *(start++))
             return 0;
