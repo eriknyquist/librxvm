@@ -8,7 +8,8 @@ struct threads {
     int *np;             /* Threads for next input char. */
     uint8_t *cp_lookup;  /* Lookup table for current input char. */
     uint8_t *np_lookup;  /* Lookup table for next input char. */
-    char *lastmatch;     /* Last input char. to match expression */
+    char *match_start;   /* Start of matching portion of input string */
+    char *match_end;     /* End of matching portion of input string */
     int csize;           /* No. of threads queued for current input char. */
     int nsize;           /* No. of threads queued for next input. char. */
 };

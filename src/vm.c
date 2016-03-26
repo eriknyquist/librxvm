@@ -56,7 +56,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
 
     tm->nsize = 0;
     tm->csize = 0;
-    tm->lastmatch = NULL;
+    tm->match_end = NULL;
 
     memset(tm->cp_lookup, 0, compiled->size);
     memset(tm->np_lookup, 0, compiled->size);
@@ -64,6 +64,8 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
     memset(tm->np, 0, compiled->size);
 
     add_thread(tm->cp, tm->cp_lookup, &tm->csize, 0);
+    tm->match_start = *input;
+
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
@@ -100,7 +102,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
                     add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->x);
                 break;
                 case OP_MATCH:
-                    tm->lastmatch = *input;
+                    tm->match_end = *input;
                 break;
             }
         }

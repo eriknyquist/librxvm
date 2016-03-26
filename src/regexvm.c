@@ -43,6 +43,43 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
     return 0;
 }
 
+int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end)
+{
+    threads_t tm;
+    int ret;
+
+    if ((ret = vm_init(&tm, compiled->size)) != 0)
+        goto cleanup;
+
+    ret = 0;
+    while (vm_execute(&tm, compiled, &input) && tm.match_end == NULL);
+
+    if (tm.match_end == NULL) {
+        if (start)
+            *start = NULL;
+        if (end)
+            *end = NULL;
+    } else {
+        if (start)
+            *start = tm.match_start;
+        if (end)
+            *end = tm.match_end;
+        ret = 1;
+    }
+
+cleanup:
+    if (tm.cp)
+        free(tm.cp);
+    if (tm.np)
+        free(tm.np);
+    if (tm.cp_lookup)
+        free(tm.cp_lookup);
+    if (tm.np_lookup)
+        free(tm.np_lookup);
+
+    return ret;
+}
+
 int regexvm_match (regexvm_t *compiled, char *input)
 {
     threads_t tm;
@@ -54,7 +91,7 @@ int regexvm_match (regexvm_t *compiled, char *input)
     if (vm_execute(&tm, compiled, &input))
         goto cleanup;
 
-    if (tm.lastmatch == (input - 1))
+    if (tm.match_end == (input - 1))
         ret = 1;
 
 cleanup:

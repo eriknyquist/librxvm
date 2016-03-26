@@ -34,7 +34,9 @@ struct regexvm {
 };
 
 int regexvm_compile (regexvm_t *compiled, char *exp);
-int regexvm_match(regexvm_t *compiled, char *input);
+int regexvm_match (regexvm_t *compiled, char *input);
+int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end);
+
 void regexvm_free (regexvm_t *compiled);
 void regexvm_print (regexvm_t *compiled);
 
