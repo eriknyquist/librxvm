@@ -84,7 +84,7 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
 };
 
-int test_regexvm(results_t *results)
+int test_regexvm_match (results_t *results)
 {
     regexvm_t compiled;
     char *msg;

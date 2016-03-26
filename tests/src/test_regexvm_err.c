@@ -122,7 +122,7 @@ static const errtest_t test_err_etrail_22 = {
     .err = RVM_ETRAIL
 };
 
-static const errtest_t *tests[NUMTESTS] = {
+static const errtest_t *err_tests[NUMTESTS] = {
     &test_err_badop_1, &test_err_badop_2, &test_err_badop_3, &test_err_badop_4,
     &test_err_badop_5, &test_err_badop_6, &test_err_badclass_7,
     &test_err_badclass_8, &test_err_badclass_9, &test_err_badclass_10,
@@ -143,7 +143,7 @@ int test_regexvm_err (results_t *results)
 
     ret = 0;
     for (i = 0; i < NUMTESTS; ++i) {
-        test = tests[i];
+        test = err_tests[i];
         if ((err = regexvm_compile(&compiled, test->rgx)) == test->err) {
             msg = "passed";
             ++(results->passed);

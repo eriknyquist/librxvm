@@ -70,7 +70,7 @@ static const compv_t test_10_nest_3 = {
            ":lg:b31,29:b12,32:ls:ls:b39,35:ls:ls:cabc:b39,35:lx:ly:lz:m"
 };
 
-static const compv_t *tests[NUM_TESTS] = {
+static const compv_t *cmp_tests[NUM_TESTS] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
     &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
     &test_9_nest_2, &test_10_nest_3
@@ -248,7 +248,7 @@ int verify_regexvm_cmp (char *expected, char *regex)
     return ret;
 }
 
-int test_regexvm_compile(results_t *results)
+int test_regexvm_compile (results_t *results)
 {
     const char *msg;
     int ret;
@@ -257,7 +257,7 @@ int test_regexvm_compile(results_t *results)
 
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
-        if ((err = verify_regexvm_cmp(tests[i]->cmp, tests[i]->rgx))) {
+        if ((err = verify_regexvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
             ret += err;
             msg = "failed";
             ++(results->failed);
