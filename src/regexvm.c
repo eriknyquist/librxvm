@@ -45,7 +45,29 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
 
 int regexvm_match (regexvm_t *compiled, char *input)
 {
-    return vm(compiled, input);
+    threads_t tm;
+    int ret;
+
+    if ((ret = vm_init(&tm, compiled->size)) != 0)
+        goto cleanup;
+
+    if (vm_execute(&tm, compiled, &input))
+        goto cleanup;
+
+    if (tm.lastmatch == (input - 1))
+        ret = 1;
+
+cleanup:
+    if (tm.cp)
+        free(tm.cp);
+    if (tm.np)
+        free(tm.np);
+    if (tm.cp_lookup)
+        free(tm.cp_lookup);
+    if (tm.np_lookup)
+        free(tm.np_lookup);
+
+    return ret;
 }
 
 void regexvm_print (regexvm_t *compiled)
