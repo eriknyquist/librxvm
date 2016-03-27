@@ -30,4 +30,4 @@ AM_PROG_AR
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset])
 
-AC_OUTPUT(Makefile src/Makefile tests/src/Makefile)
+AC_OUTPUT(Makefile src/Makefile tests/src/Makefile examples/Makefile)
