@@ -1,6 +1,3 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.69])
 AC_INIT(regexvm, 0.5, eknyquist@gmail.com)
 AC_CONFIG_HEADERS([config.h])
@@ -10,15 +7,12 @@ AM_INIT_AUTOMAKE
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
 CFLAGS="-Wall -O3"
-# Checks for programs.
 AC_PROG_CC
 AC_PROG_AWK
 AC_PROG_INSTALL
 
-# Checks for header files.
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h])
 
-# Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_TYPE_UINT8_T
@@ -26,7 +20,6 @@ AC_PROG_RANLIB
 
 AM_PROG_AR
 
-# Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset])
 
