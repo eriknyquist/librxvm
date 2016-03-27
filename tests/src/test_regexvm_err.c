@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "regexvm.h"
-
-#define NUM_TESTS   22
+#include "test_common.h"
 
 typedef struct errtest errtest_t;
 
@@ -121,7 +120,7 @@ static const errtest_t test_err_etrail_22 = {
     .err = RVM_ETRAIL
 };
 
-static const errtest_t *err_tests[NUM_TESTS] = {
+static const errtest_t *err_tests[NUM_TESTS_ERR] = {
     &test_err_badop_1, &test_err_badop_2, &test_err_badop_3, &test_err_badop_4,
     &test_err_badop_5, &test_err_badop_6, &test_err_badclass_7,
     &test_err_badclass_8, &test_err_badclass_9, &test_err_badclass_10,
@@ -131,7 +130,7 @@ static const errtest_t *err_tests[NUM_TESTS] = {
     &test_err_eclass_20, &test_err_eclass_21, &test_err_etrail_22
 };
 
-int main (void)
+int test_regexvm_err (int *count)
 {
     regexvm_t compiled;
     const errtest_t *test;
@@ -140,9 +139,8 @@ int main (void)
     int err;
     int i;
 
-    printf("1..%d\n", NUM_TESTS);
     ret = 0;
-    for (i = 0; i < NUM_TESTS; ++i) {
+    for (i = 0; i < NUM_TESTS_ERR; ++i) {
         test = err_tests[i];
         if ((err = regexvm_compile(&compiled, test->rgx)) == test->err) {
             msg = "ok";
@@ -156,7 +154,8 @@ int main (void)
         if (err == 0)
                 regexvm_free(&compiled);
 
-        printf("%s %d %s\n", msg, i + 1, __FILE__);
+        printf("%s %d %s\n", msg, *count, __func__);
+        ++(*count);
     }
 
     return ret;

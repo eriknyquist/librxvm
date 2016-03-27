@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "regexvm.h"
+#include "test_common.h"
 
-#define NUM_TESTS   19
-
-char *iter_tests[NUM_TESTS][3] =
+char *iter_tests[NUM_TESTS_ITER][3] =
 {
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxxxxokKIIjJoiOKjImIOKmOIOuyyRKj", "xxxx"},
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxokKIIjJoiOKjImIOKmbggbggOIOuyyRKj", "x"},
@@ -40,7 +39,7 @@ static int substring_match (char *string, char *start, char *end)
     return (start == end) ? 1 : 0;
 }
 
-int main (void)
+int test_regexvm_iter (int *count)
 {
     regexvm_t compiled;
     const char *msg;
@@ -50,9 +49,8 @@ int main (void)
     int err;
     int i;
 
-    printf("1..%d\n", NUM_TESTS);
     ret = 0;
-    for (i = 0; i < NUM_TESTS; ++i) {
+    for (i = 0; i < NUM_TESTS_ITER; ++i) {
         if ((err = regexvm_compile(&compiled, iter_tests[i][0])) < 0) {
             printf("Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;
@@ -81,7 +79,8 @@ int main (void)
         }
 
         msg = (ret) ? "not ok" : "ok";
-        printf("%s %d %s\n", msg, i + 1, __FILE__);
+        printf("%s %d %s\n", msg, *count, __func__);
+        ++(*count);
     }
 
     return ret;

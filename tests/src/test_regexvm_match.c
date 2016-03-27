@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "regexvm.h"
+#include "test_common.h"
 
-#define NUM_TESTS            17
 #define NUMVARIATIONS        5
 
-char *tests[NUM_TESTS][(NUMVARIATIONS * 2) + 1] =
+char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
 {
     {"abc",
         "abc", NULL, NULL, NULL, NULL,
@@ -83,7 +83,7 @@ char *tests[NUM_TESTS][(NUMVARIATIONS * 2) + 1] =
         "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
 };
 
-int main (void)
+int test_regexvm_match (int *count)
 {
     regexvm_t compiled;
     char *msg;
@@ -93,10 +93,9 @@ int main (void)
     int i;
     int j;
 
-    printf("1..%d\n", NUM_TESTS);
     total_err = 0;
     test_err = 0;
-    for (i = 0; i < NUM_TESTS; ++i) {
+    for (i = 0; i < NUM_TESTS_MATCH; ++i) {
         if ((ret = regexvm_compile(&compiled, tests[i][0])) < 0) {
             fprintf(stderr, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
@@ -133,7 +132,8 @@ int main (void)
             msg = "ok";
         }
 
-        printf("%s %d %s\n", msg, i + 1, __FILE__);
+        printf("%s %d %s\n", msg, *count, __func__);
+        ++(*count);
     }
 
     return total_err;

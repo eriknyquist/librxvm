@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "regexvm.h"
-
-#define NUM_TESTS  10
+#include "test_common.h"
 
 typedef struct compv compv_t;
 
@@ -69,7 +68,7 @@ static const compv_t test_10_nest_3 = {
            ":lg:b31,29:b12,32:ls:ls:b39,35:ls:ls:cabc:b39,35:lx:ly:lz:m"
 };
 
-static const compv_t *cmp_tests[NUM_TESTS] = {
+static const compv_t *cmp_tests[NUM_TESTS_COMPILE] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
     &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
     &test_9_nest_2, &test_10_nest_3
@@ -247,16 +246,15 @@ int verify_regexvm_cmp (char *expected, char *regex)
     return ret;
 }
 
-int main (void)
+int test_regexvm_compile (int *count)
 {
     const char *msg;
     int ret;
     int err;
     int i;
 
-    printf("1..%d\n", NUM_TESTS);
     ret = 0;
-    for (i = 0; i < NUM_TESTS; ++i) {
+    for (i = 0; i < NUM_TESTS_COMPILE; ++i) {
         if ((err = verify_regexvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
             ret += err;
             msg = "not ok";
@@ -264,7 +262,8 @@ int main (void)
             msg = "ok";
         }
 
-        printf("%s %d %s\n", msg, i + 1, __FILE__);
+        printf("%s %d %s\n", msg, *count, __func__);
+        ++(*count);
     }
 
     return ret;
