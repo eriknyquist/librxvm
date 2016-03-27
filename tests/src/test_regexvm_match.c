@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "test_common.h"
 #include "regexvm.h"
 
-#define NUMTESTS             17
+#define NUM_TESTS            17
 #define NUMVARIATIONS        5
 
-char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
+char *tests[NUM_TESTS][(NUMVARIATIONS * 2) + 1] =
 {
     {"abc",
         "abc", NULL, NULL, NULL, NULL,
@@ -84,7 +83,7 @@ char *tests[NUMTESTS][(NUMVARIATIONS * 2) + 1] =
         "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
 };
 
-int test_regexvm_match (results_t *results)
+int main (void)
 {
     regexvm_t compiled;
     char *msg;
@@ -94,9 +93,10 @@ int test_regexvm_match (results_t *results)
     int i;
     int j;
 
+    printf("1..%d\n", NUM_TESTS);
     total_err = 0;
     test_err = 0;
-    for (i = 0; i < NUMTESTS; ++i) {
+    for (i = 0; i < NUM_TESTS; ++i) {
         if ((ret = regexvm_compile(&compiled, tests[i][0])) < 0) {
             fprintf(stderr, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
@@ -126,16 +126,14 @@ int test_regexvm_match (results_t *results)
         regexvm_free(&compiled);
 
         if (test_err) {
-            msg = "failed";
+            msg = "not ok";
             total_err += test_err;
             test_err = 0;
-            ++(results->failed);
         } else {
-            msg = "passed";
-            ++(results->passed);
+            msg = "ok";
         }
 
-        printf("%s: test %d %s\n", __func__, i + 1, msg);
+        printf("%s %d %s\n", msg, i + 1, __FILE__);
     }
 
     return total_err;

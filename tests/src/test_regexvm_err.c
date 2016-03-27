@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "test_common.h"
 #include "regexvm.h"
 
-#define NUMTESTS             22
+#define NUM_TESTS   22
 
 typedef struct errtest errtest_t;
 
@@ -122,7 +121,7 @@ static const errtest_t test_err_etrail_22 = {
     .err = RVM_ETRAIL
 };
 
-static const errtest_t *err_tests[NUMTESTS] = {
+static const errtest_t *err_tests[NUM_TESTS] = {
     &test_err_badop_1, &test_err_badop_2, &test_err_badop_3, &test_err_badop_4,
     &test_err_badop_5, &test_err_badop_6, &test_err_badclass_7,
     &test_err_badclass_8, &test_err_badclass_9, &test_err_badclass_10,
@@ -132,7 +131,7 @@ static const errtest_t *err_tests[NUMTESTS] = {
     &test_err_eclass_20, &test_err_eclass_21, &test_err_etrail_22
 };
 
-int test_regexvm_err (results_t *results)
+int main (void)
 {
     regexvm_t compiled;
     const errtest_t *test;
@@ -141,24 +140,23 @@ int test_regexvm_err (results_t *results)
     int err;
     int i;
 
+    printf("1..%d\n", NUM_TESTS);
     ret = 0;
-    for (i = 0; i < NUMTESTS; ++i) {
+    for (i = 0; i < NUM_TESTS; ++i) {
         test = err_tests[i];
         if ((err = regexvm_compile(&compiled, test->rgx)) == test->err) {
-            msg = "passed";
-            ++(results->passed);
+            msg = "ok";
         } else {
             fprintf(stderr, "On compilation of regex %s:\ngot return code %d,"
                             " expecting %d\n", test->rgx, err, test->err);
-            msg = "failed";
-            ++(results->failed);
+            msg = "not ok";
             ++ret;
         }
 
         if (err == 0)
                 regexvm_free(&compiled);
 
-        printf("%s: test %d %s\n", __func__, i + 1, msg);
+        printf("%s %d %s\n", msg, i + 1, __FILE__);
     }
 
     return ret;

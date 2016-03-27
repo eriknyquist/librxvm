@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "test_common.h"
 #include "regexvm.h"
 
-#define NUMTESTS             19
+#define NUM_TESTS   19
 
-char *iter_tests[NUMTESTS][3] =
+char *iter_tests[NUM_TESTS][3] =
 {
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxxxxokKIIjJoiOKjImIOKmOIOuyyRKj", "xxxx"},
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxokKIIjJoiOKjImIOKmbggbggOIOuyyRKj", "x"},
@@ -41,7 +40,7 @@ static int substring_match (char *string, char *start, char *end)
     return (start == end) ? 1 : 0;
 }
 
-int test_regexvm_iter (results_t *results)
+int main (void)
 {
     regexvm_t compiled;
     const char *msg;
@@ -51,16 +50,15 @@ int test_regexvm_iter (results_t *results)
     int err;
     int i;
 
+    printf("1..%d\n", NUM_TESTS);
     ret = 0;
-    for (i = 0; i < NUMTESTS; ++i) {
+    for (i = 0; i < NUM_TESTS; ++i) {
         if ((err = regexvm_compile(&compiled, iter_tests[i][0])) < 0) {
             printf("Error compiling regex %s\n", iter_tests[i][0]);
-            ++(results->failed);
             ++ret;
         } else {
             if (regexvm_iter(&compiled, iter_tests[i][1], &start, &end)) {
                 if (substring_match(iter_tests[i][2], start, end)) {
-                    ++(results->passed);
                 } else {
                     printf("Error matching regex %s\n", iter_tests[i][0]);
                     printf("Expecting \"%s\", but substring pointers show \"",
@@ -70,22 +68,20 @@ int test_regexvm_iter (results_t *results)
                         ++start;
                     }
                     printf("\"\n");
-                    ++(results->failed);
                     ++ret;
                 }
             } else {
                 printf("Error matching regex %s\n", iter_tests[i][0]);
                 printf("Matching input %s falsely reported non-matching\n",
                        iter_tests[i][1]);
-                ++(results->failed);
                 ++ret;
             }
 
             regexvm_free(&compiled);
         }
 
-        msg = (ret) ? "failed" : "passed";
-        printf("%s: test %d %s\n", __func__, i + 1, msg);
+        msg = (ret) ? "not ok" : "ok";
+        printf("%s %d %s\n", msg, i + 1, __FILE__);
     }
 
     return ret;

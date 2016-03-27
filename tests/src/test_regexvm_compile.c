@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "test_common.h"
 #include "regexvm.h"
 
-#define NUM_TESTS 10
+#define NUM_TESTS  10
 
 typedef struct compv compv_t;
 
@@ -248,25 +247,24 @@ int verify_regexvm_cmp (char *expected, char *regex)
     return ret;
 }
 
-int test_regexvm_compile (results_t *results)
+int main (void)
 {
     const char *msg;
     int ret;
     int err;
     int i;
 
+    printf("1..%d\n", NUM_TESTS);
     ret = 0;
     for (i = 0; i < NUM_TESTS; ++i) {
         if ((err = verify_regexvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
             ret += err;
-            msg = "failed";
-            ++(results->failed);
+            msg = "not ok";
         } else {
-            msg = "passed";
-            ++(results->passed);
+            msg = "ok";
         }
 
-        printf("%s: test %d %s\n", __func__, i + 1, msg);
+        printf("%s %d %s\n", msg, i + 1, __FILE__);
     }
 
     return ret;
