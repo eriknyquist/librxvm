@@ -17,7 +17,7 @@ int main (void)
     int ret;
     int count;
 
-    count = 0;
+    count = 1;
     ret = 0;
 
     printf("1..%d\n", NUM_TESTS);
