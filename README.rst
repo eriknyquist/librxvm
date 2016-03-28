@@ -123,4 +123,11 @@ To link your own code with libregexvm, compile with
 and link with
 ::
 
-    -L/usr/local/lib -lregexvm
+    -lregexvm
+
+for example, to build the example applications manually, you would do
+::
+
+    cd examples
+    gcc regexvm_iter.c -o regexvm_iter -I/usr/local/include/libregexvm -lregexvm
+    gcc regexvm_match.c -o regexvm_match -I/usr/local/include/libregexvm -lregexvm
