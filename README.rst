@@ -83,13 +83,13 @@ Supported metacharacters
     |*Symbol* | *Name*                | *Description*                         |
     +=========+=======================+=======================================+
     | **+**   | one or more           | matches one or more of the preceding  |
-    |         |                       | expression                            |
+    |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
     | **\***  | zero or more          | matches zero or more of the preceding |
-    |         |                       | expression                            |
+    |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
     | **?**   | zero or one           | matches zero or one of the preceding  |
-    |         |                       | expression                            |
+    |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
     | **|**   | alternation           | allows either the preceding or the    |
     |         |                       | following expression to match         |
@@ -111,6 +111,122 @@ Supported metacharacters
     |         |                       | * character                           |
     +---------+-----------------------+---------------------------------------+
 
+Reference
+---------
+
+regexvm_compile
+~~~~~~~~~~~~~~~
+
+.. code:: c
+
+   int regexvm_compile (regexvm_t *compiled, char *exp)
+
+|
+
+Compiles the regular expression ``exp``, and places the resulting VM
+instructions into the ``regexvm_t`` type pointed to by ``compiled``.
+
+|
+
+**Returns** 0
+on success, otherwise one of the error codes defined (and commented) in lex.h.
+
+|
+
+|
+
+regexvm_match
+~~~~~~~~~~~~~
+
+.. code:: c
+
+   int regexvm_match (regexvm_t *compiled, char *input)
+
+|
+
+Performs a one-shot execution of the VM, using the instructions in the
+``regexvm_t`` type pointed to by ``compiled`` (which must have already been
+populated by ``regexvm_compile()``) and the input string ``input``.
+
+|
+
+**Returns** 1
+if the input string matches the expression exactly, and 0 if the input string
+doesn't match. The only error this function can return is RVM_EMEM, which it
+will do if it fails to allocate memory.
+
+|
+
+|
+
+regexvm_iter
+~~~~~~~~~~~~
+
+.. code:: c
+
+ int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end)
+
+|
+
+Performs an iterative execution of the VM, using the instructions in the
+``regexvm_t`` type pointed to by ``compiled`` (which must have already been
+populated by ``regexvm_compile()``) and the input string ``input``.
+
+|
+
+**Returns** 1
+if the input string contains a substring that matches the expression and 0 if
+the input string contains no matching substrings. If a matching substring is
+found, the supplied pointers, pointed to by ``start`` and ``end``, will be
+populated with the location within the input string where the matching portion
+start and ends, respectively. ``start`` and ``end`` will be set to NULL if no
+matching substring is found.
+
+|
+
+This function returns after the first matching substring is found, however the
+input string can easily be searched for further matches by calling
+``regexvm_iter()`` again and passing the ``end`` pointer from the previous
+successful invocation as the new ``input`` pointer.
+
+|
+
+|
+
+regexvm_free
+~~~~~~~~~~~~
+
+.. code:: c
+
+   void regexvm_free (regexvm_t *compiled)
+
+|
+
+Frees all dynamic memory associated with a compiled ``regexvm_t`` type. Always
+call this function, before exiting, on any compiled ``regexvm_t`` types.
+
+|
+
+**Returns** nothing.
+
+|
+
+|
+
+regexvm_print
+~~~~~~~~~~~~~
+
+.. code:: c
+
+   void regexvm_print (regexvm_t *compiled)
+
+|
+
+Prints a compiled expression in a human-readable format.
+
+**Returns** nothing.
+
+|
 
 Building your own code with libregexvm
 --------------------------------------
