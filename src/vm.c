@@ -147,7 +147,7 @@ int vm_init (threads_t *tm, unsigned int size)
     return 0;
 }
 
-void vm_free(threads_t *tm)
+void vm_cleanup(threads_t *tm)
 {
     if (tm->cp)
         free(tm->cp);

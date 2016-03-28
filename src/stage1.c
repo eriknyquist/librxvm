@@ -435,7 +435,7 @@ static void stage1_err_cleanup (context_t *cp)
     stack_free(cp->prog, inst_stack_cleanup);
 }
 
-static int context_init (context_t *cp, stack_t **ret)
+static int stage1_init (context_t *cp, stack_t **ret)
 {
     memset(cp, 0, sizeof(context_t));
     memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
@@ -472,7 +472,7 @@ int stage1 (char *input, stack_t **ret)
     cp = &context;
     charc[0] = '\0';
 
-    if ((err = context_init(cp, ret)) < 0)
+    if ((err = stage1_init(cp, ret)) < 0)
         return err;
 
     state = STATE_START;

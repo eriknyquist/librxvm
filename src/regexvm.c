@@ -68,7 +68,7 @@ int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end)
     }
 
 cleanup:
-    vm_free(&tm);
+    vm_cleanup(&tm);
     return ret;
 }
 
@@ -87,7 +87,7 @@ int regexvm_match (regexvm_t *compiled, char *input)
         ret = 1;
 
 cleanup:
-    vm_free(&tm);
+    vm_cleanup(&tm);
     return ret;
 }
 

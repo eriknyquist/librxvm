@@ -16,6 +16,6 @@ struct threads {
 
 int vm_init (threads_t *tm, unsigned int size);
 int vm_execute (threads_t *tm, regexvm_t *compiled, char **input);
-void vm_free (threads_t *tm);
+void vm_cleanup (threads_t *tm);
 
 #endif
