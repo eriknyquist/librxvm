@@ -27,12 +27,6 @@
 #ifndef REGEXVM_COMMON_H_
 #define REGEXVM_COMMON_H_
 
-#if (MAX_NEST_PARENS)
-#define MAXNESTPARENS         MAX_NEST_PARENS
-#else
-#define MAXNESTPARENS         64
-#endif
-
 #define CHARC_BLOCK_SIZE      10
 
 typedef struct stackitem stackitem_t;
@@ -76,11 +70,9 @@ struct context {
     stack_t *buf;
     stack_t *prog;
     stackitem_t *operand;
-    stack_t *parens[MAXNESTPARENS + 1];
+    stack_t *parens;
     int tok;
     int lasttok;
-    unsigned int pdepth;
-    unsigned int hdepth;
     unsigned int clen;
     unsigned int cspace;
 };

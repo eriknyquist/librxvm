@@ -68,10 +68,31 @@ static const compv_t test_10_nest_3 = {
            ":lg:b31,29:b12,32:ls:ls:b39,35:ls:ls:cabc:b39,35:lx:ly:lz:m"
 };
 
+static const compv_t test_11_nest_4 = {
+    .rgx = "w(e(r(t(y(u(i(p(o(i(u(y(q(q(w(e(r(tt(f(d(f(xx(g(g(ft(y(u(j(j(j(j("
+           "j(j(sd(sd(d(sdds(sefjy(hfdsd(s(s(d(d(f(g(h(j(;(l(k(j(h(h(g(f(d(s("
+           "a)*)*)+)*)*)?)?)?)*)+)+)+)+)*)*)*)+)?)?)?)?)?)?)?)?)*)+)+)+)*)?)+"
+           ")*)*)?)+)*)*)+)?)*)*)?)+)+)+)+)+)*)*)*)+)*)+)?)+)?",
+    .cmp = "lw:b2,151:le:lr:b5,150:lt:ly:b149,8:lu:li:b147,11:lp:b146,13:lo"
+           ":b145,15:li:lu:ly:lq:lq:lw:b22,139:le:b139,24:lr:b138,26:lt:lt"
+           ":b29,137:lf:ld:b136,32:lf:b135,34:lx:lx:lg:b38,133:lg:b133,40:lf"
+           ":lt:b132,43:ly:lu:b46,130:lj:b130,48:lj:lj:lj:lj:b126,53:lj"
+           ":b55,125:ls:ld:b58,125:ls:ld:b61,125:ld:b63,125:ls:ld:ld:ls"
+           ":b68,125:ls:le:lf:lj:ly:b74,125:lh:lf:ld:ls:ld:b80,125:ls:b82,125"
+           ":ls:ld:b124,85:ld:b123,87:lf:b122,89:lg:lh:lj:l;:ll:b117,95:lk"
+           ":b97,116:lj:b99,116:lh:b101,116:lh:b116,103:lg:b115,105:lf:ld"
+           ":b113,108:ls:b112,110:la:b112,110:b113,108:b106,114:b115,105"
+           ":b116,103:b117,95:b93,118:b92,119:b91,120:b90,121:b122,89:b123,87"
+           ":b124,85:b83,125:b126,53:b51,127:b50,128:b49,129:b130,48:b44,131"
+           ":b132,43:b133,40:b36,134:b135,34:b136,32:b30,137:b138,26:b139,24"
+           ":b20,140:b19,141:b18,142:b17,143:b16,144:b145,15:b146,13:b147,11"
+           ":b9,148:b149,8:b6,150:b3,151:m"
+};
+
 static const compv_t *cmp_tests[NUM_TESTS_COMPILE] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
     &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
-    &test_9_nest_2, &test_10_nest_3
+    &test_9_nest_2, &test_10_nest_3, &test_11_nest_4
 };
 
 unsigned int parse_int (char **str)

@@ -96,7 +96,6 @@ static void set_op_match (inst_t *inst)
    with the data in 'inst' and return a pointer to it */
 static inst_t *create_inst (inst_t *inst)
 {
-    size_t dsize;
     inst_t *new;
 
     if ((new = malloc(sizeof(inst_t))) == NULL)
@@ -163,6 +162,26 @@ static void stack_reset (stack_t *stack)
     }
 }
 
+static void inst_stack_cleanup (void *data)
+{
+    inst_t *inst;
+
+    inst = (inst_t *) data;
+
+    if (inst->ccs != NULL)
+        free(inst->ccs);
+
+    free(inst);
+}
+
+static void stack_stack_cleanup (void *data)
+{
+    stack_t *stack;
+
+    stack = (stack_t *) data;
+    stack_free(stack, inst_stack_cleanup);
+}
+
 /* process_op: process operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'operand', and
  * append the generated instructions to 'target' */
@@ -171,12 +190,14 @@ static int process_op (context_t *cp)
     stackitem_t *i;
     stackitem_t *x;
     stackitem_t *y;
+    stack_t *cur;
     unsigned int size;
     inst_t inst;
 
     if (cp->buf == NULL || cp->buf->head == NULL) {
         if (cp->tok == ALT) {
-            size = cp->parens[cp->pdepth]->size;
+            cur = (stack_t *) cp->parens->head->data;
+            size = cur->size;
             i = NULL;
         } else {
             return RVM_BADOP;
@@ -253,7 +274,12 @@ static int process_op (context_t *cp)
     }
 
     stack_reset(cp->buf);
-    cp->buf = cp->parens[0];
+    if (cp->lasttok == RPAREN) {
+        free(cp->buf);
+        stack_free_head(cp->parens);
+    }
+
+    cp->buf = (stack_t *) cp->parens->tail->data;
 
     return 0;
 }
@@ -263,6 +289,9 @@ static int process_op (context_t *cp)
  * can operate on them, should any operators be seen. */
 static int stage1_main_state (context_t *cp, int *state)
 {
+    stack_t *new;
+    stack_t *cur;
+    stack_t *base;
     inst_t inst;
 
     if (ISOP(cp->tok)) {
@@ -274,9 +303,13 @@ static int stage1_main_state (context_t *cp, int *state)
      * to be flushed into cp->target (otherwise done by process_op()) */
     if (cp->lasttok == RPAREN && cp->buf->size > 0) {
         stack_cat(cp->target, cp->buf);
-        stack_reset(cp->buf);
-        cp->buf = cp->parens[0];
+        free(cp->buf);
+        stack_free_head(cp->parens);
+        cp->buf = (stack_t *) cp->parens->tail->data;
+
     }
+
+    base = (stack_t *) cp->parens->tail->data;
 
     switch (cp->tok) {
         case LITERAL:
@@ -296,39 +329,32 @@ static int stage1_main_state (context_t *cp, int *state)
             cp->cspace = CHARC_BLOCK_SIZE;
         break;
         case LPAREN:
-            if (cp->pdepth + 1 > MAXNESTPARENS)
-                return RVM_ENEST;
 
-            stack_cat(cp->target, cp->parens[0]);
-            stack_reset(cp->parens[0]);
+            stack_cat(cp->target, base);
+            stack_reset(base);
 
-            if (cp->parens[++cp->pdepth] == NULL) {
-                if ((cp->parens[cp->pdepth] = create_stack()) == NULL)
+
+            if ((new = create_stack()) == NULL)
                     return RVM_EMEM;
-            }
 
-            if (cp->pdepth > cp->hdepth)
-                cp->hdepth = cp->pdepth;
-
-            if (cp->parens[0] == NULL || cp->parens[cp->pdepth] == NULL)
-                return RVM_EMEM;
-
-            cp->target = cp->parens[cp->pdepth];
+            stack_add_head(cp->parens, (void *) new);
+            cp->target = new;
         break;
         case RPAREN:
-            if (cp->pdepth < 1) {
+            if (cp->parens->head == cp->parens->tail) {
                 return RVM_BADPAREN;
 
             } else {
-                stack_cat(cp->target, cp->parens[0]);
+                stack_cat(cp->target, base);
                 attach_dangling_alt(cp);
 
-                stack_reset(cp->parens[0]);
+                stack_reset(base);
 
-                cp->operand = cp->parens[cp->pdepth]->tail;
-                cp->buf = cp->parens[cp->pdepth--];
-                cp->target = (cp->pdepth < 1) ?
-                    cp->prog : cp->parens[cp->pdepth];
+                cur = (stack_t *) cp->parens->head->data;
+                cp->operand = cur->tail;
+                cp->buf = cur;
+                cp->target = (cp->parens->head->next == cp->parens->tail) ?
+                    cp->prog : (stack_t *) cp->parens->head->next->data;
             }
         break;
         case CHARC_CLOSE:
@@ -416,7 +442,8 @@ static int stage1_charc_state (context_t *cp, int *state)
         case CHARC_CLOSE:
             cp->ccs[cp->clen] = '\0';
             set_op_class(&inst, cp->ccs);
-            cp->operand = stack_add_inst_head(cp->parens[0], &inst);
+            cp->operand =
+                stack_add_inst_head((stack_t *) cp->parens->tail->data, &inst);
 
             cp->ccs = NULL;
             cp->clen = 0;
@@ -431,60 +458,43 @@ static int stage1_charc_state (context_t *cp, int *state)
 
 static void stage1_cleanup (context_t *cp)
 {
-    unsigned int i;
-
-    free(cp->parens[0]);
-    for (i = 1; i <= cp->hdepth; i++) {
-        free(cp->parens[i]);
-    }
-}
-
-static void inst_stack_cleanup (void *data)
-{
-    inst_t *inst;
-
-    inst = (inst_t *) data;
-
-    if (inst->ccs != NULL)
-        free(inst->ccs);
-
-    if (inst != NULL)
-        free(inst);
+    free((stack_t *) cp->parens->tail->data);
+    free(cp->parens->tail);
+    free(cp->parens);
 }
 
 static void stage1_err_cleanup (context_t *cp)
 {
-    unsigned int i;
-
     if (cp->ccs)
         free(cp->ccs);
 
-    stack_free(cp->parens[0], inst_stack_cleanup);
-    for (i = 1; i <= cp->hdepth; i++) {
-        stack_free(cp->parens[i], inst_stack_cleanup);
-    }
-
+    stack_free(cp->parens, stack_stack_cleanup);
     stack_free(cp->prog, inst_stack_cleanup);
 }
 
 static int stage1_init (context_t *cp, stack_t **ret)
 {
+    stack_t *base;
+
     memset(cp, 0, sizeof(context_t));
-    memset(cp->parens, 0, (sizeof(stack_t *) * MAXNESTPARENS));
 
-    *ret = create_stack();
-    cp->prog = *ret;
-    cp->parens[0] = create_stack();
-    cp->buf = cp->parens[0];
+    if ((cp->parens = create_stack()) == NULL)
+        return RVM_EMEM;
 
-    if (cp->prog == NULL || cp->parens[0] == NULL) {
-        free(cp->prog);
-        free(cp->parens[0]);
+    if ((*ret = create_stack()) == NULL) {
+        free(cp->parens);
         return RVM_EMEM;
     }
 
-    cp->pdepth = 0;
-    cp->hdepth = 0;
+    if ((base = create_stack()) == NULL) {
+        free(cp->parens);
+        free(*ret);
+        return RVM_EMEM;
+    }
+
+    cp->prog = *ret;
+    stack_add_head(cp->parens, (void *) base);
+    cp->buf = base;
     cp->target = cp->prog;
     return 0;
 }
@@ -538,9 +548,11 @@ int stage1 (char *input, stack_t **ret)
 
     if (cp->lasttok == RPAREN && cp->buf->size > 0) {
         stack_cat(cp->prog, cp->buf);
+        free(cp->buf);
+        stack_free_head(cp->parens);
     }
 
-    if (cp->pdepth) {
+    if (cp->parens->head != cp->parens->tail) {
         stage1_err_cleanup(cp);
         return RVM_EPAREN;
     } else if (state == STATE_CHARC) {
@@ -550,7 +562,7 @@ int stage1 (char *input, stack_t **ret)
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(cp->prog, cp->parens[0]);
+    stack_cat(cp->prog, (stack_t *) cp->parens->tail->data);
     attach_dangling_alt(cp);
 
     /* Add the match instruction */

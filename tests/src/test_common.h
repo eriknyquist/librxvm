@@ -1,7 +1,7 @@
 #ifndef TEST_COMMON_H_
 #define TEST_COMMON_H_
 
-#define NUM_TESTS_COMPILE      10
+#define NUM_TESTS_COMPILE      11
 #define NUM_TESTS_ERR          22
 #define NUM_TESTS_ITER         19
 #define NUM_TESTS_MATCH        17

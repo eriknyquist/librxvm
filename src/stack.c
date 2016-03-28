@@ -82,6 +82,22 @@ void stack_point_new_tail (stack_t *stack, stackitem_t *new)
     stack->size += 1;
 }
 
+void stack_free_head (stack_t *stack)
+{
+    stackitem_t *new;
+
+    if (stack->head) {
+        new = stack->head->next;
+
+        if (new) {
+            new->previous = NULL;
+        }
+
+        free(stack->head);
+        stack->head = new;
+    }
+}
+
 stackitem_t *stack_add_head (stack_t *stack, void *data)
 {
     stackitem_t *new;
