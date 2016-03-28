@@ -108,14 +108,7 @@ static inst_t *create_inst (inst_t *inst)
     new->c = inst->c;
     new->x = inst->x;
     new->y = inst->y;
-
-    if (inst->ccs != NULL) {
-        dsize = (sizeof(char) * strlen(inst->ccs)) + 1;
-        if ((new->ccs = malloc(dsize)) == NULL)
-            return NULL;
-
-        strncpy(new->ccs, inst->ccs, dsize);
-    }
+    new->ccs = inst->ccs;
 
     return new;
 }
@@ -265,30 +258,6 @@ static int process_op (context_t *cp)
     return 0;
 }
 
-static int expand_char_range (char charc[], unsigned int *len)
-{
-    char rhi;
-    char rlo;
-
-    if (*lp1 > *(lp1 + 2)) {
-        rhi = *lp1;
-        rlo = *(lp1 + 2);
-    } else {
-        rhi = *(lp1 + 2);
-        rlo = *lp1;
-    }
-
-    if ((rhi - rlo) > MAXCHARCLEN - (*len + 1)) {
-        return RVM_ECLASSLEN;
-    }
-
-    while (rlo <= rhi) {
-        charc[(*len)++] = rlo++;
-    }
-
-    return 0;
-}
-
 /* stage1_main_state: main logic for adding incoming literals to a stack
  * (multiple stacks, if parenthesis groups are used) so that process_op()
  * can operate on them, should any operators be seen. */
@@ -320,6 +289,11 @@ static int stage1_main_state (context_t *cp, int *state)
         break;
         case CHARC_OPEN:
             *state = STATE_CHARC;
+
+            if ((cp->ccs = malloc(CHARC_BLOCK_SIZE)) == NULL)
+                return RVM_EMEM;
+
+            cp->cspace = CHARC_BLOCK_SIZE;
         break;
         case LPAREN:
             if (cp->pdepth + 1 > MAXNESTPARENS)
@@ -365,32 +339,87 @@ static int stage1_main_state (context_t *cp, int *state)
     return 0;
 }
 
+static int charc_enlarge (context_t *cp, size_t size)
+{
+    char *new;
+
+    new = realloc(cp->ccs, cp->cspace + size);
+
+    if (new == NULL) {
+        return RVM_EMEM;
+    }
+
+    cp->ccs = new;
+    cp->cspace += size;
+    return 0;
+}
+
+static int expand_char_range (context_t *cp)
+{
+    char rhi;
+    char rlo;
+    int err;
+    size_t size;
+    size_t delta;
+
+    /* Figure out which character is highest */
+    if (*lp1 > *(lp1 + 2)) {
+        rhi = *lp1;
+        rlo = *(lp1 + 2);
+    } else {
+        rhi = *(lp1 + 2);
+        rlo = *lp1;
+    }
+
+    /* No. of characters in range */
+    size = (size_t) rhi - rlo;
+
+    /* Enlarge char. class buffer if needed */
+    if ((cp->clen + size + 1) > cp->cspace) {
+        delta = (cp->clen + size + 1) - cp->cspace;
+        if ((err = charc_enlarge(cp, delta)) < 0)
+            return err;
+    }
+
+    /* Expand range */
+    while (rlo <= rhi) {
+        cp->ccs[cp->clen++] = rlo++;
+    }
+
+    return 0;
+}
+
 /* stage1_charc_state: called repeatedly when the character class open token
  * "[" is seen, consuming tokens until the closing character "]" is seen.
  * Generates a single "class" instruction which is added to the shared
  * buffer parens[0]. */
-static int stage1_charc_state (context_t *cp, char charc[], int *state)
+static int stage1_charc_state (context_t *cp, int *state)
 {
-    int err;
     int ret;
     inst_t inst;
 
-    ret = 0;
+    /* Enlarge char. class buffer if it is full */
+    if ((cp->clen + 1) >= cp->cspace) {
+        if ((ret = charc_enlarge(cp, CHARC_BLOCK_SIZE)) < 0)
+            return ret;
+    } else {
+        ret = 0;
+    }
+
     switch (cp->tok) {
         case LITERAL:
-            charc[cp->clen++] = *lp1;
+            cp->ccs[cp->clen++] = *lp1;
         break;
         case CHAR_RANGE:
-            if ((err = expand_char_range(charc, &cp->clen)) != 0)
-                ret = err;
+            ret = expand_char_range(cp);
         break;
         case CHARC_CLOSE:
-            charc[cp->clen] = '\0';
-            set_op_class(&inst, charc);
-
+            cp->ccs[cp->clen] = '\0';
+            set_op_class(&inst, cp->ccs);
             cp->operand = stack_add_inst_head(cp->parens[0], &inst);
+
+            cp->ccs = NULL;
             cp->clen = 0;
-            charc[0] = '\0';
             *state = STATE_START;
         break;
         default:
@@ -427,6 +456,9 @@ static void stage1_err_cleanup (context_t *cp)
 {
     unsigned int i;
 
+    if (cp->ccs)
+        free(cp->ccs);
+
     stack_free(cp->parens[0], inst_stack_cleanup);
     for (i = 1; i <= cp->hdepth; i++) {
         stack_free(cp->parens[i], inst_stack_cleanup);
@@ -461,7 +493,6 @@ static int stage1_init (context_t *cp, stack_t **ret)
  * runs it through the lexer and generates an IR for stage 2. */
 int stage1 (char *input, stack_t **ret)
 {
-    char charc[MAXCHARCLEN];
     int state;
     int err;
 
@@ -470,7 +501,6 @@ int stage1 (char *input, stack_t **ret)
     inst_t inst;
 
     cp = &context;
-    charc[0] = '\0';
 
     if ((err = stage1_init(cp, ret)) < 0)
         return err;
@@ -496,7 +526,7 @@ int stage1 (char *input, stack_t **ret)
             break;
             case STATE_CHARC:
                 /* inside character class-- run character class state */
-                if ((err = stage1_charc_state(cp, charc, &state)) < 0) {
+                if ((err = stage1_charc_state(cp, &state)) < 0) {
                     stage1_err_cleanup(cp);
                     return err;
                 }

@@ -21,14 +21,11 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdint.h>
+#include "regexvm_err.h"
+
 #ifndef REGEXVM_COMMON_H_
 #define REGEXVM_COMMON_H_
-
-#if (MAX_CHARC_LEN)
-#define MAXCHARCLEN           MAX_CHARC_LEN
-#else
-#define MAXCHARCLEN           256
-#endif
 
 #if (MAX_NEST_PARENS)
 #define MAXNESTPARENS         MAX_NEST_PARENS
@@ -36,8 +33,7 @@
 #define MAXNESTPARENS         64
 #endif
 
-#include <stdint.h>
-#include "regexvm_err.h"
+#define CHARC_BLOCK_SIZE      10
 
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
@@ -75,6 +71,7 @@ struct inst {
 };
 
 struct context {
+    char *ccs;
     stack_t *target;
     stack_t *buf;
     stack_t *prog;
@@ -85,6 +82,7 @@ struct context {
     unsigned int pdepth;
     unsigned int hdepth;
     unsigned int clen;
+    unsigned int cspace;
 };
 
 #endif
