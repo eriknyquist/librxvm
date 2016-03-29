@@ -40,6 +40,7 @@
 enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
       ZERO, ONEZERO, ALT, ANY, LITERAL, INVALIDSYM, END};
 
+void lex_init (void);
 int lex (char **input);
 
 #endif

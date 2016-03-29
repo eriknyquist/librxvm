@@ -516,6 +516,7 @@ int stage1 (char *input, stack_t **ret)
         return err;
 
     state = STATE_START;
+    lex_init();
 
     /* get the next token */
     while ((cp->tok = lex(&input)) != END) {

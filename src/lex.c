@@ -65,6 +65,11 @@ static int simple_transition (int literal, char **input, int tok, int *ret)
     return state;
 }
 
+void lex_init (void)
+{
+    literal = 0;
+}
+
 int lex (char **input)
 {
     int state = STATE_START;
