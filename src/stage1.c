@@ -37,7 +37,7 @@
 extern char *lp1;
 extern char *lpn;
 
-enum {STATE_START, STATE_CHARC};
+static enum {STATE_START, STATE_CHARC};
 
 /* set_op functions:
  * a bunch of convenience functions for populating
@@ -553,12 +553,12 @@ int stage1 (char *input, stack_t **ret)
         stack_free_head(cp->parens);
     }
 
-    if (cp->parens->head != cp->parens->tail) {
-        stage1_err_cleanup(cp);
-        return RVM_EPAREN;
-    } else if (state == STATE_CHARC) {
+    if (state == STATE_CHARC) {
         stage1_err_cleanup(cp);
         return RVM_ECLASS;
+    } else if (cp->parens->head != cp->parens->tail) {
+        stage1_err_cleanup(cp);
+        return RVM_EPAREN;
     }
 
     /* End of input-- anything left in the buffer
