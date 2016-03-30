@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "regexvm.h"
 #include "test_common.h"
 #include "test_modules.h"
 
-#define NUM_MODS          4
+#define NUM_MODS          5
 
 const testmod_t mods[NUM_MODS] = {
-    test_regexvm_compile, test_regexvm_match, test_regexvm_iter,
-    test_regexvm_err
+    test_regexvm_err, test_regexvm_match, test_regexvm_iter,
+    test_regexvm_compile, fuzz_regexvm_match
 };
 
 int main (void)

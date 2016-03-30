@@ -37,7 +37,7 @@
 extern char *lp1;
 extern char *lpn;
 
-static enum {STATE_START, STATE_CHARC};
+enum {STATE_START, STATE_CHARC};
 
 /* set_op functions:
  * a bunch of convenience functions for populating
