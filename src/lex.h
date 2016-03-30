@@ -24,6 +24,11 @@
 #ifndef LEX_H_
 #define LEX_H_
 
+#define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
+#define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
+#define WS_LOW             '\a' /* ASCII 0x07 */
+#define WS_HIGH            '\r' /* ASCII 0x0D */
+
 #define CHARC_OPEN_SYM       '['
 #define CHARC_CLOSE_SYM      ']'
 #define LPAREN_SYM           '('

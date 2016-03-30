@@ -26,11 +26,6 @@
 #include "lex.h"
 #include "regexvm_err.h"
 
-#define PRINTABLE_LOW      ' '  /* ASCII 0x20 */
-#define PRINTABLE_HIGH     '~'  /* ASCII 0x7E */
-#define WS_LOW             '\a' /* ASCII 0x07 */
-#define WS_HIGH            '\r' /* ASCII 0x0D */
-
 char *lp1;
 char *lpn;
 
