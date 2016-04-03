@@ -33,7 +33,7 @@ To install, do the usual stuff:
 Usage
 ^^^^^
 
-See sample code in the **examples** directory. The examples compile into simple
+See sample code in the ``examples`` directory. The examples compile into simple
 command-line programs, so you can look at the source to see how the library is
 used, and then build them to try out some test expressions from your shell.
 
@@ -84,23 +84,23 @@ Supported metacharacters
     |*Symbol* | *Name*                | *Description*                         |
     +=========+=======================+=======================================+
     | **+**   | one or more           | matches one or more of the preceding  |
-    |         |                       | character, e.g. the expression **ab+**|
-    |         |                       | matches the input **ab**, **abb**, but|
-    |         |                       | not **a**.                            |
+    |         |                       | character, e.g. the expression ``ab+``|
+    |         |                       | matches the input ``ab``, ``abb``, but|
+    |         |                       | not ``a``                             |
     +---------+-----------------------+---------------------------------------+
     | **\***  | zero or more          | matches zero or more of the preceding |
-    |         |                       | character, e.g. the expression **ab***|
-    |         |                       | matches the input **a**, **ab** and   |
-    |         |                       | **abb**.                              |
+    |         |                       | character, e.g. the expression ``ab*``|
+    |         |                       | matches the input ``a``, ``ab`` and   |
+    |         |                       | ``abb``                               |
     +---------+-----------------------+---------------------------------------+
     | **?**   | zero or one           | matches zero or one of the preceding  |
-    |         |                       | character, e.g the expression **ab?** |
-    |         |                       | matches only **a** or **ab**.         |
+    |         |                       | character, e.g the expression ``ab?`` |
+    |         |                       | matches only ``a`` or ``ab``          |
     +---------+-----------------------+---------------------------------------+
     | **|**   | alternation           | allows either the preceding or the    |
     |         |                       | following expression to match, e.g.   |
-    |         |                       | the expression **(c|h)at** matches    |
-    |         |                       | **cat** and **hat**.                  |
+    |         |                       | the expression ``(c|h)at`` matches    |
+    |         |                       | ``cat`` and ``hat``                   |
     +---------+-----------------------+---------------------------------------+
     | **.**   | any                   | matches any character                 |
     +---------+-----------------------+---------------------------------------+
@@ -109,7 +109,7 @@ Supported metacharacters
     |         |                       | string. If the REGEXVM_MULTILINE flag |
     |         |                       | is set, then it also matches          |
     |         |                       | immediately following each newline    |
-    |         |                       | character.                            |
+    |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
     | **$**   | end anchor            | by default, matches immediately       |
     |         |                       | preceding the end of the input string |
@@ -117,21 +117,22 @@ Supported metacharacters
     |         |                       | input string. If the REGEXVM_MULTILINE|
     |         |                       | flag is set, then it also matches     |
     |         |                       | immediately preceding each newline    |
-    |         |                       | character.                            |
+    |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
-    | **( )** | parenthesis groups    | can contain any arbitrary expression, |
+    | **( )** | parenthesis group     | can contain any arbitrary expression, |
     |         |                       | and can be nested                     |
     +---------+-----------------------+---------------------------------------+
     | **[ ]** | character class       | can contain any number of literal     |
     |         |                       | characters (or escaped, i.e. to match |
-    |         |                       | a literal **[** or **]** character) or|
+    |         |                       | a literal ``[`` or ``]`` character) or|
     |         |                       | character ranges. Ranges are valid in |
-    |         |                       | both directions, e.g. Z-A describes   |
-    |         |                       | the same set of characters as A-Z     |
+    |         |                       | both directions, e.g. ``Z-A``         |
+    |         |                       | describes the same set of characters  |
+    |         |                       | as ``A-Z``                            |
     +---------+-----------------------+---------------------------------------+
     | **\\**  | escape                | used to remove special meaning from   |
     |         |                       | characters, e.g. to match a literal   |
-    |         |                       | ***** character                       |
+    |         |                       | ``*`` character                       |
     +---------+-----------------------+---------------------------------------+
 
 |
@@ -139,8 +140,8 @@ Supported metacharacters
 Reference
 ---------
 
-regexvm_compile
-~~~~~~~~~~~~~~~
+``regexvm_compile``
+~~~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
@@ -158,8 +159,8 @@ on success, otherwise one of the error codes defined (and commented) in lex.h.
 
 |
 
-regexvm_match
-~~~~~~~~~~~~~
+``regexvm_match``
+~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
@@ -180,8 +181,8 @@ will do if it fails to allocate memory.
 
 |
 
-regexvm_iter
-~~~~~~~~~~~~
+``regexvm_iter``
+~~~~~~~~~~~~~~~~
 
 .. code:: c
 
@@ -212,8 +213,8 @@ successful invocation as the new ``input`` pointer.
 
 |
 
-regexvm_free
-~~~~~~~~~~~~
+``regexvm_free``
+~~~~~~~~~~~~~~~~
 
 .. code:: c
 
@@ -230,8 +231,8 @@ call this function, before exiting, on any compiled ``regexvm_t`` types.
 
 |
 
-regexvm_print
-~~~~~~~~~~~~~
+``regexvm_print``
+~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
@@ -246,37 +247,37 @@ Prints a compiled expression in a human-readable format.
 Flags
 -----
 
-**regexvm_match** and **regexvm_iter** take a **flags** parameter. You can use
+``regexvm_match`` and ``regexvm_iter`` take a ``flags`` parameter. You can use
 the masks below to set bit-flags which will change the behaviour of these
 functions (combine multiple flags by bitwise OR-ing them together):
 
 |
 
-**REGEXVM_ICASE**
+``REGEXVM_ICASE``
 ~~~~~~~~~~~~~~~~~
 
 case insensitive: ignore case when matching alphabet characters. Matching is
 case-sensitive by default.
 
-**REGEXVM_NONGREEDY**
+``REGEXVM_NONGREEDY``
 ~~~~~~~~~~~~~~~~~~~~~
 
-non-greedy matching: by default, **regexvm_match** and **regexvm_iter** will
-match as many characters as possible, e.g. running **regexvm_iter** with
-the expression **<.*>** against the input string **<tag>name<tag>** will match
-the entire string. With this flag set, it will match **<tag>**.
+non-greedy matching: by default, the operators ``+``, ``*``, and ``?`` will
+match as many characters as possible, e.g. running ``regexvm_iter`` with
+the expression ``<.*>`` against the input string ``<tag>name<tag>`` will match
+the entire string. With this flag set, it will match only ``<tag>``.
 
-**REGEXVM_MULTILINE**
+``REGEXVM_MULTILINE``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Multiline: By default, **^** matches immediately following the start of input,
-and **$** matches immediately preceding the end of input or the newline before
-the end of input. With this flag set, ^ will also match immediately following
-each newline character, and $ will also match immediately preceding each
-newline character. This flag is ignored and automatically enabled when
-**regexvm_match** is used; since **regexvm_match** effectively requires a
-matching string to be anchored at both the start and end of input, then **^**
-and **$** are only useful if they can also act as line anchors.
+Multiline: By default, ``^`` matches immediately following the start of input,
+and ``$`` matches immediately preceding the end of input or the newline before
+the end of input. With this flag set, ``^`` will also match immediately
+following each newline character, and ``$`` will also match immediately
+preceding each newline character. This flag is ignored and automatically
+enabled when ``regexvm_match`` is used; since ``regexvm_match`` effectively
+requires a matching string to be anchored at both the start and end of input,
+then ``^`` and ``$`` are only useful if they can also act as line anchors.
 
 |
 
