@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     regexvm_print(&compiled);
 
     /* Check if input string matches expression */
-    if (regexvm_iter(&compiled, argv[2], &start, &end)) {
+    if (regexvm_iter(&compiled, argv[2], &start, &end, 0)) {
         printf("Match!\n");
         printf("Found matching substring:\n");
         print_substring(start, end);

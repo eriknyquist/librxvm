@@ -41,7 +41,7 @@ int fuzz_regexvm_match (int *count)
                 printf("Error generating string for %s\n", testexp[i]);
                 ++ret;
             } else {
-                if (regexvm_match(&compiled, gen)) {
+                if (regexvm_match(&compiled, gen, 0)) {
                     msg = "ok";
                 } else {
                     printf("Matching input %s falsely report non-matching "

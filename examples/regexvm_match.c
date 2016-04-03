@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     regexvm_print(&compiled);
 
     /* Check if input string matches expression */
-    if (regexvm_match(&compiled, argv[2])) {
+    if (regexvm_match(&compiled, argv[2], 0)) {
         printf("Match!\n");
     } else {
         printf("No match.\n");

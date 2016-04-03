@@ -56,6 +56,21 @@ char *generate_matching_string (regexvm_t *compiled)
                 ret[size++] = (char) rand_range(PRINTABLE_LOW, PRINTABLE_HIGH);
                 ++ip;
             break;
+            case OP_SOL:
+                ret = enlarge_if_needed(ret, size);
+                if (size && ret[size - 1] != '\n') {
+                    ret[size++] = '\n';
+                }
+                ++ip;
+            break;
+            case OP_EOL:
+                ret = enlarge_if_needed(ret, size);
+                if (compiled->size > ip && (compiled->exe[ip + 1] != OP_CHAR
+                            || compiled->exe[ip + 1]->c != '\n')) {
+                    ret[size++] = '\n';
+                }
+                ++ip;
+            break;
             case OP_CLASS:
                 ret = enlarge_if_needed(ret, size);
                 ix = rand_range(0, strlen(inst->ccs) - 1);

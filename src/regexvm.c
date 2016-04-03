@@ -43,16 +43,23 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
     return 0;
 }
 
-int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end)
+int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
+                  int flags)
 {
+    char *sot;
     threads_t tm;
     int ret;
 
     if ((ret = vm_init(&tm, compiled->size)) != 0)
         goto cleanup;
 
+    sot = input;
+    tm.icase = (flags & REGEXVM_ICASE);
+    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
+    tm.multiline = (flags & REGEXVM_MULTILINE);
+
     ret = 0;
-    while (vm_execute(&tm, compiled, &input) && tm.match_end == NULL);
+    while (vm_execute(&tm, compiled, &input, sot) && tm.match_end == NULL);
 
     if (tm.match_end == NULL) {
         if (start)
@@ -72,7 +79,7 @@ cleanup:
     return ret;
 }
 
-int regexvm_match (regexvm_t *compiled, char *input)
+int regexvm_match (regexvm_t *compiled, char *input, int flags)
 {
     threads_t tm;
     int ret;
@@ -80,7 +87,11 @@ int regexvm_match (regexvm_t *compiled, char *input)
     if ((ret = vm_init(&tm, compiled->size)) != 0)
         goto cleanup;
 
-    if (vm_execute(&tm, compiled, &input))
+    tm.multiline = 1;
+    tm.icase = (flags & REGEXVM_ICASE);
+    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
+
+    if (vm_execute(&tm, compiled, &input, input))
         goto cleanup;
 
     if (tm.match_end == (input - 1))
@@ -105,6 +116,12 @@ void regexvm_print (regexvm_t *compiled)
             break;
             case OP_ANY:
                 printf("%d\tany\n", i);
+            break;
+            case OP_SOL:
+                printf("%d\tsol\n", i);
+            break;
+            case OP_EOL:
+                printf("%d\teol\n", i);
             break;
             case OP_CLASS:
                 printf("%d\tclass %s\n", i, inst->ccs);

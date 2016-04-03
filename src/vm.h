@@ -12,10 +12,15 @@ struct threads {
     char *match_end;     /* End of matching portion of input string */
     int csize;           /* No. of threads queued for current input char. */
     int nsize;           /* No. of threads queued for next input. char. */
+
+    /* Flags */
+    uint8_t icase;
+    uint8_t nongreedy;
+    uint8_t multiline;
 };
 
 int vm_init (threads_t *tm, unsigned int size);
-int vm_execute (threads_t *tm, regexvm_t *compiled, char **input);
+int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot);
 void vm_cleanup (threads_t *tm);
 
 #endif

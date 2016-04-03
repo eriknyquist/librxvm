@@ -27,10 +27,20 @@
 #include "regexvm.h"
 #include "vm.h"
 
-static int ccs_match (char *ccs, char c)
+#define ASCII_UCASE_A    0x41
+#define ASCII_UCASE_Z    0x5A
+
+#define tolower(x) ((x <= 0x5A && x >= 0x41) ? x + 32 : x)
+
+static int char_match (uint8_t icase, char a, char b)
+{
+    return (icase) ? tolower(a) == tolower(b) : a == b;
+}
+
+static int ccs_match (uint8_t icase, char *ccs, char c)
 {
     while (*ccs) {
-        if (*ccs == c)
+        if (char_match(icase, *ccs, c))
             return 1;
         ccs += 1;
     }
@@ -46,14 +56,36 @@ static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
     }
 }
 
-int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
+static int is_sol (char *input, char *start, uint8_t multiline)
+{
+    if (input == start) {
+        return 1;
+    } else {
+        return (multiline && *(input - 1) == '\n') ? 1 : 0;
+    }
+}
+
+static int is_eol (char *input, uint8_t multiline)
+{
+    if (!input) {
+        return 0;
+    } else if (*input == '\0') {
+        return 1;
+    } else {
+        return (multiline && *input == '\n') ? 1 : 0;
+    }
+}
+
+int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 {
     int t;
     int ii;
     int *dtemp;
+    int noinput;
     uint8_t *ltemp;
     inst_t *ip;
 
+    noinput = 0;
     tm->nsize = 0;
     tm->csize = 0;
     tm->match_end = NULL;
@@ -73,6 +105,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
             return 1;
         }
 
+        noinput = 0;
         /* run all the threads for this input character */
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
@@ -80,7 +113,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
 
             switch (ip->op) {
                 case OP_CHAR:
-                    if (**input == ip->c) {
+                    if (char_match(tm->icase, **input, ip->c)) {
                         add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                     }
 
@@ -88,8 +121,22 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
                 case OP_ANY:
                     add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                 break;
+                case OP_SOL:
+                    if (is_sol(*input, sot, tm->multiline)) {
+                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
+                        noinput = 1;
+                    }
+
+                break;
+                case OP_EOL:
+                    if (is_eol(*input, tm->multiline)) {
+                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
+                        noinput = 1;
+                    }
+
+                break;
                 case OP_CLASS:
-                    if (ccs_match(ip->ccs, **input)) {
+                    if (ccs_match(tm->icase, ip->ccs, **input)) {
                         add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
                     }
 
@@ -103,6 +150,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
                 break;
                 case OP_MATCH:
                     tm->match_end = *input;
+                    if (tm->nongreedy) return 1;
                 break;
             }
         }
@@ -123,7 +171,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input)
 
         memset(tm->np_lookup, 0, compiled->size);
 
-    } while (*(*input)++);
+    } while (noinput || *(*input)++);
     return 0;
 }
 

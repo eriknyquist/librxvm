@@ -104,6 +104,10 @@ int lex (char **input)
                     state = simple_transition(literal, input, ZERO, &ret);
                 } else if (**input == ANY_SYM) {
                     state = simple_transition(literal, input, ANY, &ret);
+                } else if (**input == SOL_SYM) {
+                    state = simple_transition(literal, input, SOL, &ret);
+                } else if (**input == EOL_SYM) {
+                    state = simple_transition(literal, input, EOL, &ret);
                 } else if (**input == ALT_SYM) {
                     state = simple_transition(literal, input, ALT, &ret);
                 } else if (isprintable(**input)) {

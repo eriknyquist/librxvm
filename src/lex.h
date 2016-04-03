@@ -39,11 +39,13 @@
 #define ANY_SYM              '.'
 #define ONEZERO_SYM          '?'
 #define ALT_SYM              '|'
+#define SOL_SYM              '^'
+#define EOL_SYM              '$'
 #define DEREF_SYM            '\\'
 
 /* lexer return tokens */
 enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
-      ZERO, ONEZERO, ALT, ANY, LITERAL, INVALIDSYM, END};
+      ZERO, ONEZERO, ALT, ANY, LITERAL, SOL, EOL, INVALIDSYM, END};
 
 void lex_init (void);
 int lex (char **input);

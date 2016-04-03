@@ -44,52 +44,55 @@ enum {STATE_START, STATE_CHARC};
  * inst_t types for all instructions */
 static void set_op_char (inst_t *inst, char c)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_CHAR;
     inst->c = c;
-    inst->ccs = NULL;
-    inst->x = inst->y = 0;
 }
 
 static void set_op_class (inst_t *inst, char *ccs)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_CLASS;
-    inst->c = 0;
     inst->ccs = ccs;
-    inst->x = inst->y = 0;
 }
 
 static void set_op_any (inst_t *inst)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_ANY;
-    inst->c = 0;
-    inst->ccs = NULL;
-    inst->x = inst->y = 0;
+}
+
+static void set_op_sol (inst_t *inst)
+{
+    memset(inst, 0, sizeof(inst_t));
+    inst->op = OP_SOL;
+}
+
+static void set_op_eol (inst_t *inst)
+{
+    memset(inst, 0, sizeof(inst_t));
+    inst->op = OP_EOL;
 }
 
 static void set_op_branch (inst_t *inst, int x, int y)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_BRANCH;
-    inst->c = 0;
-    inst->ccs = NULL;
     inst->x = x;
     inst->y = y;
 }
 
 static void set_op_jmp (inst_t *inst, int x)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_JMP;
-    inst->c = 0;
-    inst->y = 0;
     inst->x = x;
-    inst->ccs = NULL;
 }
 
 static void set_op_match (inst_t *inst)
 {
+    memset(inst, 0, sizeof(inst_t));
     inst->op = OP_MATCH;
-    inst->c = 0;
-    inst->ccs = NULL;
-    inst->x = inst->y = 0;
 }
 
 /* create_inst: allocate space for an inst_t, populate it
@@ -318,6 +321,14 @@ static int stage1_main_state (context_t *cp, int *state)
         break;
         case ANY:
             set_op_any(&inst);
+            cp->operand = stack_add_inst_head(cp->buf, &inst);
+        break;
+        case SOL:
+            set_op_sol(&inst);
+            cp->operand = stack_add_inst_head(cp->buf, &inst);
+        break;
+        case EOL:
+            set_op_eol(&inst);
             cp->operand = stack_add_inst_head(cp->buf, &inst);
         break;
         case CHARC_OPEN:
