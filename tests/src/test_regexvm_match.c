@@ -96,7 +96,7 @@ int test_regexvm_match (int *count)
     total_err = 0;
     test_err = 0;
     for (i = 0; i < NUM_TESTS_MATCH; ++i) {
-        if ((ret = regexvm_compile(&compiled, tests[i][0])) < 0) {
+        if ((ret = compile_testexp(&compiled, tests[i][0])) < 0) {
             fprintf(stderr, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
             return ret;

@@ -51,7 +51,7 @@ int test_regexvm_iter (int *count)
 
     ret = 0;
     for (i = 0; i < NUM_TESTS_ITER; ++i) {
-        if ((err = regexvm_compile(&compiled, iter_tests[i][0])) < 0) {
+        if ((err = compile_testexp(&compiled, iter_tests[i][0])) < 0) {
             printf("Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;
         } else {

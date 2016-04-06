@@ -142,7 +142,7 @@ int test_regexvm_err (int *count)
     ret = 0;
     for (i = 0; i < NUM_TESTS_ERR; ++i) {
         test = err_tests[i];
-        if ((err = regexvm_compile(&compiled, test->rgx)) == test->err) {
+        if ((err = compile_testexp(&compiled, test->rgx)) == test->err) {
             msg = "ok";
         } else {
             fprintf(stderr, "On compilation of regex %s:\ngot return code %d,"

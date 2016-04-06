@@ -15,5 +15,6 @@ typedef struct results results_t;
 typedef int(*testmod_t)(int *);
 
 char *generate_matching_string (regexvm_t *compiled);
+int compile_testexp (regexvm_t *compiled, char *exp);
 
 #endif

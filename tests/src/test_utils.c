@@ -9,12 +9,12 @@
 
 static unsigned int space;
 
-unsigned int rand_range (unsigned int low, unsigned int high)
+static unsigned int rand_range (unsigned int low, unsigned int high)
 {
     return (unsigned int) low + (rand() % ((high - low) + 1));
 }
 
-char *enlarge_if_needed (char *string, int size)
+static char *enlarge_if_needed (char *string, int size)
 {
     char *temp;
 
@@ -27,6 +27,18 @@ char *enlarge_if_needed (char *string, int size)
     space += BLOCK_SIZE;
     return temp;
 }
+
+#if (TEST_PRINT_SIZES)
+static void print_heap_usage (unsigned int size)
+{
+    size_t progsize;
+    size_t vmsize;
+
+    progsize = sizeof(regexvm_t) + (sizeof(inst_t) * size);
+    vmsize = ((sizeof(int) * size) * 2) + (size * 2);
+    printf("compiled size: %zu bytes\nVM size: %zu bytes\n", progsize, vmsize);
+}
+#endif
 
 char *generate_matching_string (regexvm_t *compiled)
 {
@@ -90,4 +102,19 @@ char *generate_matching_string (regexvm_t *compiled)
 
     ret[size] = '\0';
     return ret;
+}
+
+int compile_testexp (regexvm_t *compiled, char *exp)
+{
+    int ret;
+
+    if ((ret = regexvm_compile(compiled, exp)) < 0)
+        return ret;
+
+#if (TEST_PRINT_SIZES)
+    printf("expression: %s\n", exp);
+    print_heap_usage(compiled->size);
+    printf("\n");
+#endif
+    return 0;
 }

@@ -249,7 +249,7 @@ int verify_regexvm_cmp (char *expected, char *regex)
     int err;
     regexvm_t compiled;
 
-    if ((ret = regexvm_compile(&compiled, regex)) < 0)
+    if ((ret = compile_testexp(&compiled, regex)) < 0)
         return ret;
 
     if ((err = cmpexe(expected, &compiled)) != 0) {
