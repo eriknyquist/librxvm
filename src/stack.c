@@ -53,6 +53,7 @@ stack_t *create_stack (void)
     newstack->tail = NULL;
     newstack->dangling_alt = NULL;
     newstack->size = 0;
+    newstack->dsize = 0;
     return newstack;
 }
 

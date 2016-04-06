@@ -46,8 +46,8 @@ struct stack {
     stackitem_t *head;
     stackitem_t *tail;
     stackitem_t *dangling_alt;
-    unsigned short size;
-    unsigned short dsize;
+    int size;
+    int dsize;
 };
 
 /* VM instruction types */
@@ -75,6 +75,7 @@ struct context {
     int lasttok;
     unsigned int clen;
     unsigned int cspace;
+    uint8_t chained;
 };
 
 #endif

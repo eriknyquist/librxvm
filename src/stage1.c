@@ -259,6 +259,9 @@ static int process_op (context_t *cp)
             if (i != NULL)
                 stack_cat_from_item(cp->target, cp->buf->head, i);
 
+            if (cp->target->dsize && !cp->chained)
+                cp->chained = 1;
+
             attach_dangling_alt(cp);
 
             /* x = current position PLUS 1
@@ -526,6 +529,7 @@ int stage1 (char *input, stack_t **ret)
     if ((err = stage1_init(cp, ret)) < 0)
         return err;
 
+    cp->chained = 0;
     state = STATE_START;
     lex_init();
 
@@ -580,6 +584,10 @@ int stage1 (char *input, stack_t **ret)
     /* Add the match instruction */
     set_op_match(&inst);
     stack_add_inst_head(cp->prog, &inst);
+
+    /* Re-use dsize member to indicate to stage2 whether
+     * jmp chain optimisation is needed */
+    cp->prog->dsize = cp->chained;
 
     stage1_cleanup(cp);
     return 0;

@@ -27,7 +27,7 @@ static const compv_t test_3_basic_3 = {
 
 static const compv_t test_4_basic_4 = {
     .rgx = "aa|bb|cc|dd",
-    .cmp = "b1,12:b2,9:b3,6:la:la:j8:lb:lb:j11:lc:lc:j14:ld:ld:m"
+    .cmp = "b1,12:b2,9:b3,6:la:la:j14:lb:lb:j14:lc:lc:j14:ld:ld:m"
 };
 
 static const compv_t test_5_basic_5 = {
@@ -47,7 +47,7 @@ static const compv_t test_7_basic_7 = {
 
 static const compv_t test_8_nest_1 = {
     .rgx = "(a|b|c+)*b(x+|y(zs?(dd[A-F0-9]|bb)*)+)?",
-    .cmp = "b10,1:b2,7:b3,5:la:j6:lb:j9:lc:b7,9:b10,1:lb:b12,30:b13,16:lx"
+    .cmp = "b10,1:b2,7:b3,5:la:j9:lb:j9:lc:b7,9:b10,1:lb:b12,30:b13,16:lx"
            ":b13,15:j30:ly:lz:b19,20:ls:b29,21:b22,26:ld:ld:cABCDEF0123456789"
            ":j28:lb:lb:b29,21:b17,30:m"
 };
