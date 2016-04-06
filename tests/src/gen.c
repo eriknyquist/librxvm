@@ -62,12 +62,6 @@ void regexvm_print_err (int err)
         case RVM_EMEM:
             msg = "Failed to allocate memory";
         break;
-        case RVM_ENEST:
-            msg = "Too many nested parenthesis groups";
-        break;
-        case RVM_ECLASSLEN:
-            msg = "Too many elements in character class";
-        break;
         case RVM_EINVAL:
             msg = "Unrecognised symbol";
         break;

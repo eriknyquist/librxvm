@@ -8,7 +8,7 @@
 
 const testmod_t mods[NUM_MODS] = {
     test_regexvm_err, test_regexvm_match, test_regexvm_iter,
-    test_regexvm_compile, fuzz_regexvm_match
+    test_regexvm_compile, test_fuzz_regexvm_match
 };
 
 int main (void)

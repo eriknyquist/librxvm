@@ -18,7 +18,7 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "gu(iu+h(yt*ft(gh|fvuyg(fff)*)*)*j+[a-z])*)*tdrf+y)*)*)*)x.*fxfxfct)*)"
 };
 
-int fuzz_regexvm_match (int *count)
+int test_fuzz_regexvm_match (int *count)
 {
     regexvm_t compiled;
     const char *msg;
@@ -31,7 +31,7 @@ int fuzz_regexvm_match (int *count)
     srand(time(NULL));
 
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
-        if ((ret = regexvm_compile(&compiled, testexp[i])) < 0) {
+        if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             printf("Error (%d) compiling expression %s\n", ret, testexp[i]);
             exit(ret);
         }
