@@ -67,9 +67,7 @@ static int is_sol (char *input, char *start, uint8_t multiline)
 
 static int is_eol (char *input, uint8_t multiline)
 {
-    if (!input) {
-        return 0;
-    } else if (*input == '\0') {
+    if (*input == '\0') {
         return 1;
     } else {
         return (multiline && *input == '\n') ? 1 : 0;
@@ -81,11 +79,9 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
     int t;
     int ii;
     int *dtemp;
-    int noinput;
     uint8_t *ltemp;
     inst_t *ip;
 
-    noinput = 0;
     tm->nsize = 0;
     tm->csize = 0;
     tm->match_end = NULL;
@@ -105,7 +101,6 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
             return 1;
         }
 
-        noinput = 0;
         /* run all the threads for this input character */
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
@@ -123,15 +118,13 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
                 break;
                 case OP_SOL:
                     if (is_sol(*input, sot, tm->multiline)) {
-                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
-                        noinput = 1;
+                        add_thread(tm->cp, tm->cp_lookup, &tm->csize, ii + 1);
                     }
 
                 break;
                 case OP_EOL:
                     if (is_eol(*input, tm->multiline)) {
-                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
-                        noinput = 1;
+                        add_thread(tm->cp, tm->cp_lookup, &tm->csize, ii + 1);
                     }
 
                 break;
@@ -171,7 +164,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 
         memset(tm->np_lookup, 0, compiled->size);
 
-    } while (noinput || *(*input)++);
+    } while (*(*input)++);
     return 0;
 }
 
