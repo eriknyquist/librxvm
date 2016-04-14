@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "regexvm.h"
 #include "test_common.h"
@@ -7,16 +8,27 @@
 char *rgx;
 char *input;
 
-#define NUM_ITER     1000
+#define NUM_ITER     10
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
     "<.*>.*^string$.*otherstring",
+
+    "<.*>.*^\\(.*\\)$.*^[A-F].+$.*",
+
     "\\[[0-9]+(\\.[0-9]+)*\\]",
+
     "aab*(de?(erg)*|qq[B-F]*)*z",
+
     "\\**\\++(\\??(\\.*([*+.?]*(\\((\\)(\\[)*)*)*)*)*)*",
+
     "kf?[0Oo3]r*(ty*(d+|ok(.ok)*|yg*yu|uy.+guy|uyg|r(plpl(lpl|p(p|l(lp(u?y|"
-    "gu(iu+h(yt*ft(gh|fvuyg(fff)*)*)*j+[a-z])*)*tdrf+y)*)*)*)x.*fxfxfct)*)"
+    "gu(iu+h(yt*ft(gh|fvuyg(fff)*)*)*j+[a-z])*)*tdrf+y)*)*)*)x.*fxfxfct)*)",
+
+    "(^aa(BB|77|&&|0|f+|(ddx)*)+$.*(cc(dd(EE(FF(gg(hh(II(jj(kk)*)*)*)*)*)*)*"
+    ")*)*.*)*",
+
+    "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p)*)+)*)+)*)+)*)+)*)+)*)+)*)+)*"
 };
 
 int test_fuzz_regexvm_match (int *count)
@@ -56,6 +68,7 @@ int test_fuzz_regexvm_match (int *count)
 
         printf("%s %d %s\n", msg, *count, __func__);
         ++(*count);
+
         regexvm_free(&compiled);
     }
 
