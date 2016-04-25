@@ -42,7 +42,8 @@ used, and then build them to try out some test expressions from your shell.
 Building the examples
 ---------------------
 
-**NOTE: You must install libregexvm before building the examples**
+After running the main Makefile from the **Installation** section, the examples
+can be built like so:
 ::
 
     cd examples
