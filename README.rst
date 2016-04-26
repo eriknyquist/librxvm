@@ -77,8 +77,16 @@ Using the examples
 
 |
 
-Supported metacharacters
-------------------------
+Regular Expression Syntax
+-------------------------
+
+A regular expression consists of ordinary characters and special characters.
+An ordinary character matches itself exactly (e.g. the expression ``abc``
+matches only the input string ``abc``).
+
+|
+
+A description of the available special characters follows.
 
 
     +---------+-----------------------+---------------------------------------+
