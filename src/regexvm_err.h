@@ -26,11 +26,14 @@
 
 #define RVM_BADOP      -1   /* Operator used incorrectly */
 #define RVM_BADCLASS   -2   /* Unexpected character class closing character */
-#define RVM_BADPAREN   -3   /* Unexpected closing parenthesis */
-#define RVM_EPAREN     -4   /* Unterminated parenthesis group */
-#define RVM_ECLASS     -5   /* Unterminated character class */
-#define RVM_ETRAIL     -6   /* Trailing escape character */
-#define RVM_EMEM       -7   /* Failed to allocate memory */
-#define RVM_EINVAL     -8   /* Invalid symbol */
+#define RVM_BADREP     -3   /* Unexpected closing repetition character */
+#define RVM_BADPAREN   -4   /* Unexpected closing parenthesis */
+#define RVM_EPAREN     -5   /* Unterminated parenthesis group */
+#define RVM_ECLASS     -6   /* Unterminated character class */
+#define RVM_EREP       -7   /* Missing repetition closing character */
+#define RVM_MREP       -8   /* Empty repetition */
+#define RVM_ETRAIL     -9   /* Trailing escape character */
+#define RVM_EMEM       -10  /* Failed to allocate memory */
+#define RVM_EINVAL     -11  /* Invalid symbol */
 
 #endif

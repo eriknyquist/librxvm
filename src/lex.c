@@ -26,11 +26,13 @@
 #include "lex.h"
 #include "regexvm_err.h"
 
+#define isdigit(x) ((x >= '0' && x <= '9') ? 1 : 0)
+
 char *lp1;
 char *lpn;
 
 enum {STATE_START, STATE_LITERAL, STATE_RANGE, STATE_CLASS, STATE_DEREF,
-      STATE_END};
+      STATE_REP, STATE_END};
 
 static unsigned int literal;
 
@@ -67,8 +69,13 @@ void lex_init (void)
 
 int lex (char **input)
 {
-    int state = STATE_START;
-    int ret = INVALIDSYM;
+    short comma;
+    int state;
+    int ret;
+
+    comma = 0;
+    state = STATE_START;
+    ret = INVALIDSYM;
 
     if (!**input) return END;
 
@@ -91,6 +98,13 @@ int lex (char **input)
                     ret = CHARC_CLOSE;
                     literal = 0;
                     *input += 1;
+
+                } else if (**input == REP_OPEN_SYM) {
+                   state = STATE_REP;
+                   *input += 1;
+
+                } else if (**input == REP_CLOSE_SYM) {
+                    return RVM_BADREP;
 
                 } else if (**input == LPAREN_SYM) {
                     state = simple_transition(literal, input, LPAREN, &ret);
@@ -117,7 +131,6 @@ int lex (char **input)
                 }
 
             break;
-
             case STATE_LITERAL:
                 if (**input == RANGE_SEP_SYM && literal) {
                     return RVM_EINVAL;
@@ -131,7 +144,6 @@ int lex (char **input)
                 }
 
             break;
-
             case STATE_DEREF:
                 if (!**input) {
                     return RVM_EINVAL;
@@ -143,9 +155,9 @@ int lex (char **input)
                 *input += 1;
                 state = STATE_END;
             break;
-
             case STATE_RANGE:
-                if (isprintable(**input) && !isreserved(**input)) {
+                if (isprintable(**input) &&
+                        !isreserved(**input)) {
                     state = STATE_END;
                     ret = CHAR_RANGE;
                     *input += 1;
@@ -154,11 +166,34 @@ int lex (char **input)
                 }
 
             break;
+            case STATE_REP:
+                if (**input == REP_CLOSE_SYM) {
+                    if (!isdigit(*(*input - 1)) &&
+                            !isdigit(*(lp1 + 1))) {
+                        return RVM_MREP;
+                    }
+
+                    state = STATE_END;
+                    ret = REP;
+                } else if (**input == ',') {
+                    if (comma)
+                        return RVM_EINVAL;
+
+                    comma = 1;
+                } else if (!isdigit(**input)) {
+                    return RVM_EINVAL;
+                }
+
+                *input += 1;
+            break;
         }
     }
 
-    if (state == STATE_DEREF)
+    if (state == STATE_DEREF) {
         ret = RVM_ETRAIL;
+    } else if (state == STATE_REP) {
+        ret = RVM_EREP;
+    }
 
     lpn = *input;
     return ret;

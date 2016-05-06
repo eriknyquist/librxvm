@@ -118,7 +118,7 @@ int stage2 (stack_t *ir, regexvm_t *ret)
         if (inst->op == OP_BRANCH) {
             inst->x += i;
             inst->y += i;
-        } else if (inst->op == OP_JMP) {
+        } else if (inst->op == OP_JMP || inst->op == OP_JLT) {
             inst->x += i;
         }
 

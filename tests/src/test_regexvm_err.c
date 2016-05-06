@@ -120,6 +120,51 @@ static const errtest_t test_err_etrail_22 = {
     .err = RVM_ETRAIL
 };
 
+static const errtest_t test_err_badrep_23 = {
+    .rgx = "abc}",
+    .err = RVM_BADREP
+};
+
+static const errtest_t test_err_badrep_24 = {
+    .rgx = "abc(def){2,6}}",
+    .err = RVM_BADREP
+};
+
+static const errtest_t test_err_badrep_25 = {
+    .rgx = "}",
+    .err = RVM_BADREP
+};
+
+static const errtest_t test_err_erep_26 = {
+    .rgx = "e+(kn){3",
+    .err = RVM_EREP
+};
+
+static const errtest_t test_err_erep_27 = {
+    .rgx = "a{3,}{",
+    .err = RVM_EREP
+};
+
+static const errtest_t test_err_erep_28 = {
+    .rgx = "a{",
+    .err = RVM_EREP
+};
+
+static const errtest_t test_err_mrep_29 = {
+    .rgx = "frr{}",
+    .err = RVM_MREP
+};
+
+static const errtest_t test_err_mrep_30 = {
+    .rgx = "fw(uu){,}",
+    .err = RVM_MREP
+};
+
+static const errtest_t test_err_badop_31 = {
+    .rgx = "{3}",
+    .err = RVM_BADOP
+};
+
 static const errtest_t *err_tests[NUM_TESTS_ERR] = {
     &test_err_badop_1, &test_err_badop_2, &test_err_badop_3, &test_err_badop_4,
     &test_err_badop_5, &test_err_badop_6, &test_err_badclass_7,
@@ -127,7 +172,10 @@ static const errtest_t *err_tests[NUM_TESTS_ERR] = {
     &test_err_badclass_11, &test_err_badparen_12, &test_err_badparen_13,
     &test_err_badparen_14, &test_err_badparen_15, &test_err_eparen_16,
     &test_err_eparen_17, &test_err_eparen_18, &test_err_eparen_19,
-    &test_err_eclass_20, &test_err_eclass_21, &test_err_etrail_22
+    &test_err_eclass_20, &test_err_eclass_21, &test_err_etrail_22,
+    &test_err_badrep_23, &test_err_badrep_24, &test_err_badrep_25,
+    &test_err_erep_26, &test_err_erep_27, &test_err_erep_28, &test_err_mrep_29,
+    &test_err_mrep_30, &test_err_badop_31
 };
 
 int test_regexvm_err (int *count)

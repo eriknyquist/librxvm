@@ -61,6 +61,9 @@ void regexvm_print_err (int err)
         case RVM_BADCLASS:
             msg = "Unexpected character class closing character";
         break;
+        case RVM_BADREP:
+            msg = "Unexpected closing repetition character";
+        break;
         case RVM_BADPAREN:
             msg = "Unexpected parenthesis group closing character";
         break;
@@ -69,6 +72,12 @@ void regexvm_print_err (int err)
         break;
         case RVM_ECLASS:
             msg = "Unterminated character class";
+        break;
+        case RVM_EREP:
+            msg = "Missing repetition closing character";
+        break;
+        case RVM_MREP:
+            msg = "Empty repetition";
         break;
         case RVM_ETRAIL:
             msg = "Trailing escape character";

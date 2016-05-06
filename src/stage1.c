@@ -29,8 +29,11 @@
 #include "regexvm_common.h"
 #include "stack.h"
 
+#define REP_NO_FIELD        -1
+#define REP_FIELD_EMPTY     -2
+
 #define ISOP(x) \
-((x == ONE || x == ZERO || x == ONEZERO || x == ALT) ? 1 : 0)
+((x == ONE || x == ZERO || x == ONEZERO || x == ALT || x == REP) ? 1 : 0)
 
 /* pointers for the start & end of text in
  * input string for the current token */
@@ -87,6 +90,14 @@ static void set_op_jmp (inst_t *inst, int x)
     memset(inst, 0, sizeof(inst_t));
     inst->op = OP_JMP;
     inst->x = x;
+}
+
+static void set_op_jlt (inst_t *inst, int j, int i)
+{
+    memset(inst, 0, sizeof(inst_t));
+    inst->op = OP_JLT;
+    inst->x = j;
+    inst->y = i;
 }
 
 static void set_op_match (inst_t *inst)
@@ -185,6 +196,151 @@ static void stack_stack_cleanup (void *data)
     stack_free(stack, inst_stack_cleanup);
 }
 
+static void parse_rep (char *start, char *end, int *rep_n, int *rep_m)
+{
+    int *curr;
+
+    *rep_n = REP_NO_FIELD;
+    *rep_m = REP_NO_FIELD;
+    curr = rep_n;
+
+    while (++start != (end - 1)) {
+        if (*start == ',') {
+            curr = rep_m;
+        } else {
+            if (*curr == REP_NO_FIELD)
+                *curr = 0;
+            *curr *= 10;
+            *curr += (*start - '0');
+        }
+    }
+
+    if (curr == rep_m) {
+        if (*rep_n == REP_NO_FIELD)
+            *rep_n = REP_FIELD_EMPTY;
+        if (*rep_m == REP_NO_FIELD)
+            *rep_m = REP_FIELD_EMPTY;
+    }
+}
+
+static int code_rep_range (context_t *cp, int rep_n, int rep_m,
+                           unsigned int size, stackitem_t *i)
+{
+    inst_t inst;
+
+    set_op_jlt(&inst, 2, rep_n);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    set_op_branch(&inst, 1, size + 2);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    stack_cat_from_item(cp->target, cp->buf->head, i);
+
+    set_op_jlt(&inst, -(size + 2), rep_m - 1);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    return 0;
+}
+
+
+static int code_rep_more (context_t *cp, int rep_n, unsigned int size,
+                          stackitem_t *i)
+{
+    inst_t inst;
+
+    stack_cat_from_item(cp->target, cp->buf->head, i);
+
+    set_op_jlt(&inst, -(size), rep_n - 1);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    set_op_branch(&inst, -(size + 1), 1);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    return 0;
+}
+
+static int code_rep_less (context_t *cp, int rep_m, unsigned int size,
+                          stackitem_t *i)
+{
+    inst_t inst;
+
+    set_op_branch(&inst, 1, size + 2);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    stack_cat_from_item(cp->target, cp->buf->head, i);
+
+    set_op_jlt(&inst, -(size + 1), rep_m - 1);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    return 0;
+}
+
+static int code_rep_n (context_t *cp, int rep_n, unsigned int size,
+                       stackitem_t *i)
+{
+    inst_t inst;
+
+    stack_cat_from_item(cp->target, cp->buf->head, i);
+
+    set_op_jlt(&inst, -(size), rep_n + 1);
+    if (stack_add_inst_head(cp->target, &inst) == NULL) {
+        return RVM_EMEM;
+    }
+
+    return 0;
+}
+
+static int process_op_rep (context_t *cp, int rep_n, int rep_m,
+                           unsigned int size, stackitem_t *i)
+{
+    int err;
+
+    /* {n,m} */
+    if (rep_n >= 0 && rep_m >=0) {
+        if ((err = code_rep_range(cp, rep_n, rep_m, size, i)) < 0) {
+            return err;
+        }
+
+    /* {n,} */
+    } else if (rep_n > 0 && rep_m == REP_FIELD_EMPTY) {
+        if ((err = code_rep_more(cp, rep_n, size, i)) < 0) {
+            return err;
+        }
+
+    /* {,m} */
+    } else if (rep_n == REP_FIELD_EMPTY && rep_m > 0) {
+        if ((err = code_rep_less(cp, rep_m, size, i)) < 0) {
+            return err;
+        }
+
+    /* {n} */
+    } else if (rep_m == REP_NO_FIELD) {
+        if ((err = code_rep_n(cp, rep_n, size, i)) < 0) {
+            return err;
+        }
+
+    /* Special case; treat as '*' operator */
+    } else if (rep_n == 0 && rep_m == REP_FIELD_EMPTY) {
+
+    }
+
+    return 0;
+}
+
 /* process_op: process operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'operand', and
  * append the generated instructions to 'target' */
@@ -195,6 +351,8 @@ static int process_op (context_t *cp)
     stackitem_t *y;
     stack_t *cur;
     unsigned int size;
+    int rep_n;
+    int rep_m;
     inst_t inst;
 
     if (cp->buf == NULL || cp->buf->head == NULL) {
@@ -223,11 +381,14 @@ static int process_op (context_t *cp)
 
     /* Generate instructions for operator & operand(s) */
     switch (cp->tok) {
+        case REP:
+            parse_rep(lp1, lpn, &rep_n, &rep_m);
+            process_op_rep(cp, rep_n, rep_m, size, i);
+        break;
         case ONE:
             /* x = current position MINUS size of operand buf
              * y = current position PLUS 1 */
             set_op_branch(&inst, -(size), 1);
-
             stack_cat_from_item(cp->target, cp->buf->head, i);
             if (stack_add_inst_head(cp->target, &inst) == NULL)
                 return RVM_EMEM;
@@ -236,9 +397,10 @@ static int process_op (context_t *cp)
             /* x = current position PLUS size of operand buf PLUS 2
              * y = current position PLUS 1 */
             set_op_branch(&inst, size + 2, 1);
-
             x = stack_add_inst_head(cp->target, &inst);
+
             stack_cat_from_item(cp->target, cp->buf->head, i);
+
             set_op_branch(&inst, 1, -(size));
             y = stack_add_inst_head(cp->target, &inst);
 

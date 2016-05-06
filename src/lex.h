@@ -33,6 +33,8 @@
 #define CHARC_CLOSE_SYM      ']'
 #define LPAREN_SYM           '('
 #define RPAREN_SYM           ')'
+#define REP_OPEN_SYM         '{'
+#define REP_CLOSE_SYM        '}'
 #define RANGE_SEP_SYM        '-'
 #define ONE_SYM              '+'
 #define ZERO_SYM             '*'
@@ -45,7 +47,7 @@
 
 /* lexer return tokens */
 enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
-      ZERO, ONEZERO, ALT, ANY, LITERAL, SOL, EOL, INVALIDSYM, END};
+      ZERO, ONEZERO, ALT, ANY, LITERAL, REP, SOL, EOL, INVALIDSYM, END};
 
 void lex_init (void);
 int lex (char **input);

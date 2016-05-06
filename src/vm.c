@@ -27,10 +27,7 @@
 #include "regexvm.h"
 #include "vm.h"
 
-#define ASCII_UCASE_A    0x41
-#define ASCII_UCASE_Z    0x5A
-
-#define tolower(x) ((x <= 0x5A && x >= 0x41) ? x + 32 : x)
+#define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
 
 static int char_match (uint8_t icase, char a, char b)
 {
