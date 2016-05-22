@@ -71,6 +71,96 @@ static int is_eol (char *input, uint8_t multiline)
     }
 }
 
+#if (DBGF)
+void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
+{
+    unsigned int i;
+    inst_t *inst;
+
+    for (i = 0; i < compiled->size; i++) {
+        inst = compiled->exe[i];
+
+        if (i == point) {
+            fprintf(fp, "----> ");
+        } else {
+            fprintf(fp, "      ");
+        }
+
+        switch(inst->op) {
+            case OP_CHAR:
+                fprintf(fp, "%-4dchar %c\n", i, inst->c);
+            break;
+            case OP_ANY:
+                fprintf(fp, "%-4dany\n", i);
+            break;
+            case OP_SOL:
+                fprintf(fp, "%-4dsol\n", i);
+            break;
+            case OP_EOL:
+                fprintf(fp, "%-4deol\n", i);
+            break;
+            case OP_CLASS:
+                fprintf(fp, "%-4dclass %s\n", i, inst->ccs);
+            break;
+            case OP_BRANCH:
+                fprintf(fp, "%-4dbranch %d %d\n", i, inst->x, inst->y);
+            break;
+            case OP_JMP:
+                fprintf(fp, "%-4djmp %d\n", i, inst->x);
+            break;
+            case OP_JLT:
+                fprintf(fp, "%-4djlt %d %d\n", i, inst->x, inst->y);
+            break;
+            case OP_MATCH:
+                fprintf(fp, "%-4dmatch\n", i);
+            break;
+        }
+    }
+}
+
+void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
+                          char *sot, char *input)
+{
+    FILE *fp;
+    char filename[50];
+    int i;
+
+    snprintf(filename, 50, ".rvm_dbgf/%d.dbgf", ++fcnt);
+
+    if ((fp = fopen(filename, "w")) == NULL) {
+        printf("Error opening file %s for writing\n", filename);
+        return;
+    }
+
+    fprintf(fp, "%s\n", sot);
+    for (i = 0; i < (input - sot); ++i) {
+        fprintf(fp, " ");
+    }
+    fprintf(fp, "^\n\n");
+    regexvm_print_pointer(fp, compiled, tm->cp[cur]);
+    fprintf(fp, "\n");
+
+    fprintf(fp, "Threads for current input character:\n");
+    fprintf(fp, "-----------------------------------\n\n");
+    for (i = 0; i < tm->csize; ++i) {
+        fprintf(fp, "%-4d", tm->cp[i]);
+    }
+    fprintf(fp, "\n");
+    for (i = 0; i < cur; ++i) {
+        fprintf(fp, "    ");
+    }
+    fprintf(fp, "^\n\n\n");
+
+    fprintf(fp, "Threads for next input character:\n");
+    fprintf(fp, "--------------------------------\n\n");
+    for (i = 0; i < tm->nsize; ++i) {
+        fprintf(fp, "%-4d", tm->np[i]);
+    }
+    fprintf(fp, "\n");
+    fclose(fp);
+}
+#endif  /* DBGF */
+
 int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 {
     int t;
@@ -102,6 +192,10 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
             ip = compiled->exe[ii]; /* pointer to instruction data */
+
+#if (DBGF)
+            print_threads_state(compiled, tm, t, sot, *input);
+#endif /* DBGF */
 
             switch (ip->op) {
                 case OP_CHAR:
@@ -143,6 +237,9 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
                     if (tm->nongreedy) return 1;
                 break;
             }
+#if (DBGF)
+            print_threads_state(compiled, tm, t, sot, *input);
+#endif /* DBGF */
         }
 
         /* Threads saved for the next input character
