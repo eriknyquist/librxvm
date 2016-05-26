@@ -161,6 +161,24 @@ void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
 }
 #endif  /* DBGF */
 
+static void add_thread_curr (threads_t *tm, int val)
+{
+    add_thread(tm->cp, tm->cp_lookup, &tm->csize, val);
+}
+
+static void add_thread_next (threads_t *tm, int val)
+{
+    add_thread(tm->np, tm->np_lookup, &tm->nsize, val);
+}
+
+static void vm_zero (threads_t *tm, unsigned int size)
+{
+    memset(tm->cp_lookup, 0, size);
+    memset(tm->np_lookup, 0, size);
+    memset(tm->cp, 0, sizeof(int) * size);
+    memset(tm->np, 0, sizeof(int) * size);
+}
+
 int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 {
     int t;
@@ -173,12 +191,8 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
     tm->csize = 0;
     tm->match_end = NULL;
 
-    memset(tm->cp_lookup, 0, compiled->size);
-    memset(tm->np_lookup, 0, compiled->size);
-    memset(tm->cp, 0, compiled->size);
-    memset(tm->np, 0, compiled->size);
-
-    add_thread(tm->cp, tm->cp_lookup, &tm->csize, 0);
+    vm_zero(tm, compiled->size);
+    add_thread_curr(tm, 0);
     tm->match_start = *input;
 
     do {
@@ -200,37 +214,37 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
             switch (ip->op) {
                 case OP_CHAR:
                     if (char_match(tm->icase, **input, ip->c)) {
-                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
+                        add_thread_next(tm, ii + 1);
                     }
 
                 break;
                 case OP_ANY:
-                    add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
+                    add_thread_next(tm, ii + 1);
                 break;
                 case OP_SOL:
                     if (is_sol(*input, sot, tm->multiline)) {
-                        add_thread(tm->cp, tm->cp_lookup, &tm->csize, ii + 1);
+                        add_thread_curr(tm, ii + 1);
                     }
 
                 break;
                 case OP_EOL:
                     if (is_eol(*input, tm->multiline)) {
-                        add_thread(tm->cp, tm->cp_lookup, &tm->csize, ii + 1);
+                        add_thread_curr(tm, ii + 1);
                     }
 
                 break;
                 case OP_CLASS:
                     if (ccs_match(tm->icase, ip->ccs, **input)) {
-                        add_thread(tm->np, tm->np_lookup, &tm->nsize, ii + 1);
+                        add_thread_next(tm, ii + 1);
                     }
 
                 break;
                 case OP_BRANCH:
-                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->x);
-                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->y);
+                    add_thread_curr(tm, ip->x);
+                    add_thread_curr(tm, ip->y);
                 break;
                 case OP_JMP:
-                    add_thread(tm->cp, tm->cp_lookup, &tm->csize, ip->x);
+                    add_thread_curr(tm, ip->x);
                 break;
                 case OP_MATCH:
                     tm->match_end = *input;
