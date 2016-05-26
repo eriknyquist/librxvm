@@ -12,6 +12,14 @@ char *input;
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
+    "([\\.]+|\\**)*a?d*;+",
+
+    "abc*(cd?)*",
+
+    "@*(asd+(sd(p|gg(ju)*)+)+)+",
+
+    "a+(r*e+ (y*o+u)* d+r)*u+n*k+\\?*",
+
     "<.*>.*^string$.*otherstring",
 
     "<.*>.*^\\(.*\\)$.*^[A-F].+$.*",
