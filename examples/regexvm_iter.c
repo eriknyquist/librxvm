@@ -86,7 +86,7 @@ void regexvm_print_err (int err)
             msg = "Failed to allocate memory";
         break;
         case RVM_EINVAL:
-            msg = "Unrecognised symbol";
+            msg = "Invalid symbol";
         break;
         default:
             msg = "Unrecognised error code";
