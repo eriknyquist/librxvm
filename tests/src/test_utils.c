@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "regexvm.h"
 #include "lex.h"
 #include "test_common.h"
 
+#define NUMNAMES        7
 #define BLOCK_SIZE      10
 
 static unsigned int space;
@@ -117,4 +119,36 @@ int compile_testexp (regexvm_t *compiled, char *exp)
     printf("\n");
 #endif
     return 0;
+}
+
+char *hrsize (uint64_t size)
+{
+    static const char *names[NUMNAMES] =
+    {
+        "EB", "PB", "TB", "GB", "MB", "KB", "B"
+    };
+    char *ret;
+    uint64_t mult;
+    size_t retsize;
+    int i;
+
+    retsize = sizeof(char) * 20;
+    mult = EXABYTES;
+    ret = malloc(retsize);
+
+    for (i = 0; i < NUMNAMES; ++i, mult /= 1024) {
+        if (size < mult)
+            continue;
+
+        if ((size % mult) == 0) {
+            snprintf(ret, retsize, "%"PRIu64" %s", size / mult, names[i]);
+        } else {
+            snprintf(ret, retsize, "%.2f %s", (float) size / mult, names[i]);
+        }
+
+        return ret;
+    }
+
+    strcpy(ret, "0");
+    return ret;
 }

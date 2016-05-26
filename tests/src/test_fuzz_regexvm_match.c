@@ -8,7 +8,7 @@
 char *rgx;
 char *input;
 
-#define NUM_ITER     10
+#define NUM_ITER     10000
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
@@ -31,11 +31,36 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p)*)+)*)+)*)+)*)+)*)+)*)+)*)+)*"
 };
 
+static void print_whitespace(char *str)
+{
+    while (*str) {
+        switch (*str) {
+            case '\n':
+                printf("\\n");
+            break;
+            case '\r':
+                printf("\\r");
+            break;
+            case '\t':
+                printf("\\t");
+            break;
+            case '\v':
+                printf("\\v");
+            break;
+            default:
+                printf("%c", *str);
+        }
+        ++str;
+    }
+}
+
 int test_fuzz_regexvm_match (int *count)
 {
     regexvm_t compiled;
     const char *msg;
     char *gen;
+    char *sizestr;
+    uint64_t gensize;
     int ret;
     int i;
     int j;
@@ -44,6 +69,7 @@ int test_fuzz_regexvm_match (int *count)
     srand(time(NULL));
 
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
+        gensize = 0;
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             printf("Error (%d) compiling expression %s\n", ret, testexp[i]);
             exit(ret);
@@ -54,19 +80,27 @@ int test_fuzz_regexvm_match (int *count)
                 printf("Error generating string for %s\n", testexp[i]);
                 ++ret;
             } else {
+                gensize += sizeof(char) * strlen(gen);
                 if (regexvm_match(&compiled, gen, 0)) {
                     msg = "ok";
                 } else {
-                    printf("Matching input %s falsely report non-matching "
-                           "against expression %s\n", gen, testexp[i]);
+                    printf("Matching input ");
+                    print_whitespace(gen);
+                    printf(" is falsely reported as non-matching against "
+                           "expression %s\n", testexp[i]);
                     ++ret;
                 }
 
+                fflush(stdout);
                 free(gen);
             }
         }
 
-        printf("%s %d %s\n", msg, *count, __func__);
+        sizestr = hrsize(gensize);
+        printf("%s %d %s: tested %s of input data\n", msg, *count, __func__,
+               sizestr);
+        free(sizestr);
+        gensize = 0;
         ++(*count);
 
         regexvm_free(&compiled);
