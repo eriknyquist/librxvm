@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT(regexvm, 0.6, eknyquist@gmail.com)
+AC_INIT(regexvm, 0.7, eknyquist@gmail.com)
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/stack.c])
 AC_CONFIG_AUX_DIR([build-aux])
