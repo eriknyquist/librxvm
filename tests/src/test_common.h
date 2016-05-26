@@ -18,6 +18,7 @@ typedef int(*testmod_t)(int *);
 
 char *generate_matching_string (regexvm_t *compiled);
 int compile_testexp (regexvm_t *compiled, char *exp);
+void regexvm_print_oneline (regexvm_t *compiled);
 void regexvm_print_err (int err);
 char *hrsize (uint64_t size);
 

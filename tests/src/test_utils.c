@@ -66,6 +66,52 @@ void regexvm_print_err (int err)
     printf("Error %d: %s\n", err, msg);
 }
 
+void regexvm_print_oneline (regexvm_t *compiled)
+{
+    unsigned int i;
+    inst_t *inst;
+
+    for (i = 0; i < compiled->size; i++) {
+        inst = compiled->exe[i];
+
+        switch(inst->op) {
+            case OP_CHAR:
+                printf("l%c", inst->c);
+            break;
+            case OP_ANY:
+                printf("a");
+            break;
+            case OP_SOL:
+                printf("s");
+            break;
+            case OP_EOL:
+                printf("e");
+            break;
+            case OP_CLASS:
+                printf("c%s", inst->ccs);
+            break;
+            case OP_BRANCH:
+                printf("b%d,%d", inst->x, inst->y);
+            break;
+            case OP_JMP:
+                printf("j%d", inst->x);
+            break;
+            case OP_JLT:
+                printf("t%d,%d", inst->x, inst->y);
+            break;
+            case OP_MATCH:
+                printf("m");
+            break;
+        }
+
+        if (i == (compiled->size - 1)) {
+            printf("\n");
+        } else {
+            printf(":");
+        }
+    }
+}
+
 #if (TEST_PRINT_SIZES)
 static void print_heap_usage (unsigned int size)
 {
