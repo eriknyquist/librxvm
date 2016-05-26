@@ -394,14 +394,14 @@ static int process_op (context_t *cp)
                 return RVM_EMEM;
         break;
         case ZERO:
-            /* x = current position PLUS size of operand buf PLUS 2
-             * y = current position PLUS 1 */
-            set_op_branch(&inst, size + 2, 1);
+            /* x = current position PLUS 1
+             * y = current position PLUS size of operand buf PLUS 2 */
+            set_op_branch(&inst, 1, size + 2);
             x = stack_add_inst_head(cp->target, &inst);
 
             stack_cat_from_item(cp->target, cp->buf->head, i);
 
-            set_op_branch(&inst, 1, -(size));
+            set_op_branch(&inst, -(size), 1);
             y = stack_add_inst_head(cp->target, &inst);
 
             if (x == NULL || y == NULL)
