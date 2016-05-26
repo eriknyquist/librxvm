@@ -12,9 +12,11 @@ MEMCHECK := tests/scripts/memcheck.sh
 CFLAGS := -Wall -Wno-trigraphs -I$(RVM_INC) -I$(TEST_INC) -g -O0
 
 
-all: $(RVM_OBJS) $(TEST_OBJS)
-	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $(TESTS)
+all: $(TESTS)
 	./$(MEMCHECK) $(TESTS)
+
+$(TESTS): $(RVM_OBJS) $(TEST_OBJS)
+	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $@
 
 clean:
 	@- $(RM) $(TESTS) $(RVM_OBJS) $(TEST_OBJS)
