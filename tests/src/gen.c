@@ -7,8 +7,6 @@
 char *rgx;
 char *input;
 
-static void regexvm_print_err (int err);
-
 int main (int argc, char *argv[])
 {
     char *gen;
@@ -34,40 +32,4 @@ int main (int argc, char *argv[])
     free(gen);
     regexvm_free(&compiled);
     return ret;
-}
-
-void regexvm_print_err (int err)
-{
-    const char *msg;
-
-    switch (err) {
-        case RVM_BADOP:
-            msg = "Operator used incorrectly";
-        break;
-        case RVM_BADCLASS:
-            msg = "Unexpected character class closing character";
-        break;
-        case RVM_BADPAREN:
-            msg = "Unexpected parenthesis group closing character";
-        break;
-        case RVM_EPAREN:
-            msg = "Unterminated parenthesis group";
-        break;
-        case RVM_ECLASS:
-            msg = "Unterminated character class";
-        break;
-        case RVM_ETRAIL:
-            msg = "Trailing escape character";
-        break;
-        case RVM_EMEM:
-            msg = "Failed to allocate memory";
-        break;
-        case RVM_EINVAL:
-            msg = "Unrecognised symbol";
-        break;
-        default:
-            msg = "Unrecognised error code";
-    }
-
-    printf("Error %d: %s\n", err, msg);
 }
