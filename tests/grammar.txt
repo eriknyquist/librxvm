@@ -1,0 +1,17 @@
+<RE>            ::=   <union> | <simple-RE>
+<union>         ::=   <RE> "|" <simple-RE>
+<simple-RE>     ::=   <concatenation> | <basic-RE>
+<concatenation> ::=   <simple-RE> <basic-RE>
+<basic-RE>      ::=   <star> | <plus> | <elementary-RE>
+<star>          ::=   <elementary-RE> "*"
+<plus>          ::=   <elementary-RE> "+"
+<elementary-RE> ::=   <group> | <any> | <eol> | <sol> | <char> | <set>
+<group>         ::=   "(" <RE> ")"
+<any>           ::=   "."
+<sol>           ::=   "^"
+<eol>           ::=   "$"
+<char>          ::=   any non metacharacter | "\" metacharacter
+<set>           ::=   "[" <set-items
+<set-items>     ::=   <set-item> | <set-item> <set-items>
+<set-item>      ::=   <range> | <char>
+<range>         ::=   <char> "-" <char>
