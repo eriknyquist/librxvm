@@ -28,6 +28,7 @@
 #include "regexvm_err.h"
 #include "regexvm_common.h"
 #include "stack.h"
+#include "vmcode.h"
 
 #define REP_NO_FIELD        -1
 #define REP_FIELD_EMPTY     -2
@@ -42,21 +43,11 @@ extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
 
-/* set_op functions:
- * a bunch of convenience functions for populating
- * inst_t types for all instructions */
 static void set_op_char (inst_t *inst, char c)
 {
     memset(inst, 0, sizeof(inst_t));
     inst->op = OP_CHAR;
     inst->c = c;
-}
-
-static void set_op_class (inst_t *inst, char *ccs)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_CLASS;
-    inst->ccs = ccs;
 }
 
 static void set_op_any (inst_t *inst)
@@ -75,96 +66,6 @@ static void set_op_eol (inst_t *inst)
 {
     memset(inst, 0, sizeof(inst_t));
     inst->op = OP_EOL;
-}
-
-static void set_op_branch (inst_t *inst, int x, int y)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_BRANCH;
-    inst->x = x;
-    inst->y = y;
-}
-
-static void set_op_jmp (inst_t *inst, int x)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_JMP;
-    inst->x = x;
-}
-
-static void set_op_jlt (inst_t *inst, int j, int i)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_JLT;
-    inst->x = j;
-    inst->y = i;
-}
-
-static void set_op_match (inst_t *inst)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_MATCH;
-}
-
-/* create_inst: allocate space for an inst_t, populate it
-   with the data in 'inst' and return a pointer to it */
-static inst_t *create_inst (inst_t *inst)
-{
-    inst_t *new;
-
-    if ((new = malloc(sizeof(inst_t))) == NULL)
-        return NULL;
-
-    memset(new, 0, sizeof(inst_t));
-
-    new->op = inst->op;
-    new->c = inst->c;
-    new->x = inst->x;
-    new->y = inst->y;
-    new->ccs = inst->ccs;
-
-    return new;
-}
-
-static stackitem_t *stack_add_inst_head (stack_t *stack, inst_t *inst)
-{
-    return stack_add_head(stack, (void *) create_inst(inst));
-}
-
-static stackitem_t *stack_add_inst_tail (stack_t *stack, inst_t *inst)
-{
-    return stack_add_tail(stack, (void *) create_inst(inst));
-}
-
-/* stack_cat_from_item: append items from a stack, starting from
- * stack item 'i', until stack item 'stop' is reached, onto stack1. */
-static void stack_cat_from_item (stack_t *stack1, stackitem_t *stop,
-                                 stackitem_t *i)
-{
-    while (1) {
-        stack_point_new_head(stack1, i);
-        if (i == stop) break;
-        i = i->previous;
-    }
-}
-
-/* when an alternation operator "|" is seen, it leaves a 'jmp'
- * instructuction with an unset pointer. This pointer marks the end of
- * that alternation, and attach_dangling_alt is called to set this
- * pointer when 1) another "| alt. token is seen, 2) a right-paren.
- * token is seen, or 3) the end of the input string is reached. */
-static void attach_dangling_alt (context_t *cp)
-{
-    inst_t *inst;
-
-    if (cp->target->dangling_alt == NULL) {
-        return;
-    } else {
-        inst = (inst_t *) cp->target->dangling_alt->data;
-        inst->x = (cp->target->size - cp->target->dsize) + 1;
-
-        cp->target->dangling_alt = NULL;
-    }
 }
 
 static void stack_reset (stack_t *stack)
@@ -194,114 +95,6 @@ static void stack_stack_cleanup (void *data)
 
     stack = (stack_t *) data;
     stack_free(stack, inst_stack_cleanup);
-}
-
-static void parse_rep (char *start, char *end, int *rep_n, int *rep_m)
-{
-    int *curr;
-
-    *rep_n = REP_NO_FIELD;
-    *rep_m = REP_NO_FIELD;
-    curr = rep_n;
-
-    while (++start != (end - 1)) {
-        if (*start == ',') {
-            curr = rep_m;
-        } else {
-            if (*curr == REP_NO_FIELD)
-                *curr = 0;
-            *curr *= 10;
-            *curr += (*start - '0');
-        }
-    }
-
-    if (curr == rep_m) {
-        if (*rep_n == REP_NO_FIELD)
-            *rep_n = REP_FIELD_EMPTY;
-        if (*rep_m == REP_NO_FIELD)
-            *rep_m = REP_FIELD_EMPTY;
-    }
-}
-
-static int code_rep_range (context_t *cp, int rep_n, int rep_m,
-                           unsigned int size, stackitem_t *i)
-{
-    inst_t inst;
-
-    set_op_jlt(&inst, 2, rep_n);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    set_op_branch(&inst, 1, size + 2);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size + 2), rep_m - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    return 0;
-}
-
-
-static int code_rep_more (context_t *cp, int rep_n, unsigned int size,
-                          stackitem_t *i)
-{
-    inst_t inst;
-
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size), rep_n - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    set_op_branch(&inst, -(size + 1), 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    return 0;
-}
-
-static int code_rep_less (context_t *cp, int rep_m, unsigned int size,
-                          stackitem_t *i)
-{
-    inst_t inst;
-
-    set_op_branch(&inst, 1, size + 2);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size + 1), rep_m - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    return 0;
-}
-
-static int code_rep_n (context_t *cp, int rep_n, unsigned int size,
-                       stackitem_t *i)
-{
-    inst_t inst;
-
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size), rep_n + 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    return 0;
 }
 
 static int process_op_rep (context_t *cp, int rep_n, int rep_m,
@@ -341,19 +134,43 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
     return 0;
 }
 
+static void parse_rep (char *start, char *end, int *rep_n, int *rep_m)
+{
+    int *curr;
+
+    *rep_n = REP_NO_FIELD;
+    *rep_m = REP_NO_FIELD;
+    curr = rep_n;
+
+    while (++start != (end - 1)) {
+        if (*start == ',') {
+            curr = rep_m;
+        } else {
+            if (*curr == REP_NO_FIELD)
+                *curr = 0;
+            *curr *= 10;
+            *curr += (*start - '0');
+        }
+    }
+
+    if (curr == rep_m) {
+        if (*rep_n == REP_NO_FIELD)
+            *rep_n = REP_FIELD_EMPTY;
+        if (*rep_m == REP_NO_FIELD)
+            *rep_m = REP_FIELD_EMPTY;
+    }
+}
+
 /* process_op: process operator 'tok' against a buffer of
  * literals 'buf', where the first operand is 'operand', and
  * append the generated instructions to 'target' */
 static int process_op (context_t *cp)
 {
     stackitem_t *i;
-    stackitem_t *x;
-    stackitem_t *y;
     stack_t *cur;
     unsigned int size;
     int rep_n;
     int rep_m;
-    inst_t inst;
 
     if (cp->buf == NULL || cp->buf->head == NULL) {
         if (cp->tok == ALT) {
@@ -376,9 +193,6 @@ static int process_op (context_t *cp)
         }
     }
 
-    x = NULL;
-    y = NULL;
-
     /* Generate instructions for operator & operand(s) */
     switch (cp->tok) {
         case REP:
@@ -386,58 +200,16 @@ static int process_op (context_t *cp)
             process_op_rep(cp, rep_n, rep_m, size, i);
         break;
         case ONE:
-            /* x = current position MINUS size of operand buf
-             * y = current position PLUS 1 */
-            set_op_branch(&inst, -(size), 1);
-            stack_cat_from_item(cp->target, cp->buf->head, i);
-            if (stack_add_inst_head(cp->target, &inst) == NULL)
-                return RVM_EMEM;
+            code_one(cp, size, i);
         break;
         case ZERO:
-            /* x = current position PLUS 1
-             * y = current position PLUS size of operand buf PLUS 2 */
-            set_op_branch(&inst, 1, size + 2);
-            x = stack_add_inst_head(cp->target, &inst);
-
-            stack_cat_from_item(cp->target, cp->buf->head, i);
-
-            set_op_branch(&inst, -(size), 1);
-            y = stack_add_inst_head(cp->target, &inst);
-
-            if (x == NULL || y == NULL)
-                return RVM_EMEM;
+            code_zero(cp, size, i);
         break;
         case ONEZERO:
-            /* x = current position PLUS 1
-             * y = current position PLUS size of operand buf PLUS 1 */
-            set_op_branch(&inst, 1, size + 1);
-
-            if (stack_add_inst_head(cp->target, &inst) == NULL)
-                return RVM_EMEM;
-
-            stack_cat_from_item(cp->target, cp->buf->head, i);
+            code_onezero(cp, size, i);
         break;
         case ALT:
-            if (i != NULL)
-                stack_cat_from_item(cp->target, cp->buf->head, i);
-
-            if (cp->target->dsize && !cp->chained)
-                cp->chained = 1;
-
-            attach_dangling_alt(cp);
-
-            /* x = current position PLUS 1
-             * y = current position PLUS size of target buf PLUS 2 */
-            set_op_branch(&inst, 1, cp->target->size + 2);
-
-            x = stack_add_inst_tail(cp->target, &inst);
-            set_op_jmp(&inst, 0);
-            cp->target->dangling_alt = stack_add_inst_head(cp->target, &inst);
-            cp->target->dsize = cp->target->size;
-
-            if (x == NULL || cp->target->dangling_alt == NULL)
-                return RVM_EMEM;
-
+            code_alt(cp, size, i);
         break;
     }
 
@@ -598,7 +370,6 @@ static int expand_char_range (context_t *cp)
 static int stage1_charc_state (context_t *cp, int *state)
 {
     int ret;
-    inst_t inst;
 
     /* Enlarge char. class buffer if it is full */
     if ((cp->clen + 1) >= cp->cspace) {
@@ -616,13 +387,7 @@ static int stage1_charc_state (context_t *cp, int *state)
             ret = expand_char_range(cp);
         break;
         case CHARC_CLOSE:
-            cp->ccs[cp->clen] = '\0';
-            set_op_class(&inst, cp->ccs);
-            cp->operand =
-                stack_add_inst_head((stack_t *) cp->parens->tail->data, &inst);
-
-            cp->ccs = NULL;
-            cp->clen = 0;
+            code_ccs(cp);
             *state = STATE_START;
         break;
         default:
@@ -684,7 +449,6 @@ int stage1 (char *input, stack_t **ret)
 
     context_t *cp;
     context_t context;
-    inst_t inst;
 
     cp = &context;
 
@@ -744,8 +508,9 @@ int stage1 (char *input, stack_t **ret)
     attach_dangling_alt(cp);
 
     /* Add the match instruction */
-    set_op_match(&inst);
-    stack_add_inst_head(cp->prog, &inst);
+    if ((err = code_match(cp)) < 0) {
+        return err;
+    }
 
     /* Re-use dsize member to indicate to stage2 whether
      * jmp chain optimisation is needed */

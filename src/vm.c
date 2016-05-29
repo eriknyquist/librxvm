@@ -27,6 +27,10 @@
 #include "regexvm.h"
 #include "vm.h"
 
+#if (DBGF)
+int fcnt;
+#endif
+
 #define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
 
 static int char_match (uint8_t icase, char a, char b)
@@ -195,6 +199,10 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
     add_thread_curr(tm, 0);
     tm->match_start = *input;
 
+#if (DBGF)
+    fcnt = 0;
+#endif
+
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
@@ -209,7 +217,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 
 #if (DBGF)
             print_threads_state(compiled, tm, t, sot, *input);
-#endif /* DBGF */
+#endif
 
             switch (ip->op) {
                 case OP_CHAR:
@@ -253,7 +261,7 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
             }
 #if (DBGF)
             print_threads_state(compiled, tm, t, sot, *input);
-#endif /* DBGF */
+#endif
         }
 
         /* Threads saved for the next input character
