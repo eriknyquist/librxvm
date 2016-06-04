@@ -132,9 +132,6 @@ void regexvm_print (regexvm_t *compiled)
             case OP_JMP:
                 printf("%d\tjmp %d\n", i, inst->x);
             break;
-            case OP_JLT:
-                printf("%d\tjlt %d %d\n", i, inst->x, inst->y);
-            break;
             case OP_MATCH:
                 printf("%d\tmatch\n", i);
             break;

@@ -80,7 +80,34 @@ char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
 
     {"[asdfghjkl]+",
         "a", "asd", "kdfg", "asdfghjk", "asgsdhjdhfgsdhjfgakdsjfkdslfskj",
-        "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL}
+        "", "b", "asjdhakdfhsdfhkdshfcsdhfsdjfhfj", NULL, NULL},
+
+    {"abc{3}",
+        "abccc", NULL, NULL, NULL, NULL,
+        "ab", "abc", "abcc", "abcccc", "abccccccccccccccc"},
+
+    {"abc{4,}",
+        "abcccc", "abccccc", "abcccccccccccc", "abcccccccccccccccccccc", NULL,
+        "ab", "abc", "abcc", "abccc", NULL},
+
+    {"xyz{,6}",
+        "xy", "xyz", "xyzz", "xyzzzz", "xyzzzzzz",
+        "xyzzzzzzz", "xyzzzzzzzzzzzzz", "x", "xyzzzzzzzzzzzzzzzzzzzzz", NULL},
+
+    {"qqw{3,4}",
+        "qqwww", "qqwwww", NULL, NULL, NULL,
+        "qq", "qqw", "qqww", "qqwwwww", "qqwwwwwwwwwwwwwwwwwwww"},
+
+    {"abc*(def+){2,3}",
+        "abdefdeffdef", "abcccccccdeffffffdefdeffff", "abccccccccdefdef", NULL,
+        NULL,
+        "abcdedede", "abcdef", "abcdeffffffffff", "abcdefdefdefdef", NULL},
+
+    {"ab*(q?xx|(de){4}){1,3}",
+        "abxx", "abbbxxqxxdededede", "abbbbbbdedededeqxxdededede",
+        "axxdededededededede", NULL,
+        "abqxxdededeqxx", "abqq", "abdededededeq", "abxxdedededexxdededede",
+        NULL}
 };
 
 int test_regexvm_match (int *count)

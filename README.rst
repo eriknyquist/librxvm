@@ -93,18 +93,35 @@ A description of the available special characters follows.
     |*Symbol* | *Name*                | *Description*                         |
     +=========+=======================+=======================================+
     | **+**   | one or more           | matches one or more of the preceding  |
-    |         |                       | character, e.g. the expression ``ab+``|
-    |         |                       | matches the input ``ab``, ``abb``, but|
-    |         |                       | not ``a``                             |
+    |         |                       | character or parenthesis group, e.g.  |
+    |         |                       | the expression ``ab+`` matches the    |
+    |         |                       | input ``ab``, ``abb``, but not ``a``  |
     +---------+-----------------------+---------------------------------------+
     | **\***  | zero or more          | matches zero or more of the preceding |
-    |         |                       | character, e.g. the expression ``ab*``|
-    |         |                       | matches the input ``a``, ``ab`` and   |
-    |         |                       | ``abb``                               |
+    |         |                       | character or parenthesis group, e.g.  |
+    |         |                       | the expression ``ab*`` matches the    |
+    |         |                       | input ``a``, ``ab`` and ``abb``       |
     +---------+-----------------------+---------------------------------------+
     | **?**   | zero or one           | matches zero or one of the preceding  |
-    |         |                       | character, e.g the expression ``ab?`` |
-    |         |                       | matches only ``a`` or ``ab``          |
+    |         |                       | character or parenthesis group, e.g   |
+    |         |                       | the expression ``ab?`` matches only   |
+    |         |                       | ``a`` or ``ab``                       |
+    +---------+-----------------------+---------------------------------------+
+    | **{n}** | repetition            | matches **n** repetitions of the      |
+    |         |                       | preceding character or parenthesis    |
+    |         |                       | group.                                |
+    +---------+-----------------------+---------------------------------------+
+    |**{n,m}**| repetition (range)    | matches **n** to **m** repetitions of |
+    |         |                       | the preceding character or parenthesis|
+    |         |                       | group.                                |
+    +---------+-----------------------+---------------------------------------+
+    | **{,m}**| repetition (less)     | matches **m** or less repetitions of  |
+    |         |                       | the preceding character or parenthesis|
+    |         |                       | group                                 |
+    +---------+-----------------------+---------------------------------------+
+    | **{n,}**| repetition (more)     | matches **n** or more repetitions of  |
+    |         |                       | the preceding character or parenthesis|
+    |         |                       | group                                 |
     +---------+-----------------------+---------------------------------------+
     | **|**   | alternation           | allows either the preceding or the    |
     |         |                       | following expression to match, e.g.   |
@@ -195,7 +212,8 @@ will do if it fails to allocate memory.
 
 .. code:: c
 
-   int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end, int flags)
+   int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
+   int flags)
 
 Performs an iterative execution of the VM, using the instructions in the
 ``regexvm_t`` type pointed to by ``compiled`` (which must have already been

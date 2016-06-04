@@ -27,55 +27,11 @@
 #include "regexvm.h"
 #include "vm.h"
 
-#if (DBGF)
-int fcnt;
-#endif
-
 #define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
 
-static int char_match (uint8_t icase, char a, char b)
-{
-    return (icase) ? tolower(a) == tolower(b) : a == b;
-}
-
-static int ccs_match (uint8_t icase, char *ccs, char c)
-{
-    while (*ccs) {
-        if (char_match(icase, *ccs, c))
-            return 1;
-        ccs += 1;
-    }
-
-    return 0;
-}
-
-static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
-{
-    if (!lookup[val]) {
-        lookup[val] = 1;
-        list[(*lsize)++] = val;
-    }
-}
-
-static int is_sol (char *input, char *start, uint8_t multiline)
-{
-    if (input == start) {
-        return 1;
-    } else {
-        return (multiline && *(input - 1) == '\n') ? 1 : 0;
-    }
-}
-
-static int is_eol (char *input, uint8_t multiline)
-{
-    if (*input == '\0') {
-        return 1;
-    } else {
-        return (multiline && *input == '\n') ? 1 : 0;
-    }
-}
-
 #if (DBGF)
+int fcnt;
+
 void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
 {
     unsigned int i;
@@ -111,9 +67,6 @@ void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
             break;
             case OP_JMP:
                 fprintf(fp, "%-4djmp %d\n", i, inst->x);
-            break;
-            case OP_JLT:
-                fprintf(fp, "%-4djlt %d %d\n", i, inst->x, inst->y);
             break;
             case OP_MATCH:
                 fprintf(fp, "%-4dmatch\n", i);
@@ -164,6 +117,48 @@ void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
     fclose(fp);
 }
 #endif  /* DBGF */
+
+static int char_match (uint8_t icase, char a, char b)
+{
+    return (icase) ? tolower(a) == tolower(b) : a == b;
+}
+
+static int ccs_match (uint8_t icase, char *ccs, char c)
+{
+    while (*ccs) {
+        if (char_match(icase, *ccs, c))
+            return 1;
+        ccs += 1;
+    }
+
+    return 0;
+}
+
+static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
+{
+    if (!lookup[val]) {
+        lookup[val] = 1;
+        list[(*lsize)++] = val;
+    }
+}
+
+static int is_sol (char *input, char *start, uint8_t multiline)
+{
+    if (input == start) {
+        return 1;
+    } else {
+        return (multiline && *(input - 1) == '\n') ? 1 : 0;
+    }
+}
+
+static int is_eol (char *input, uint8_t multiline)
+{
+    if (*input == '\0') {
+        return 1;
+    } else {
+        return (multiline && *input == '\n') ? 1 : 0;
+    }
+}
 
 static void add_thread_curr (threads_t *tm, int val)
 {

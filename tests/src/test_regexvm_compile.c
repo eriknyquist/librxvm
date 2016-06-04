@@ -89,10 +89,138 @@ static const compv_t test_11_nest_4 = {
            ":b9,148:b8,149:b6,150:b3,151:m"
 };
 
+static const compv_t test_12_rep_1 = {
+    .rgx = "abc{3}",
+    .cmp = "la:lb:lc:lc:lc:m"
+};
+
+static const compv_t test_13_rep_2 = {
+    .rgx = "xyz{,4}",
+    .cmp = "lx:ly:b3,10:lz:b5,10:lz:b7,10:lz:b9,10:lz:m"
+};
+
+static const compv_t test_14_rep_3 = {
+    .rgx = "yyd{7,}",
+    .cmp = "ly:ly:ld:ld:ld:ld:ld:ld:ld:b8,10:m"
+};
+
+static const compv_t test_15_rep_4 = {
+    .rgx = "yyd{5,6}",
+    .cmp = "ly:ly:ld:ld:ld:ld:ld:b8,9:ld:m"
+};
+
+static const compv_t test_16_rep_5 = {
+    .rgx = "efx{0,}",
+    .cmp = "le:lf:b3,5:lx:b3,5:m"
+};
+
+static const compv_t test_17_rep_6 = {
+    .rgx = "abc*(de+f{4,5}|xxyy){,3}",
+    .cmp = "la:lb:b3,5:lc:b3,5:b6,53:b7,17:ld:le:b8,10:lf:lf:lf:lf:b15,16:lf:"
+           "j21:lx:lx:ly:ly:b22,53:b23,33:ld:le:b24,26:lf:lf:lf:lf:b31,32:lf:"
+           "j37:lx:lx:ly:ly:b38,53:b39,49:ld:le:b40,42:lf:lf:lf:lf:b47,48:lf:"
+           "j53:lx:lx:ly:ly:m"
+};
+
+static const compv_t test_18_rep_7 = {
+    .rgx = "a*(b{2,3}p+(ffl?p){4}(hh(ee(yuy){5,}){,8}){5}){1,2}",
+    .cmp = "b1,3:la:b1,3:lb:lb:b6,7:lb:lp:b7,9:lf:lf:b12,13:ll:lp:lf:lf:b17,18"
+          ":ll:lp:lf:lf:b22,23:ll:lp:lf:lf:b27,28:ll:lp:lh:lh:b32,183:le:le:ly"
+          ":lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b46,50:b51,183:le:le:ly:"
+          "lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b65,69:b70,183:le:le:ly:l"
+          "u:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b84,88:b89,183:le:le:ly:lu"
+          ":ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b103,107:b108,183:le:le:ly:"
+          "lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b122,126:b127,183:le:le:l"
+          "y:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b141,145:b146,183:le:le"
+          ":ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b160,164:b165,183:le:"
+          "le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b179,183:lh:lh:b186"
+          ",337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b200,204:b2"
+          "05,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b219,223:"
+          "b224,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b238,24"
+          "2:b243,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b257,"
+          "261:b262,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b27"
+          "6,280:b281,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b"
+          "295,299:b300,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly"
+          ":b314,318:b319,337:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:"
+          "ly:b333,337:lh:lh:b340,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:l"
+          "y:ly:lu:ly:b354,358:b359,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu"
+          ":ly:ly:lu:ly:b373,377:b378,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:"
+          "lu:ly:ly:lu:ly:b392,396:b397,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:l"
+          "y:lu:ly:ly:lu:ly:b411,415:b416,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly"
+          ":ly:lu:ly:ly:lu:ly:b430,434:b435,491:le:le:ly:lu:ly:ly:lu:ly:ly:lu:"
+          "ly:ly:lu:ly:ly:lu:ly:b449,453:b454,491:le:le:ly:lu:ly:ly:lu:ly:ly:l"
+          "u:ly:ly:lu:ly:ly:lu:ly:b468,472:b473,491:le:le:ly:lu:ly:ly:lu:ly:ly"
+          ":lu:ly:ly:lu:ly:ly:lu:ly:b487,491:lh:lh:b494,645:le:le:ly:lu:ly:ly:"
+          "lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b508,512:b513,645:le:le:ly:lu:ly:l"
+          "y:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b527,531:b532,645:le:le:ly:lu:ly"
+          ":ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b546,550:b551,645:le:le:ly:lu:"
+          "ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b565,569:b570,645:le:le:ly:l"
+          "u:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b584,588:b589,645:le:le:ly"
+          ":lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b603,607:b608,645:le:le:"
+          "ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b622,626:b627,645:le:l"
+          "e:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b641,645:lh:lh:b648,"
+          "799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b662,666:b66"
+          "7,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b681,685:b"
+          "686,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b700,704"
+          ":b705,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b719,7"
+          "23:b724,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b738"
+          ",742:b743,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b7"
+          "57,761:b762,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:"
+          "b776,780:b781,799:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:l"
+          "y:b795,799:b800,1596:lb:lb:b803,804:lb:lp:b804,806:lf:lf:b809,810:l"
+          "l:lp:lf:lf:b814,815:ll:lp:lf:lf:b819,820:ll:lp:lf:lf:b824,825:ll:lp"
+          ":lh:lh:b829,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:"
+          "b843,847:b848,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:l"
+          "y:b862,866:b867,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu"
+          ":ly:b881,885:b886,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:"
+          "lu:ly:b900,904:b905,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:l"
+          "y:lu:ly:b919,923:b924,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly"
+          ":ly:lu:ly:b938,942:b943,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:"
+          "ly:ly:lu:ly:b957,961:b962,980:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:l"
+          "u:ly:ly:lu:ly:b976,980:lh:lh:b983,1134:le:le:ly:lu:ly:ly:lu:ly:ly:l"
+          "u:ly:ly:lu:ly:ly:lu:ly:b997,1001:b1002,1134:le:le:ly:lu:ly:ly:lu:ly"
+          ":ly:lu:ly:ly:lu:ly:ly:lu:ly:b1016,1020:b1021,1134:le:le:ly:lu:ly:ly"
+          ":lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1035,1039:b1040,1134:le:le:ly:lu"
+          ":ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1054,1058:b1059,1134:le:le"
+          ":ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1073,1077:b1078,1134"
+          ":le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1092,1096:b109"
+          "7,1134:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1111,111"
+          "5:b1116,1134:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b11"
+          "30,1134:lh:lh:b1137,1288:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:"
+          "ly:lu:ly:b1151,1155:b1156,1288:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:"
+          "lu:ly:ly:lu:ly:b1170,1174:b1175,1288:le:le:ly:lu:ly:ly:lu:ly:ly:lu:"
+          "ly:ly:lu:ly:ly:lu:ly:b1189,1193:b1194,1288:le:le:ly:lu:ly:ly:lu:ly:"
+          "ly:lu:ly:ly:lu:ly:ly:lu:ly:b1208,1212:b1213,1288:le:le:ly:lu:ly:ly:"
+          "lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1227,1231:b1232,1288:le:le:ly:lu:"
+          "ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1246,1250:b1251,1288:le:le:"
+          "ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1265,1269:b1270,1288:"
+          "le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1284,1288:lh:lh"
+          ":b1291,1442:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b130"
+          "5,1309:b1310,1442:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:l"
+          "y:b1324,1328:b1329,1442:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:l"
+          "y:lu:ly:b1343,1347:b1348,1442:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:l"
+          "u:ly:ly:lu:ly:b1362,1366:b1367,1442:le:le:ly:lu:ly:ly:lu:ly:ly:lu:l"
+          "y:ly:lu:ly:ly:lu:ly:b1381,1385:b1386,1442:le:le:ly:lu:ly:ly:lu:ly:l"
+          "y:lu:ly:ly:lu:ly:ly:lu:ly:b1400,1404:b1405,1442:le:le:ly:lu:ly:ly:l"
+          "u:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1419,1423:b1424,1442:le:le:ly:lu:l"
+          "y:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1438,1442:lh:lh:b1445,1596:l"
+          "e:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1459,1463:b1464,"
+          "1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1478,1482:"
+          "b1483,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:b1497"
+          ",1501:b1502,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly"
+          ":b1516,1520:b1521,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly"
+          ":lu:ly:b1535,1539:b1540,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly:ly:lu"
+          ":ly:ly:lu:ly:b1554,1558:b1559,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly"
+          ":ly:lu:ly:ly:lu:ly:b1573,1577:b1578,1596:le:le:ly:lu:ly:ly:lu:ly:ly"
+          ":lu:ly:ly:lu:ly:ly:lu:ly:b1592,1596:m"
+};
+
 static const compv_t *cmp_tests[NUM_TESTS_COMPILE] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
     &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
-    &test_9_nest_2, &test_10_nest_3, &test_11_nest_4
+    &test_9_nest_2, &test_10_nest_3, &test_11_nest_4, &test_12_rep_1,
+    &test_13_rep_2, &test_14_rep_3, &test_15_rep_4, &test_16_rep_5,
+    &test_17_rep_6, &test_18_rep_7
 };
 
 unsigned int parse_int (char **str)
@@ -173,16 +301,6 @@ int cmpexe (char *str, regexvm_t *prog)
                     return i + 1;
                 ++str;
             break;
-            case 't':
-                if (inst->op != OP_JLT)
-                    return i + 1;
-                ++str;
-                if (inst->x != parse_int(&str))
-                    return i + 1;
-                ++str;
-                if (inst->y != parse_int(&str))
-                    return i + 1;
-            break;
             case 's':
                 if (inst->op != OP_SOL)
                     return i + 1;
@@ -248,9 +366,6 @@ void print_prog_cmp (regexvm_t *compiled, int err)
             break;
             case OP_JMP:
                 printf("%d\tjmp %d", i, inst->x);
-            break;
-            case OP_JLT:
-                printf("%d\tjlt %d %d", i, inst->x, inst->y);
             break;
             case OP_MATCH:
                 printf("%d\tmatch", i);

@@ -29,14 +29,6 @@ static void set_op_jmp (inst_t *inst, int x)
     inst->x = x;
 }
 
-static void set_op_jlt (inst_t *inst, int j, int i)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_JLT;
-    inst->x = j;
-    inst->y = i;
-}
-
 static void set_op_match (inst_t *inst)
 {
     memset(inst, 0, sizeof(inst_t));
@@ -85,6 +77,38 @@ static void stack_cat_from_item (stack_t *stack1, stackitem_t *stop,
     }
 }
 
+static int stack_dupe_from_item (stack_t *stack1, stackitem_t *stop,
+                                  stackitem_t *i)
+{
+    char *temp;
+    int ccslen;
+    inst_t inst;
+
+    while(1) {
+        memcpy(&inst, i->data, sizeof(inst_t));
+
+        /* "class" instructions will require
+         * extra work to copy the class string */
+        if (inst.op == OP_CLASS) {
+            ccslen = strlen(inst.ccs) + 1;
+            temp = inst.ccs;
+            if ((inst.ccs = malloc(sizeof(char) * ccslen)) == NULL) {
+                return RVM_EMEM;
+            }
+            memcpy(inst.ccs, temp, sizeof(char) * ccslen);
+        }
+
+        if (stack_add_inst_head(stack1, &inst) == NULL) {
+            return RVM_EMEM;
+        }
+
+        if (i == stop) break;
+        i = i->previous;
+    }
+
+    return 0;
+}
+
 /* when an alternation operator "|" is seen, it leaves a 'jmp'
  * instructuction with an unset pointer. This pointer marks the end of
  * that alternation, and attach_dangling_alt is called to set this
@@ -108,22 +132,29 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
                     stackitem_t *i)
 {
     inst_t inst;
+    int end;
+    int j;
 
-    set_op_jlt(&inst, 2, rep_n);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+    for (j = 0; j < rep_n; ++j) {
+        if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
+            return RVM_EMEM;
+        }
     }
 
-    set_op_branch(&inst, 1, size + 2);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
+    for (j = 0; j < (rep_m - rep_n); ++j) {
+        end = (size + 1) * ((rep_m - rep_n) - j);
+        set_op_branch(&inst, 1, end);
+        if (stack_add_inst_head(cp->target, &inst) == NULL) {
+            return RVM_EMEM;
+        }
 
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size + 2), rep_m - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        if (j == (rep_m - 1)) {
+            stack_cat_from_item(cp->target, cp->buf->head, i);
+        } else {
+            if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
+                return RVM_EMEM;
+            }
+        }
     }
 
     return 0;
@@ -133,15 +164,17 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
 int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 {
     inst_t inst;
+    int j;
+
+    for (j = 0; j < (rep_n - 1); ++j) {
+        if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
+            return RVM_EMEM;
+        }
+    }
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
 
-    set_op_jlt(&inst, -(size), rep_n - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
-
-    set_op_branch(&inst, -(size + 1), 1);
+    set_op_branch(&inst, -(size), 1);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
         return RVM_EMEM;
     }
@@ -152,17 +185,23 @@ int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
 {
     inst_t inst;
+    int end;
+    int j;
 
-    set_op_branch(&inst, 1, size + 2);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
+    for (j = 0; j < rep_m; ++j) {
+        end = (size + 1) * (rep_m - j);
+        set_op_branch(&inst, 1, end);
+        if (stack_add_inst_head(cp->target, &inst) == NULL) {
+            return RVM_EMEM;
+        }
 
-    stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size + 1), rep_m - 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        if (j == (rep_m - 1)) {
+            stack_cat_from_item(cp->target, cp->buf->head, i);
+        } else {
+            if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
+                return RVM_EMEM;
+            }
+        }
     }
 
     return 0;
@@ -170,14 +209,15 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
 
 int code_rep_n (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 {
-    inst_t inst;
+    int j;
+
+    for (j = 0; j < (rep_n - 1); ++j) {
+        if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
+            return RVM_EMEM;
+        }
+    }
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
-
-    set_op_jlt(&inst, -(size), rep_n + 1);
-    if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
-    }
 
     return 0;
 }

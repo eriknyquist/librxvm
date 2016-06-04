@@ -41,6 +41,9 @@ void regexvm_print_err (int err)
         case RVM_BADCLASS:
             msg = "Unexpected character class closing character";
         break;
+        case RVM_BADREP:
+            msg = "Unexpected repetition closing character";
+        break;
         case RVM_BADPAREN:
             msg = "Unexpected parenthesis group closing character";
         break;
@@ -49,6 +52,12 @@ void regexvm_print_err (int err)
         break;
         case RVM_ECLASS:
             msg = "Unterminated character class";
+        break;
+        case RVM_EREP:
+            msg = "Missing repetition closing character";
+        break;
+        case RVM_MREP:
+            msg = "Empty repetition";
         break;
         case RVM_ETRAIL:
             msg = "Trailing escape character";
@@ -96,9 +105,6 @@ void regexvm_print_oneline (regexvm_t *compiled)
             case OP_JMP:
                 printf("j%d", inst->x);
             break;
-            case OP_JLT:
-                printf("t%d,%d", inst->x, inst->y);
-            break;
             case OP_MATCH:
                 printf("m");
             break;
@@ -126,11 +132,11 @@ static void print_heap_usage (unsigned int size)
 
 char *generate_matching_string (regexvm_t *compiled)
 {
+    char *ret;
+    inst_t *inst;
     unsigned int ip;
     unsigned int size;
     unsigned int ix;
-    char *ret;
-    inst_t *inst;
 
     if ((ret = malloc(BLOCK_SIZE)) == NULL)
         return NULL;

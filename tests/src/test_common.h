@@ -1,11 +1,11 @@
 #ifndef TEST_COMMON_H_
 #define TEST_COMMON_H_
 
-#define NUM_TESTS_COMPILE      11
+#define NUM_TESTS_COMPILE      18
 #define NUM_TESTS_ERR          31
 #define NUM_TESTS_ITER         19
-#define NUM_TESTS_MATCH        17
-#define NUM_TESTS_FUZZ_MATCH   12
+#define NUM_TESTS_MATCH        23
+#define NUM_TESTS_FUZZ_MATCH   20
 
 #define NUM_TESTS              (NUM_TESTS_COMPILE + NUM_TESTS_MATCH + \
                                 NUM_TESTS_ITER + NUM_TESTS_ERR + \

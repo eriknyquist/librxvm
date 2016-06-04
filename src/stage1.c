@@ -128,7 +128,9 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
 
     /* Special case; treat as '*' operator */
     } else if (rep_n == 0 && rep_m == REP_FIELD_EMPTY) {
-
+        if ((err = code_zero(cp, size, i)) < 0) {
+            return err;
+        }
     }
 
     return 0;
@@ -169,6 +171,7 @@ static int process_op (context_t *cp)
     stackitem_t *i;
     stack_t *cur;
     unsigned int size;
+    int err;
     int rep_n;
     int rep_m;
 
@@ -197,19 +200,29 @@ static int process_op (context_t *cp)
     switch (cp->tok) {
         case REP:
             parse_rep(lp1, lpn, &rep_n, &rep_m);
-            process_op_rep(cp, rep_n, rep_m, size, i);
+            if ((err = process_op_rep(cp, rep_n, rep_m, size, i)) < 0) {
+                return err;
+            }
         break;
         case ONE:
-            code_one(cp, size, i);
+            if ((err = code_one(cp, size, i)) < 0) {
+                return err;
+            }
         break;
         case ZERO:
-            code_zero(cp, size, i);
+            if ((err = code_zero(cp, size, i)) < 0) {
+                return err;
+            }
         break;
         case ONEZERO:
-            code_onezero(cp, size, i);
+            if ((err = code_onezero(cp, size, i)) < 0) {
+                return err;
+            }
         break;
         case ALT:
-            code_alt(cp, size, i);
+            if ((err = code_alt(cp, size, i)) < 0) {
+                return err;
+            }
         break;
     }
 

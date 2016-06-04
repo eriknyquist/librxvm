@@ -52,8 +52,7 @@ struct stack {
 
 /* VM instruction types */
 enum {
-    OP_CHAR, OP_ANY, OP_CLASS, OP_BRANCH, OP_JMP, OP_JLT, OP_SOL, OP_EOL,
-    OP_MATCH
+    OP_CHAR, OP_ANY, OP_CLASS, OP_BRANCH, OP_JMP, OP_SOL, OP_EOL, OP_MATCH
 };
 
 /* instruction */
