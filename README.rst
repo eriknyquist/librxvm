@@ -178,8 +178,10 @@ instructions into the ``regexvm_t`` type pointed to by ``compiled``.
 
 |
 
-**Returns** 0
-on success, otherwise one of the error codes defined (and commented) in lex.h.
+**Return value**
+
+* 0 if compilation succeeded
+* negative number if an error occured (error codes defined in src/lex.h)
 
 |
 
@@ -192,16 +194,16 @@ on success, otherwise one of the error codes defined (and commented) in lex.h.
 
    int regexvm_match (regexvm_t *compiled, char *input, int flags)
 
-Performs a one-shot execution of the VM, using the instructions in the
-``regexvm_t`` type pointed to by ``compiled`` (which must have already been
-populated by ``regexvm_compile()``) and the input string ``input``.
+Check if the string ``input`` matches the compiled expression ``compiled``
+exactly.
 
 |
 
-**Returns** 1
-if the input string matches the expression exactly, and 0 if the input string
-doesn't match. The only error this function can return is RVM_EMEM, which it
-will do if it fails to allocate memory.
+**Return value**
+
+* 1 if the input matches the expression
+* 0 if the input doesn't match the compiled expression
+* RVM_EMEM if memory allocation fails
 
 |
 
@@ -212,29 +214,22 @@ will do if it fails to allocate memory.
 
 .. code:: c
 
-   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
-   int flags)
+   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end, int flags)
 
-Performs an iterative execution of the VM, using the instructions in the
-``regexvm_t`` type pointed to by ``compiled`` (which must have already been
-populated by ``regexvm_compile()``) and the input string ``input``.
-
-|
-
-**Returns** 1
-if the input string contains a substring that matches the expression and 0 if
-the input string contains no matching substrings. If a matching substring is
-found, the supplied pointers, pointed to by ``start`` and ``end``, will be
-populated with the location within the input string where the matching portion
-start and ends, respectively. ``start`` and ``end`` will be set to NULL if no
-matching substring is found.
+Searches the string starting at ``input`` for a pattern that matches the
+compiled regular expresssion ``compiled``, until a match is found or until the
+string's null termination character is reached. When a match is found,
+the pointers pointed to by ``start`` and ``end`` are populated with the
+locations within the input string where the matching portion starts and ends,
+respectively.
 
 |
 
-This function returns after the first matching substring is found, however the
-input string can easily be searched for further matches by calling
-``regexvm_search()`` again and passing the ``end`` pointer from the previous
-successful invocation as the new ``input`` pointer.
+**Return value**
+
+* 1 if a match is found
+* 0 if no match is found
+* negative number if an error occured (error codes defined in src/lex.h)
 
 |
 
