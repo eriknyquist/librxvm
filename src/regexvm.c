@@ -88,7 +88,7 @@ cleanup:
     return ret;
 }
 
-int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
+int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
                   int flags)
 {
     char *sot;

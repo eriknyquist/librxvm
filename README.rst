@@ -53,23 +53,23 @@ Using the examples
 ------------------
 ::
 
-   $> ./regexvm_iter
+   $> ./regexvm_search
 
-     Usage: ./regexvm_iter <regex> <input>
+     Usage: ./regexvm_search <regex> <input>
 
-   $>./regexvm_iter "regex(vm)*" "UtrUygHIuregexvmvmvmllTRDrHIOIP"
+   $>./regexvm_search "regex(vm)*" "UtrUygHIuregexvmvmvmllTRDrHIOIP"
 
      Match!
      Found matching substring:
      regexvmvmvm
 
-   $> ./regexvm_iter "regex(vm)*" "UtrUygHIuregexllTRDrHIOIP"
+   $> ./regexvm_search "regex(vm)*" "UtrUygHIuregexllTRDrHIOIP"
 
      Match!
      Found matching substring:
      regex
 
-   $> ./regexvm_iter "regex(vm)*" "UtrUygHIuregellTRDrHIOIP"
+   $> ./regexvm_search "regex(vm)*" "UtrUygHIuregellTRDrHIOIP"
 
      No match.
 
@@ -207,12 +207,12 @@ will do if it fails to allocate memory.
 
 |
 
-``regexvm_iter``
-~~~~~~~~~~~~~~~~
+``regexvm_search``
+~~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
+   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
    int flags)
 
 Performs an iterative execution of the VM, using the instructions in the
@@ -233,7 +233,7 @@ matching substring is found.
 
 This function returns after the first matching substring is found, however the
 input string can easily be searched for further matches by calling
-``regexvm_iter()`` again and passing the ``end`` pointer from the previous
+``regexvm_search()`` again and passing the ``end`` pointer from the previous
 successful invocation as the new ``input`` pointer.
 
 |
@@ -298,7 +298,7 @@ Prints a compiled expression in a human-readable format.
 Flags
 -----
 
-``regexvm_match`` and ``regexvm_iter`` take a ``flags`` parameter. You can use
+``regexvm_match`` and ``regexvm_search`` take a ``flags`` parameter. You can use
 the masks below to set bit-flags which will change the behaviour of these
 functions (combine multiple flags by bitwise OR-ing them together):
 
@@ -314,7 +314,7 @@ case-sensitive by default.
 ~~~~~~~~~~~~~~~~~~~~~
 
 non-greedy matching: by default, the operators ``+``, ``*``, and ``?`` will
-match as many characters as possible, e.g. running ``regexvm_iter`` with
+match as many characters as possible, e.g. running ``regexvm_search`` with
 the expression ``<.*>`` against the input string ``<tag>name<tag>`` will match
 the entire string. With this flag set, it will match only ``<tag>``.
 
@@ -349,5 +349,5 @@ for example, to build the example applications manually, you would do
 ::
 
     cd examples
-    gcc regexvm_iter.c -o regexvm_iter -I/usr/local/include/libregexvm -lregexvm
+    gcc regexvm_search.c -o regexvm_search -I/usr/local/include/libregexvm -lregexvm
     gcc regexvm_match.c -o regexvm_match -I/usr/local/include/libregexvm -lregexvm
