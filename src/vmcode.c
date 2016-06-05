@@ -148,7 +148,7 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
             return RVM_EMEM;
         }
 
-        if (j == (rep_m - 1)) {
+        if (j == ((rep_m - rep_n) - 1)) {
             stack_cat_from_item(cp->target, cp->buf->head, i);
         } else {
             if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
