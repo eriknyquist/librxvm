@@ -115,7 +115,7 @@ A description of the available special characters follows.
     |         |                       | the preceding character or parenthesis|
     |         |                       | group.                                |
     +---------+-----------------------+---------------------------------------+
-    | **{,m}**| repetition (less)     | matches **m** or less repetitions of  |
+    | **{,m}**| repetition (less)     | matches **m** or fewer repetitions of |
     |         |                       | the preceding character or parenthesis|
     |         |                       | group                                 |
     +---------+-----------------------+---------------------------------------+
