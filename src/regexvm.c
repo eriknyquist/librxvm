@@ -51,6 +51,43 @@ char getchar_str (void *data)
     return ret;
 }
 
+char getchar_file (void *data)
+{
+    return fgetc((FILE *)data);
+}
+
+int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
+                     int flags)
+{
+    threads_t tm;
+    int ret;
+
+    if ((ret = vm_init(&tm, compiled->size)) != 0)
+        goto cleanup;
+
+    *match_size = 0;
+    tm.icase = (flags & REGEXVM_ICASE);
+    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
+    tm.multiline = (flags & REGEXVM_MULTILINE);
+
+    tm.getchar = getchar_file;
+    tm.getchar_data = fp;
+    tm.endchar = EOF;
+
+    ret = 0;
+    while (vm_execute(&tm, compiled) && tm.match_end == 0);
+
+    if (tm.match_end > 0) {
+        *match_size = (tm.match_end - tm.match_start) - 1;
+        fseek(fp, -((long int)*match_size + 1), SEEK_CUR);
+        ret = 1;
+    }
+
+cleanup:
+    vm_cleanup(&tm);
+    return ret;
+}
+
 int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
                   int flags)
 {

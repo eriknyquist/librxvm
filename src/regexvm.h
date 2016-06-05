@@ -40,6 +40,8 @@ struct regexvm {
 
 int regexvm_compile (regexvm_t *compiled, char *exp);
 int regexvm_match (regexvm_t *compiled, char *input, int flags);
+int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
+                     int flags);
 int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
                   int flags);
 

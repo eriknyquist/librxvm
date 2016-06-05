@@ -157,7 +157,7 @@ A description of the available special characters follows.
     |         |                       | as ``A-Z``                            |
     +---------+-----------------------+---------------------------------------+
     | **\\**  | escape                | used to remove special meaning from   |
-    |         |                       | characters, e.g. to match a literal   |
+    |         |                       | characters, e.g. to match  leteral    |
     |         |                       | ``*`` character                       |
     +---------+-----------------------+---------------------------------------+
 
@@ -235,6 +235,30 @@ This function returns after the first matching substring is found, however the
 input string can easily be searched for further matches by calling
 ``regexvm_iter()`` again and passing the ``end`` pointer from the previous
 successful invocation as the new ``input`` pointer.
+
+|
+
+|
+
+``regexvm_fsearch``
+~~~~~~~~~~~~~~~~~~~
+
+.. code:: c
+
+   int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
+
+Searches the file at ``fp`` (``fp`` must be initialised by caller, i.e. with
+``fopen``) for a pattern that matches the compiled regular expresssion
+``compiled``, from the current file position until EOF. When a match is found,
+the file pointer ``fp`` is re-positioned to the first character of the match,
+and ``match_size`` is populated with a positive integer representing the match
+size (number of characters).
+
+**Return value**
+
+* 1 if a match is found
+* 0 if no match is found
+* negative number if an error occured (error codes defined in src/lex.h)
 
 |
 
