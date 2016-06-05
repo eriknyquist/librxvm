@@ -76,12 +76,14 @@ void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
 }
 
 void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
-                          char *sot, char *input)
+                          char *input)
 {
     FILE *fp;
+    char *sot;
     char filename[50];
     int i;
 
+    sot = input - tm->chars;
     snprintf(filename, 50, ".rvm_dbgf/%d.dbgf", ++fcnt);
 
     if ((fp = fopen(filename, "w")) == NULL) {
@@ -90,7 +92,7 @@ void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
     }
 
     fprintf(fp, "%s\n", sot);
-    for (i = 0; i < (input - sot); ++i) {
+    for (i = 0; i < (tm->chars - 1); ++i) {
         fprintf(fp, " ");
     }
     fprintf(fp, "^\n\n");
@@ -142,21 +144,21 @@ static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
     }
 }
 
-static int is_sol (char *input, char *start, uint8_t multiline)
+static int is_sol (threads_t *tm)
 {
-    if (input == start) {
+    if (tm->chars == 1) {
         return 1;
     } else {
-        return (multiline && *(input - 1) == '\n') ? 1 : 0;
+        return (tm->multiline && tm->lastinput == '\n') ? 1 : 0;
     }
 }
 
-static int is_eol (char *input, uint8_t multiline)
+static int is_eol (threads_t *tm, char c)
 {
-    if (*input == '\0') {
+    if (c == tm->endchar) {
         return 1;
     } else {
-        return (multiline && *input == '\n') ? 1 : 0;
+        return (tm->multiline && c == '\n') ? 1 : 0;
     }
 }
 
@@ -178,8 +180,9 @@ static void vm_zero (threads_t *tm, unsigned int size)
     memset(tm->np, 0, sizeof(int) * size);
 }
 
-int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
+int vm_execute (threads_t *tm, regexvm_t *compiled)
 {
+    char C;
     int t;
     int ii;
     int *dtemp;
@@ -188,11 +191,10 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
 
     tm->nsize = 0;
     tm->csize = 0;
-    tm->match_end = NULL;
 
+    tm->match_start = tm->chars;
     vm_zero(tm, compiled->size);
     add_thread_curr(tm, 0);
-    tm->match_start = *input;
 
 #if (DBGF)
     fcnt = 0;
@@ -201,9 +203,12 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
-        if (**input && !tm->csize) {
+        if (!tm->csize) {
             return 1;
         }
+
+        C = (*tm->getchar)(tm->getchar_data);
+        ++tm->chars;
 
         /* run all the threads for this input character */
         for (t = 0; t < tm->csize; ++t) {
@@ -211,12 +216,12 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
             ip = compiled->exe[ii]; /* pointer to instruction data */
 
 #if (DBGF)
-            print_threads_state(compiled, tm, t, sot, *input);
+            print_threads_state(compiled, tm, t, *((char **)tm->getchar_data));
 #endif
 
             switch (ip->op) {
                 case OP_CHAR:
-                    if (char_match(tm->icase, **input, ip->c)) {
+                    if (char_match(tm->icase, C, ip->c)) {
                         add_thread_next(tm, ii + 1);
                     }
 
@@ -225,19 +230,19 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
                     add_thread_next(tm, ii + 1);
                 break;
                 case OP_SOL:
-                    if (is_sol(*input, sot, tm->multiline)) {
+                    if (is_sol(tm)) {
                         add_thread_curr(tm, ii + 1);
                     }
 
                 break;
                 case OP_EOL:
-                    if (is_eol(*input, tm->multiline)) {
+                    if (is_eol(tm, C)) {
                         add_thread_curr(tm, ii + 1);
                     }
 
                 break;
                 case OP_CLASS:
-                    if (ccs_match(tm->icase, ip->ccs, **input)) {
+                    if (ccs_match(tm->icase, ip->ccs, C)) {
                         add_thread_next(tm, ii + 1);
                     }
 
@@ -250,12 +255,12 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
                     add_thread_curr(tm, ip->x);
                 break;
                 case OP_MATCH:
-                    tm->match_end = *input;
+                    tm->match_end = tm->chars;
                     if (tm->nongreedy) return 1;
                 break;
             }
 #if (DBGF)
-            print_threads_state(compiled, tm, t, sot, *input);
+            print_threads_state(compiled, tm, t, *((char**)tm->getchar_data));
 #endif
         }
 
@@ -274,8 +279,8 @@ int vm_execute (threads_t *tm, regexvm_t *compiled, char **input, char *sot)
         tm->np_lookup = ltemp;
 
         memset(tm->np_lookup, 0, compiled->size);
-
-    } while (*(*input)++);
+        tm->lastinput = C;
+    } while (C != tm->endchar);
     return 0;
 }
 
@@ -283,6 +288,9 @@ int vm_init (threads_t *tm, unsigned int size)
 {
     tm->cp_lookup = tm->np_lookup = NULL;
     tm->cp = tm->np = NULL;
+    tm->match_start = tm->match_end = 0;
+    tm->lastinput = 0;
+    tm->chars = 0;
 
     if ((tm->cp = malloc(size * sizeof(int))) == NULL)
         return RVM_EMEM;

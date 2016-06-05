@@ -43,6 +43,14 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
     return 0;
 }
 
+char getchar_str (void *data)
+{
+    char ret;
+    ret = **((char**)data);
+    ++(*((char**)data));
+    return ret;
+}
+
 int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
                   int flags)
 {
@@ -58,19 +66,23 @@ int regexvm_iter (regexvm_t *compiled, char *input, char **start, char **end,
     tm.nongreedy = (flags & REGEXVM_NONGREEDY);
     tm.multiline = (flags & REGEXVM_MULTILINE);
 
-    ret = 0;
-    while (vm_execute(&tm, compiled, &input, sot) && tm.match_end == NULL);
+    tm.getchar = getchar_str;
+    tm.getchar_data = &input;
+    tm.endchar = '\0';
 
-    if (tm.match_end == NULL) {
+    ret = 0;
+    while (vm_execute(&tm, compiled) && tm.match_end == 0);
+
+    if (tm.match_end < 0) {
         if (start)
             *start = NULL;
         if (end)
             *end = NULL;
     } else {
         if (start)
-            *start = tm.match_start;
+            *start = sot + tm.match_start;
         if (end)
-            *end = tm.match_end;
+            *end = sot + (tm.match_end - 1);
         ret = 1;
     }
 
@@ -81,20 +93,26 @@ cleanup:
 
 int regexvm_match (regexvm_t *compiled, char *input, int flags)
 {
+    char *sot;
     threads_t tm;
     int ret;
 
     if ((ret = vm_init(&tm, compiled->size)) != 0)
         goto cleanup;
 
+    sot = input;
     tm.multiline = 1;
     tm.icase = (flags & REGEXVM_ICASE);
     tm.nongreedy = (flags & REGEXVM_NONGREEDY);
 
-    if (vm_execute(&tm, compiled, &input, input))
+    tm.getchar = getchar_str;
+    tm.getchar_data = &input;
+    tm.endchar = '\0';
+
+    if (vm_execute(&tm, compiled))
         goto cleanup;
 
-    if (tm.match_end == (input - 1))
+    if ((sot + tm.match_end) == input)
         ret = 1;
 
 cleanup:
