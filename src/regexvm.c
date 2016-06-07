@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "regexvm.h"
 #include "stage1.h"
 #include "stage2.h"
@@ -36,6 +37,12 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
 
     if ((ret = stage1(exp, &ir)) < 0)
         return ret;
+
+    if (ir == NULL) {
+        compiled->exe = NULL;
+        compiled->simple = exp;
+        return 0;
+    }
 
     if ((ret = stage2(ir, compiled)) < 0)
         return ret;
@@ -56,30 +63,62 @@ char getchar_file (void *data)
     return fgetc((FILE *)data);
 }
 
+int simple_match (threads_t *tm, char *simple)
+{
+    char c;
+
+    tm->match_start = tm->chars;
+    while (*simple) {
+        c = (*tm->getchar)(tm->getchar_data);
+        ++tm->chars;
+
+        if (c == tm->endchar)
+            return 1;
+
+        if (*simple == '\\')
+            ++simple;
+
+        if (!char_match(tm->icase, *simple, c))
+            return 0;
+
+        ++simple;
+    }
+
+    tm->match_end = tm->chars + 1;
+    return 1;
+}
+
 int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
                      int flags)
 {
     threads_t tm;
     int ret;
+    uint64_t seek_size;
 
-    if ((ret = vm_init(&tm, compiled->size)) != 0)
-        goto cleanup;
+    memset(&tm, 0, sizeof(threads_t));
+    tm.getchar = getchar_file;
+    tm.getchar_data = fp;
+    tm.endchar = EOF;
 
     *match_size = 0;
     tm.icase = (flags & REGEXVM_ICASE);
     tm.nongreedy = (flags & REGEXVM_NONGREEDY);
     tm.multiline = (flags & REGEXVM_MULTILINE);
 
-    tm.getchar = getchar_file;
-    tm.getchar_data = fp;
-    tm.endchar = EOF;
-
     ret = 0;
-    while (vm_execute(&tm, compiled) && tm.match_end == 0);
+    if (compiled->simple) {
+        while (!simple_match(&tm, compiled->simple));
+    } else {
+        if ((ret = vm_init(&tm, compiled->size)) != 0)
+            goto cleanup;
 
-    if (tm.match_end > 0) {
+        while (vm_execute(&tm, compiled) && tm.match_end == 0);
+    }
+
+    if (tm.match_end) {
         *match_size = (tm.match_end - tm.match_start) - 1;
-        fseek(fp, -((long int)*match_size + 1), SEEK_CUR);
+        seek_size = -((long int)*match_size + (compiled->simple == NULL));
+        fseek(fp, seek_size, SEEK_CUR);
         ret = 1;
     }
 
@@ -95,20 +134,25 @@ int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
     threads_t tm;
     int ret;
 
-    if ((ret = vm_init(&tm, compiled->size)) != 0)
-        goto cleanup;
+    memset(&tm, 0, sizeof(threads_t));
+    tm.getchar = getchar_str;
+    tm.getchar_data = &input;
+    tm.endchar = '\0';
 
     sot = input;
     tm.icase = (flags & REGEXVM_ICASE);
     tm.nongreedy = (flags & REGEXVM_NONGREEDY);
     tm.multiline = (flags & REGEXVM_MULTILINE);
 
-    tm.getchar = getchar_str;
-    tm.getchar_data = &input;
-    tm.endchar = '\0';
-
     ret = 0;
-    while (vm_execute(&tm, compiled) && tm.match_end == 0);
+    if (compiled->simple) {
+        while (!simple_match(&tm, compiled->simple));
+    } else {
+        if ((ret = vm_init(&tm, compiled->size)) != 0)
+            goto cleanup;
+
+        while (vm_execute(&tm, compiled) && tm.match_end == 0);
+    }
 
     if (tm.match_end < 0) {
         if (start)
@@ -134,23 +178,30 @@ int regexvm_match (regexvm_t *compiled, char *input, int flags)
     threads_t tm;
     int ret;
 
-    if ((ret = vm_init(&tm, compiled->size)) != 0)
-        goto cleanup;
+    memset(&tm, 0, sizeof(threads_t));
+    tm.getchar = getchar_str;
+    tm.getchar_data = &input;
+    tm.endchar = '\0';
 
     sot = input;
     tm.multiline = 1;
     tm.icase = (flags & REGEXVM_ICASE);
     tm.nongreedy = (flags & REGEXVM_NONGREEDY);
 
-    tm.getchar = getchar_str;
-    tm.getchar_data = &input;
-    tm.endchar = '\0';
+    ret = 0;
+    if (compiled->simple) {
+        if (!simple_match(&tm, compiled->simple)) {
+            goto cleanup;
+        }
+    } else {
+        if ((ret = vm_init(&tm, compiled->size)) != 0)
+            goto cleanup;
 
-    if (vm_execute(&tm, compiled))
-        goto cleanup;
+        if (vm_execute(&tm, compiled))
+            goto cleanup;
+    }
 
-    if ((sot + tm.match_end) == input)
-        ret = 1;
+    ret = tm.match_end && !*(sot + (tm.match_end - 1));
 
 cleanup:
     vm_cleanup(&tm);
@@ -161,6 +212,11 @@ void regexvm_print (regexvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
+
+    if (compiled->simple) {
+        printf("\"%s\" no compilation required\n", compiled->simple);
+        return;
+    }
 
     for (i = 0; i < compiled->size; i++) {
         inst = compiled->exe[i];
@@ -198,6 +254,9 @@ void regexvm_free (regexvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
+
+    if (compiled->exe == NULL)
+        return;
 
     for (i = 0; i < compiled->size; i++) {
         inst = compiled->exe[i];

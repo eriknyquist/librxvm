@@ -71,6 +71,7 @@ struct context {
     stack_t *prog;
     stackitem_t *operand;
     stack_t *parens;
+    char *simple;
     int tok;
     int lasttok;
     unsigned int clen;

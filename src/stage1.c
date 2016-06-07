@@ -267,19 +267,19 @@ static int stage1_main_state (context_t *cp, int *state)
     switch (cp->tok) {
         case LITERAL:
             set_op_char(&inst, *lp1);
-            cp->operand = stack_add_inst_head(cp->buf, &inst);
+            goto single;
         break;
         case ANY:
             set_op_any(&inst);
-            cp->operand = stack_add_inst_head(cp->buf, &inst);
+            goto single;
         break;
         case SOL:
             set_op_sol(&inst);
-            cp->operand = stack_add_inst_head(cp->buf, &inst);
+            goto single;
         break;
         case EOL:
             set_op_eol(&inst);
-            cp->operand = stack_add_inst_head(cp->buf, &inst);
+            goto single;
         break;
         case CHARC_OPEN:
             *state = STATE_CHARC;
@@ -321,6 +321,12 @@ static int stage1_main_state (context_t *cp, int *state)
         case CHARC_CLOSE:
             return RVM_BADCLASS;
         break;
+single:
+        if ((cp->operand = stack_add_inst_head(cp->buf, &inst)) == NULL) {
+            return RVM_EMEM;
+        }
+        break;
+
     }
 
     return 0;
@@ -446,6 +452,7 @@ static int stage1_init (context_t *cp, stack_t **ret)
         return RVM_EMEM;
     }
 
+    cp->simple = NULL;
     cp->prog = *ret;
     stack_add_head(cp->parens, (void *) base);
     cp->buf = base;
@@ -453,16 +460,38 @@ static int stage1_init (context_t *cp, stack_t **ret)
     return 0;
 }
 
+int compile_simple_backlog (context_t *cp, char *orig)
+{
+    inst_t inst;
+
+    while (orig != cp->simple) {
+        if (*orig == '\\') {
+            ++orig;
+        }
+
+        set_op_char(&inst, *orig);
+        if ((stack_add_inst_head(cp->buf, &inst)) == NULL) {
+            return RVM_EMEM;
+        }
+        ++orig;
+    }
+
+    cp->operand = cp->buf->head;
+    return 0;
+}
+
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates an IR for stage 2. */
 int stage1 (char *input, stack_t **ret)
 {
+    char *orig;
     int state;
     int err;
 
     context_t *cp;
     context_t context;
 
+    orig = input;
     cp = &context;
 
     if ((err = stage1_init(cp, ret)) < 0)
@@ -472,8 +501,26 @@ int stage1 (char *input, stack_t **ret)
     state = STATE_START;
     lex_init();
 
-    /* get the next token */
-    while ((cp->tok = lex(&input)) != END) {
+    while ((cp->tok = lex(&input)) == LITERAL) {
+        cp->simple = input;
+    }
+
+    /* String contains only literal characters;
+     * no compilation necessary. */
+    if (cp->tok == END) {
+        cp->simple = orig;
+        stage1_cleanup(cp);
+        stack_free(cp->prog, inst_stack_cleanup);
+        *ret = NULL;
+        return 0;
+    } else if (cp->simple) {
+        if (compile_simple_backlog(cp, orig) < 0) {
+            return RVM_EMEM;
+        }
+        cp->simple = NULL;
+    }
+
+    do {
         if (cp->tok < 0) {
             stage1_err_cleanup(cp);
             return cp->tok;
@@ -499,7 +546,7 @@ int stage1 (char *input, stack_t **ret)
             break;
         }
         cp->lasttok = cp->tok;
-    }
+    } while ((cp->tok = lex(&input)) != END);
 
     if (cp->lasttok == RPAREN && cp->buf->size > 0) {
         stack_cat(cp->prog, cp->buf);

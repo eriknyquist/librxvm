@@ -130,6 +130,7 @@ int stage2 (stack_t *ir, regexvm_t *ret)
     }
 
     ret->size = ir->size;
+    ret->simple = NULL;
 
     if (ir->dsize)
         err = optimise_chains(ret);

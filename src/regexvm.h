@@ -36,6 +36,7 @@ typedef struct regexvm regexvm_t;
 struct regexvm {
     inst_t **exe;
     unsigned int size;
+    char *simple;
 };
 
 int regexvm_compile (regexvm_t *compiled, char *exp);

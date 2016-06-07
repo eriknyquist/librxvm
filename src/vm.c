@@ -120,7 +120,7 @@ void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
 }
 #endif  /* DBGF */
 
-static int char_match (uint8_t icase, char a, char b)
+int char_match (uint8_t icase, char a, char b)
 {
     return (icase) ? tolower(a) == tolower(b) : a == b;
 }
