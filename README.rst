@@ -221,7 +221,8 @@ compiled regular expresssion ``compiled``, until a match is found or until the
 string's null termination character is reached. When a match is found,
 the pointers pointed to by ``start`` and ``end`` are populated with the
 locations within the input string where the matching portion starts and ends,
-respectively.
+respectively. If no match is found, then both ``start`` and ``end`` will be set
+to ``NULL``.
 
 |
 
@@ -244,10 +245,11 @@ respectively.
 
 Searches the file at ``fp`` (``fp`` must be initialised by caller, i.e. with
 ``fopen``) for a pattern that matches the compiled regular expresssion
-``compiled``, from the current file position until EOF. When a match is found,
+``compiled``, from the current file position until EOF. If a match is found,
 the file pointer ``fp`` is re-positioned to the first character of the match,
 and ``match_size`` is populated with a positive integer representing the match
-size (number of characters).
+size (number of characters). If no match is found, then ``match_end`` will be
+set to 0, and ``fp`` will remain positioned at EOF.
 
 **Return value**
 
