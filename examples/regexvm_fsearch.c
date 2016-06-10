@@ -15,7 +15,10 @@ static char *get_matching_text (FILE *fp, uint64_t size)
         return NULL;
     }
 
-    fread(ret, sizeof(char), size, fp);
+    if (fread(ret, sizeof(char), size, fp) != (sizeof(char) * size)) {
+        return NULL;
+    }
+
     ret[size] = '\0';
     return ret;
 }
@@ -49,7 +52,11 @@ int main (int argc, char *argv[])
 
     /* Find all occurrences of compiled expression in file */
     while (regexvm_fsearch(&compiled, fp, &size, 0)) {
-        match = get_matching_text(fp, size);
+        if ((match = get_matching_text(fp, size)) == NULL) {
+            printf("Error reading matching text from file '%s'\n", argv[2]);
+            exit(1);
+        }
+
         printf("Found match: %s\n", match);
         free(match);
     }
