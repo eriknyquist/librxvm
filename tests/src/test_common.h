@@ -5,6 +5,7 @@
 #define NUM_TESTS_ERR          31
 #define NUM_TESTS_ITER         19
 #define NUM_TESTS_MATCH        23
+#define NUM_TESTS_NOMATCH      5
 #define NUM_TESTS_FUZZ_MATCH   20
 
 #define NUM_TESTS              (NUM_TESTS_COMPILE + NUM_TESTS_MATCH + \

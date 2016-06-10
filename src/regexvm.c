@@ -154,7 +154,7 @@ int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
         while (vm_execute(&tm, compiled) && tm.match_end == 0);
     }
 
-    if (tm.match_end < 0) {
+    if (tm.match_end == 0) {
         if (start)
             *start = NULL;
         if (end)

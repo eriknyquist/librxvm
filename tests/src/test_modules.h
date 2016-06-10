@@ -4,6 +4,7 @@
 int test_regexvm_compile (int *count);
 int test_regexvm_match (int *count);
 int test_regexvm_search (int *count);
+int test_regexvm_search_nomatch (int *count);
 int test_regexvm_err (int *count);
 int test_fuzz_regexvm_match (int *count);
 
