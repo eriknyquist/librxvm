@@ -15,12 +15,12 @@
 /*#define ELEM_CHOICES        6 */
 #define SETITEM_CHOICES     2
 
-#define NUM_META            12
+#define NUM_META            15
 
 #define LITERALS            (((PRINTABLE_HIGH - PRINTABLE_LOW) + \
                             (WS_HIGH - WS_LOW)) - NUM_META)
 
-static const char *meta = "()*+-.?[]{|}";
+static const char *meta = "()*+-.?[]{|}^$\\";
 static char charmap[LITERALS + NUM_META];
 
 static void nonterm_re       (cfg_t *cfg);
