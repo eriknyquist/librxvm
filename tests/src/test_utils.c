@@ -11,7 +11,7 @@
 
 static unsigned int space;
 
-static unsigned int rand_range (unsigned int low, unsigned int high)
+unsigned int rand_range (unsigned int low, unsigned int high)
 {
     return (unsigned int) low + (rand() % ((high - low) + 1));
 }
@@ -23,8 +23,11 @@ static char *enlarge_if_needed (char *string, int size)
     if ((size + 1) < space)
         return string;
 
-    if ((temp = realloc(string, space + BLOCK_SIZE)) == NULL)
-        return string;
+    if ((temp = realloc(string, space + BLOCK_SIZE)) == NULL) {
+        printf("Error: can't allocate any more memory.\n");
+        printf("Current heap allocation size: %u bytes\n", space);
+        exit(-1);
+    }
 
     space += BLOCK_SIZE;
     return temp;

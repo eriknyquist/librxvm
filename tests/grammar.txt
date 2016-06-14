@@ -2,10 +2,10 @@
 <union>     ::=   <RE> "|" <simple>
 <simple>    ::=   <concat> | <basic>
 <concat>    ::=   <simple> <basic>
-<basic>     ::=   <zero> | <one> | <zeroone> | <rep> | <elem>
+<basic>     ::=   <zero> | <one> | <onezero> | <rep> | <elem>
 <zero>      ::=   <elem> "*"
 <one>       ::=   <elem> "+"
-<zeroone>   ::=   <elem> "?"
+<onezero>   ::=   <elem> "?"
 <rep>       ::=   <elem> "{" <reps> "}"
 <reps>      ::=   <rep_n> | <rep_range> | <rep_more> | <rep_less>
 <rep_n>     ::=   <integer>

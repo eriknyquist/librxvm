@@ -42,16 +42,21 @@ int main (int argc, char *argv[])
     }
 
     srand(time(NULL));
+
     /* Compile the expression */
     if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
         regexvm_print_err(ret);
         exit(ret);
     }
 
-    for (i = 0; i < num; ++i) {
-        gen = generate_matching_string(&compiled);
-        printf("%s\n", gen);
-        free(gen);
+    if (compiled.simple) {
+        printf("%s\n", compiled.simple);
+    } else {
+        for (i = 0; i < num; ++i) {
+            gen = generate_matching_string(&compiled);
+            printf("%s\n", gen);
+            free(gen);
+        }
     }
 
     regexvm_free(&compiled);
