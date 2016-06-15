@@ -80,36 +80,38 @@ static void print_whitespace(char *str)
 
 int test_fuzz_regexvm_match (int *count)
 {
-    regexvm_t compiled;
     const char *msg;
     char *gen;
     char *sizestr;
+    randinput_cfg_t cfg;
+
+    regexvm_t compiled;
     uint64_t gensize;
+    uint64_t itersize;
     uint64_t total_size;
     int ret;
     int i;
     int j;
 
     total_size = 0;
-    msg = "not ok";
+    msg = "ok";
     srand(time(NULL));
 
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
-        gensize = 0;
+        itersize = 0;
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             printf("Error (%d) compiling expression %s\n", ret, testexp[i]);
             exit(ret);
         }
+        cfg.compiled = &compiled;
 
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = generate_matching_string(&compiled)) == NULL) {
+            if ((gen = gen_randinput(&cfg, &gensize)) == NULL) {
                 printf("Error generating string for %s\n", testexp[i]);
                 ++ret;
             } else {
-                gensize += sizeof(char) * strlen(gen);
-                if (regexvm_match(&compiled, gen, 0)) {
-                    msg = "ok";
-                } else {
+                if (!regexvm_match(&compiled, gen, 0)) {
+                    msg = "not ok";
                     printf("Matching input ");
                     print_whitespace(gen);
                     printf(" is falsely reported as non-matching against "
@@ -117,17 +119,17 @@ int test_fuzz_regexvm_match (int *count)
                     ++ret;
                 }
 
+                itersize += gensize;
                 fflush(stdout);
                 free(gen);
             }
         }
 
-        total_size += gensize;
-        sizestr = hrsize(gensize);
+        total_size += itersize;
+        sizestr = hrsize(itersize);
         printf("%s %d %s: tested %s of input data\n", msg, *count, __func__,
                sizestr);
         free(sizestr);
-        gensize = 0;
         ++(*count);
 
         regexvm_free(&compiled);

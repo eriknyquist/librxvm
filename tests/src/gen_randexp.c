@@ -3,7 +3,6 @@
 #include <string.h>
 #include <time.h>
 #include "regexvm.h"
-#include "randexp.h"
 #include "test_common.h"
 
 int parse_int (char *input)
@@ -23,12 +22,12 @@ int parse_int (char *input)
 
 int main (int argc, char *argv[])
 {
-    cfg_t cfg;
+    randexp_cfg_t cfg;
     char *gen;
     int num;
     int i;
 
-    memset(&cfg, 0, sizeof(cfg_t));
+    memset(&cfg, 0, sizeof(randexp_cfg_t));
     num = 1;
 
     if (argc > 2) {
@@ -43,7 +42,7 @@ int main (int argc, char *argv[])
     srand(time(NULL));
 
     for (i = 0; i < num; ++i) {
-        gen = gen_randexp(&cfg);
+        gen = gen_randexp(&cfg, NULL);
         printf("%s\n", gen);
         free(gen);
     }

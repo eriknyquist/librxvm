@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "randexp.h"
+#include <stdint.h>
 #include "regexvm.h"
 #include "test_common.h"
 #include "lex.h"
@@ -23,33 +23,33 @@
 static const char *meta = "()*+-.?[]{|}^$\\";
 static char charmap[LITERALS + NUM_META];
 
-static void nonterm_re       (cfg_t *cfg);
-static void nonterm_union    (cfg_t *cfg);
-static void nonterm_simple   (cfg_t *cfg);
-static void nonterm_concat   (cfg_t *cfg);
-static void nonterm_basic    (cfg_t *cfg);
-static void nonterm_zero     (cfg_t *cfg);
-static void nonterm_one      (cfg_t *cfg);
-static void nonterm_onezero  (cfg_t *cfg);
-static void nonterm_rep      (cfg_t *cfg);
-static void nonterm_reps     (cfg_t *cfg);
-static void nonterm_repn     (cfg_t *cfg);
-static void nonterm_reprange (cfg_t *cfg);
-static void nonterm_repmore  (cfg_t *cfg);
-static void nonterm_repless  (cfg_t *cfg);
-static void nonterm_elem     (cfg_t *cfg);
-static void nonterm_group    (cfg_t *cfg);
-static void nonterm_any      (cfg_t *cfg);
-/*static void nonterm_sol      (cfg_t *cfg);*/
-/*static void nonterm_eol      (cfg_t *cfg);*/
-static void nonterm_char     (cfg_t *cfg);
-static void nonterm_char_ccs (cfg_t *cfg);
-static void nonterm_set      (cfg_t *cfg);
-static void nonterm_setitems (cfg_t *cfg);
-static void nonterm_setitem  (cfg_t *cfg);
-static void nonterm_range    (cfg_t *cfg);
+static void nonterm_re       (randexp_cfg_t *cfg);
+static void nonterm_union    (randexp_cfg_t *cfg);
+static void nonterm_simple   (randexp_cfg_t *cfg);
+static void nonterm_concat   (randexp_cfg_t *cfg);
+static void nonterm_basic    (randexp_cfg_t *cfg);
+static void nonterm_zero     (randexp_cfg_t *cfg);
+static void nonterm_one      (randexp_cfg_t *cfg);
+static void nonterm_onezero  (randexp_cfg_t *cfg);
+static void nonterm_rep      (randexp_cfg_t *cfg);
+static void nonterm_reps     (randexp_cfg_t *cfg);
+static void nonterm_repn     (randexp_cfg_t *cfg);
+static void nonterm_reprange (randexp_cfg_t *cfg);
+static void nonterm_repmore  (randexp_cfg_t *cfg);
+static void nonterm_repless  (randexp_cfg_t *cfg);
+static void nonterm_elem     (randexp_cfg_t *cfg);
+static void nonterm_group    (randexp_cfg_t *cfg);
+static void nonterm_any      (randexp_cfg_t *cfg);
+/*static void nonterm_sol      (randexp_cfg_t *cfg);*/
+/*static void nonterm_eol      (randexp_cfg_t *cfg);*/
+static void nonterm_char     (randexp_cfg_t *cfg);
+static void nonterm_char_ccs (randexp_cfg_t *cfg);
+static void nonterm_set      (randexp_cfg_t *cfg);
+static void nonterm_setitems (randexp_cfg_t *cfg);
+static void nonterm_setitem  (randexp_cfg_t *cfg);
+static void nonterm_range    (randexp_cfg_t *cfg);
 
-typedef void (*nonterm_t)(cfg_t*);
+typedef void (*nonterm_t)(randexp_cfg_t*);
 
 nonterm_t simple_choices[SIMPLE_CHOICES] = {nonterm_concat, nonterm_basic};
 nonterm_t basic_choices[BASIC_CHOICES] =
@@ -104,68 +104,19 @@ static char get_rand_literal (uint8_t meta)
     return charmap[rand_range(WS_LOW, hi)];
 }
 
-static void enlarge_buf (cfg_t *cfg, int blocks)
-{
-    char *temp;
-    int size;
-
-    size = BLOCK_SIZE * blocks;
-    if ((temp = realloc(cfg->buf, cfg->space + size)) == NULL) {
-         printf("Error: can't allocate any more memory.\n");
-         printf("Current heap allocation size: %u bytes\n", cfg->space);
-         exit(-1);
-    }
-
-    cfg->space += size;
-    cfg->buf = temp;
-}
-
-static void buf_addc (cfg_t *cfg, char c)
-{
-    if ((cfg->size + 1) > cfg->space) {
-        enlarge_buf(cfg, 1);
-    }
-
-    cfg->buf[cfg->size++] = c;
-}
-
-static void buf_adds (cfg_t *cfg, char *s, int n)
-{
-    int i;
-    int blocks;
-
-    if ((cfg->size + n) > cfg->space) {
-        blocks = (((cfg->size + n) - cfg->space) / BLOCK_SIZE) + 1;
-        enlarge_buf(cfg, blocks);
-    }
-
-    for (i = 0; i < n && s[i]; ++i) {
-        cfg->buf[cfg->size++] = s[i];
-    }
-}
-
-static void buf_addu (cfg_t *cfg, unsigned int i)
-{
-    int chars;
-    char num[20];
-
-    chars = snprintf(num, sizeof(num), "%d", i);
-    buf_adds(cfg, num, chars);
-}
-
 static int choice (int prob)
 {
     return (rand_range(0, 100) < prob);
 }
 
-void nonterm_range (cfg_t *cfg)
+void nonterm_range (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, get_rand_literal(0));
-    buf_addc(cfg, '-');
-    buf_addc(cfg, get_rand_literal(0));
+    strb_addc(cfg->strb, get_rand_literal(0));
+    strb_addc(cfg->strb, '-');
+    strb_addc(cfg->strb, get_rand_literal(0));
 }
 
-void nonterm_setitem (cfg_t *cfg)
+void nonterm_setitem (randexp_cfg_t *cfg)
 {
     nonterm_t nonterm;
 
@@ -173,7 +124,7 @@ void nonterm_setitem (cfg_t *cfg)
     nonterm(cfg);
 }
 
-void nonterm_setitems (cfg_t *cfg)
+void nonterm_setitems (randexp_cfg_t *cfg)
 {
     if (rand_range(0, 1)) {
         nonterm_setitem(cfg);
@@ -183,51 +134,51 @@ void nonterm_setitems (cfg_t *cfg)
     }
 }
 
-void nonterm_set (cfg_t *cfg)
+void nonterm_set (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, '[');
+    strb_addc(cfg->strb, '[');
     nonterm_setitems(cfg);
-    buf_addc(cfg, ']');
+    strb_addc(cfg->strb, ']');
 }
 
-void nonterm_char_ccs (cfg_t *cfg)
+void nonterm_char_ccs (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, get_rand_literal(1));
+    strb_addc(cfg->strb, get_rand_literal(1));
 }
 
-void nonterm_char (cfg_t *cfg)
+void nonterm_char (randexp_cfg_t *cfg)
 {
     if (choice(cfg->escapes)) {
-        buf_addc(cfg, '\\');
-        buf_addc(cfg, meta[rand_range(0, NUM_META - 1)]);
+        strb_addc(cfg->strb, '\\');
+        strb_addc(cfg->strb, meta[rand_range(0, NUM_META - 1)]);
     } else {
-        buf_addc(cfg, get_rand_literal(0));
+        strb_addc(cfg->strb, get_rand_literal(0));
     }
 }
 /*
-void nonterm_eol (cfg_t *cfg)
+void nonterm_eol (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, '$');
+    strb_addc(cfg->strb, '$');
 }
 
-void nonterm_sol (cfg_t *cfg)
+void nonterm_sol (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, '^');
+    strb_addc(cfg->strb, '^');
 }
 */
-void nonterm_any (cfg_t *cfg)
+void nonterm_any (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, '.');
+    strb_addc(cfg->strb, '.');
 }
 
-void nonterm_group (cfg_t *cfg)
+void nonterm_group (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, '(');
+    strb_addc(cfg->strb, '(');
     nonterm_re(cfg);
-    buf_addc(cfg, ')');
+    strb_addc(cfg->strb, ')');
 }
 
-void nonterm_elem (cfg_t *cfg)
+void nonterm_elem (randexp_cfg_t *cfg)
 {
     nonterm_t nonterm;
 
@@ -235,31 +186,31 @@ void nonterm_elem (cfg_t *cfg)
     nonterm(cfg);
 }
 
-void nonterm_repless (cfg_t *cfg)
+void nonterm_repless (randexp_cfg_t *cfg)
 {
-    buf_addc(cfg, ',');
-    buf_addu(cfg, rand_range(1, MAX_REP));
+    strb_addc(cfg->strb, ',');
+    strb_addu(cfg->strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_repmore (cfg_t *cfg)
+void nonterm_repmore (randexp_cfg_t *cfg)
 {
-    buf_addu(cfg, rand_range(1, MAX_REP));
-    buf_addc(cfg, ',');
+    strb_addu(cfg->strb, rand_range(1, MAX_REP));
+    strb_addc(cfg->strb, ',');
 }
 
-void nonterm_reprange (cfg_t *cfg)
+void nonterm_reprange (randexp_cfg_t *cfg)
 {
-    buf_addu(cfg, rand_range(1, MAX_REP));
-    buf_addc(cfg, ',');
-    buf_addu(cfg, rand_range(1, MAX_REP));
+    strb_addu(cfg->strb, rand_range(1, MAX_REP));
+    strb_addc(cfg->strb, ',');
+    strb_addu(cfg->strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_repn (cfg_t *cfg)
+void nonterm_repn (randexp_cfg_t *cfg)
 {
-    buf_addu(cfg, rand_range(1, MAX_REP));
+    strb_addu(cfg->strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_reps (cfg_t *cfg)
+void nonterm_reps (randexp_cfg_t *cfg)
 {
     nonterm_t nonterm;
 
@@ -267,33 +218,33 @@ void nonterm_reps (cfg_t *cfg)
     nonterm(cfg);
 }
 
-void nonterm_rep (cfg_t *cfg)
+void nonterm_rep (randexp_cfg_t *cfg)
 {
     nonterm_elem(cfg);
-    buf_addc(cfg, '{');
+    strb_addc(cfg->strb, '{');
     nonterm_reps(cfg);
-    buf_addc(cfg, '}');
+    strb_addc(cfg->strb, '}');
 }
 
-void nonterm_onezero (cfg_t *cfg)
+void nonterm_onezero (randexp_cfg_t *cfg)
 {
     nonterm_elem(cfg);
-    buf_addc(cfg, '?');
+    strb_addc(cfg->strb, '?');
 }
 
-void nonterm_one (cfg_t *cfg)
+void nonterm_one (randexp_cfg_t *cfg)
 {
     nonterm_elem(cfg);
-    buf_addc(cfg, '+');
+    strb_addc(cfg->strb, '+');
 }
 
-void nonterm_zero (cfg_t *cfg)
+void nonterm_zero (randexp_cfg_t *cfg)
 {
     nonterm_elem(cfg);
-    buf_addc(cfg, '*');
+    strb_addc(cfg->strb, '*');
 }
 
-void nonterm_basic (cfg_t *cfg)
+void nonterm_basic (randexp_cfg_t *cfg)
 {
     nonterm_t nonterm;
 
@@ -301,13 +252,13 @@ void nonterm_basic (cfg_t *cfg)
     nonterm(cfg);
 }
 
-void nonterm_concat (cfg_t *cfg)
+void nonterm_concat (randexp_cfg_t *cfg)
 {
     nonterm_simple(cfg);
     nonterm_basic(cfg);
 }
 
-void nonterm_simple (cfg_t *cfg)
+void nonterm_simple (randexp_cfg_t *cfg)
 {
     if (choice(cfg->tokens)) {
         nonterm_concat(cfg);
@@ -316,14 +267,14 @@ void nonterm_simple (cfg_t *cfg)
     }
 }
 
-void nonterm_union (cfg_t *cfg)
+void nonterm_union (randexp_cfg_t *cfg)
 {
     nonterm_re(cfg);
-    buf_addc(cfg, '|');
+    strb_addc(cfg->strb, '|');
     nonterm_simple(cfg);
 }
 
-void nonterm_re (cfg_t *cfg)
+void nonterm_re (randexp_cfg_t *cfg)
 {
     if (rand_range(0, 1)) {
         nonterm_union(cfg);
@@ -332,18 +283,20 @@ void nonterm_re (cfg_t *cfg)
     }
 }
 
-char *gen_randexp (cfg_t *cfg)
+char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len)
 {
-    if ((cfg->buf = malloc(BLOCK_SIZE)) == NULL) {
-        return NULL;
-    }
+    strb_t strb;
 
-    cfg->space = BLOCK_SIZE;
-    cfg->size = 0;
-
+    cfg->strb = &strb;
+    strb_init(cfg->strb, 50);
     init_charmap();
+
     nonterm_re(cfg);
 
-    buf_addc(cfg, '\0');
-    return cfg->buf;
+    if (len) {
+        *len = cfg->strb->size;
+    }
+
+    strb_addc(cfg->strb, '\0');
+    return cfg->strb->buf;
 }

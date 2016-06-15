@@ -26,6 +26,7 @@ int main (int argc, char *argv[])
 {
     char *gen;
     int ret;
+    randinput_cfg_t cfg;
     regexvm_t compiled;
     int num;
     int i;
@@ -44,7 +45,7 @@ int main (int argc, char *argv[])
     srand(time(NULL));
 
     /* Compile the expression */
-    if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
+    if ((ret = regexvm_compile(cfg.compiled, argv[1])) < 0) {
         regexvm_print_err(ret);
         exit(ret);
     }
@@ -53,7 +54,7 @@ int main (int argc, char *argv[])
         printf("%s\n", compiled.simple);
     } else {
         for (i = 0; i < num; ++i) {
-            gen = generate_matching_string(&compiled);
+            gen = gen_randinput(&cfg, NULL);
             printf("%s\n", gen);
             free(gen);
         }
