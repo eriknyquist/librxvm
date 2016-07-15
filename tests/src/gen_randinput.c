@@ -42,6 +42,7 @@ int main (int argc, char *argv[])
         num = parse_int(argv[2]);
     }
 
+    cfg.compiled = &compiled;
     srand(time(NULL));
 
     /* Compile the expression */
