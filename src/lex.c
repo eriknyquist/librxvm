@@ -47,19 +47,19 @@ static inline int isprintable (char x)
         (x >= WS_LOW && x <= WS_HIGH)) ? 1 : 0;
 }
 
-static int simple_transition (int literal, char **input, int tok, int *ret)
+static int trans (int literal, char **input, int tok, int state, int *ret)
 {
-    int state;
+    int endstate;
 
     if (literal) {
-        state = STATE_LITERAL;
+        endstate = STATE_LITERAL;
     } else {
-        state = STATE_END;
-        *ret = tok;
+        endstate = state;
+        if (ret) *ret = tok;
         *input += 1;
     }
 
-    return state;
+    return endstate;
 }
 
 void lex_init (void)
@@ -88,11 +88,8 @@ int lex (char **input)
                     *input += 1;
 
                 } else if (**input == CHARC_OPEN_SYM) {
-                    state = STATE_END;
-                    ret = CHARC_OPEN;
-                    literal = 1;
-                    *input += 1;
-
+                    state = trans(literal, input, CHARC_OPEN, STATE_END, &ret);
+                    if (!literal) literal = 1;
                 } else if (**input == CHARC_CLOSE_SYM) {
                     state = STATE_END;
                     ret = CHARC_CLOSE;
@@ -100,30 +97,27 @@ int lex (char **input)
                     *input += 1;
 
                 } else if (**input == REP_OPEN_SYM) {
-                   state = STATE_REP;
-                   *input += 1;
-
+                    state = trans(literal, input, 0, STATE_REP, NULL);
                 } else if (**input == REP_CLOSE_SYM) {
-                    return RVM_BADREP;
-
+                    state = trans(literal, input, RVM_BADREP, STATE_END, &ret);
                 } else if (**input == LPAREN_SYM) {
-                    state = simple_transition(literal, input, LPAREN, &ret);
+                    state = trans(literal, input, LPAREN, STATE_END, &ret);
                 } else if (**input == RPAREN_SYM) {
-                    state = simple_transition(literal, input, RPAREN, &ret);
+                    state = trans(literal, input, RPAREN, STATE_END, &ret);
                 } else if (**input == ONE_SYM) {
-                    state = simple_transition(literal, input, ONE, &ret);
+                    state = trans(literal, input, ONE, STATE_END, &ret);
                 } else if (**input == ONEZERO_SYM) {
-                    state = simple_transition(literal, input, ONEZERO, &ret);
+                    state = trans(literal, input, ONEZERO, STATE_END, &ret);
                 } else if (**input == ZERO_SYM) {
-                    state = simple_transition(literal, input, ZERO, &ret);
+                    state = trans(literal, input, ZERO, STATE_END, &ret);
                 } else if (**input == ANY_SYM) {
-                    state = simple_transition(literal, input, ANY, &ret);
+                    state = trans(literal, input, ANY, STATE_END, &ret);
                 } else if (**input == SOL_SYM) {
-                    state = simple_transition(literal, input, SOL, &ret);
+                    state = trans(literal, input, SOL, STATE_END, &ret);
                 } else if (**input == EOL_SYM) {
-                    state = simple_transition(literal, input, EOL, &ret);
+                    state = trans(literal, input, EOL, STATE_END, &ret);
                 } else if (**input == ALT_SYM) {
-                    state = simple_transition(literal, input, ALT, &ret);
+                    state = trans(literal, input, ALT, STATE_END, &ret);
                 } else if (isprintable(**input)) {
                     state = STATE_LITERAL;
                 } else {
