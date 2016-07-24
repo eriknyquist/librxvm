@@ -9,10 +9,22 @@ char *gen_randinput (randinput_cfg_t *cfg, uint64_t *len)
 {
     inst_t **exe;
     inst_t *inst;
+    char *ret;
     char rand;
+    size_t size;
     unsigned int ip;
     unsigned int ix;
     strb_t strb;
+
+    if (cfg->compiled->simple) {
+        size = sizeof(char) * (strlen(cfg->compiled->simple) + 1);
+        if ((ret = malloc(size)) == NULL) {
+            return NULL;
+        }
+
+        memcpy(ret, cfg->compiled->simple, size);
+        return ret;
+    }
 
     cfg->strb = &strb;
     strb_init(cfg->strb, 50);

@@ -34,13 +34,19 @@ int regexvm_compile (regexvm_t *compiled, char *exp)
 {
     stack_t *ir;
     int ret;
+    size_t size;
 
     if ((ret = stage1(exp, &ir)) < 0)
         return ret;
 
     if (ir == NULL) {
+        size = sizeof(char) * (strlen(exp) + 1);
+        if ((compiled->simple = malloc(size)) == NULL) {
+            return RVM_EMEM;
+        }
+
+        memcpy(compiled->simple, exp, size);
         compiled->exe = NULL;
-        compiled->simple = exp;
         return 0;
     }
 
@@ -255,8 +261,12 @@ void regexvm_free (regexvm_t *compiled)
     unsigned int i;
     inst_t *inst;
 
-    if (compiled->exe == NULL)
+    if (compiled->simple) {
+        free(compiled->simple);
         return;
+    } else if (compiled->exe == NULL) {
+        return;
+    }
 
     for (i = 0; i < compiled->size; i++) {
         inst = compiled->exe[i];

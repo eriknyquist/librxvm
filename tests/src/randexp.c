@@ -73,7 +73,7 @@ static int ismeta (char c)
     return 0;
 }
 
-static void init_charmap ()
+void init_charmap ()
 {
     int i;
     char c;
@@ -143,7 +143,11 @@ void nonterm_set (randexp_cfg_t *cfg)
 
 void nonterm_char_ccs (randexp_cfg_t *cfg)
 {
-    strb_addc(cfg->strb, get_rand_literal(1));
+    char c;
+
+    c = get_rand_literal(1);
+    if (c == ']' || c == '-') ++c;
+    strb_addc(cfg->strb, c);
 }
 
 void nonterm_char (randexp_cfg_t *cfg)
@@ -289,7 +293,6 @@ char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len)
 
     cfg->strb = &strb;
     strb_init(cfg->strb, 50);
-    init_charmap();
 
     nonterm_re(cfg);
 

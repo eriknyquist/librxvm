@@ -11,7 +11,8 @@ gen_randinput_SOURCES = gen_randinput.c randinput.c string_builder.c test_utils.
 
 regexvm_test_SOURCES = test_run.c test_regexvm_compile.c test_regexvm_err.c \
 test_regexvm_search.c test_regexvm_match.c test_fuzz_regexvm_match.c \
-test_regexvm_search_nomatch.c test_utils.c randinput.c randexp.c string_builder.c
+test_fuzz_full_regexvm_match.c test_regexvm_search_nomatch.c test_utils.c \
+randinput.c randexp.c string_builder.c
 
 LDADD = -lregexvm -L../../src
 AM_CFLAGS = -I../../src -Wall -Wno-trigraphs

@@ -3,6 +3,7 @@
 #include "regexvm_err.h"
 #include "regexvm_common.h"
 #include "stack.h"
+#include "vmcode.h"
 
 /* set_op functions:
  * a bunch of convenience functions for populating
@@ -134,6 +135,15 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
     inst_t inst;
     int end;
     int j;
+    int temp;
+
+    if (rep_n == rep_m) {
+        return code_rep_n(cp, rep_n, size, i);
+    } else if (rep_n > rep_m) {
+        temp = rep_n;
+        rep_n = rep_m;
+        rep_m = temp;
+    }
 
     for (j = 0; j < rep_n; ++j) {
         if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {

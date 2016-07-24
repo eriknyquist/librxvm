@@ -4,11 +4,12 @@
 #include "test_common.h"
 #include "test_modules.h"
 
-#define NUM_MODS          6
+#define NUM_MODS          7
 
 const testmod_t mods[NUM_MODS] = {
     test_regexvm_err, test_regexvm_match, test_regexvm_search,
-    test_regexvm_search_nomatch, test_regexvm_compile, test_fuzz_regexvm_match
+    test_regexvm_search_nomatch, test_regexvm_compile, test_fuzz_regexvm_match,
+    test_fuzz_full_regexvm_match
 };
 
 int main (void)

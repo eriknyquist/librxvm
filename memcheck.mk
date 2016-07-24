@@ -1,7 +1,7 @@
 TESTS := regexvm_test
 
 RVM_C_SRCS := $(wildcard src/*.c)
-TEST_SRCS := $(wildcard tests/src/test_*.c)
+TEST_SRCS := $(wildcard tests/src/test_*.c) tests/src/string_builder.c tests/src/randexp.c tests/src/randinput.c
 RVM_OBJS := ${RVM_C_SRCS:.c=.o}
 TEST_OBJS := ${TEST_SRCS:.c=.o}
 

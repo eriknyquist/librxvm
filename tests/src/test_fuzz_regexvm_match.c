@@ -8,7 +8,7 @@
 char *rgx;
 char *input;
 
-#define NUM_ITER     100000
+#define NUM_ITER     1000
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
@@ -55,29 +55,6 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "bb(cc(dd(EE.{3,4}){6,}){2,}){8,9}"
 };
 
-static void print_whitespace(char *str)
-{
-    while (*str) {
-        switch (*str) {
-            case '\n':
-                printf("\\n");
-            break;
-            case '\r':
-                printf("\\r");
-            break;
-            case '\t':
-                printf("\\t");
-            break;
-            case '\v':
-                printf("\\v");
-            break;
-            default:
-                printf("%c", *str);
-        }
-        ++str;
-    }
-}
-
 int test_fuzz_regexvm_match (int *count)
 {
     const char *msg;
@@ -100,22 +77,21 @@ int test_fuzz_regexvm_match (int *count)
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
         itersize = 0;
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
-            printf("Error (%d) compiling expression %s\n", ret, testexp[i]);
+            test_err(testexp[i], "", __func__, "Compilation failed", ret);
             exit(ret);
         }
         cfg.compiled = &compiled;
 
         for (j = 0; j < NUM_ITER; ++j) {
             if ((gen = gen_randinput(&cfg, &gensize)) == NULL) {
-                printf("Error generating string for %s\n", testexp[i]);
+                test_err(testexp[i], "", __func__,
+                        "Memory allocation failed during input generation", 0);
                 ++ret;
             } else {
                 if (!regexvm_match(&compiled, gen, 0)) {
                     msg = "not ok";
-                    printf("Matching input ");
-                    print_whitespace(gen);
-                    printf(" is falsely reported as non-matching against "
-                           "expression %s\n", testexp[i]);
+                    test_err(testexp[i], gen, __func__,
+                            "input falsely reported as non-matching", 0);
                     ++ret;
                 }
 
@@ -127,8 +103,8 @@ int test_fuzz_regexvm_match (int *count)
 
         total_size += itersize;
         sizestr = hrsize(itersize);
-        printf("%s %d %s: tested %s of input data\n", msg, *count, __func__,
-               sizestr);
+        printf("%s %d %s: %d failed, %d passed, %s\n", msg, *count, __func__,
+               ret, NUM_ITER - ret, sizestr);
         free(sizestr);
         ++(*count);
 
