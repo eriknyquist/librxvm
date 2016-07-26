@@ -6,7 +6,7 @@
 #include "test_common.h"
 
 
-#define NUM_ITER     1000
+#define NUM_ITER     100
 
 int test_fuzz_full_regexvm_match (int *count)
 {
@@ -18,7 +18,6 @@ int test_fuzz_full_regexvm_match (int *count)
     randexp_cfg_t ecfg;
 
     regexvm_t compiled;
-    uint64_t gensize;
     uint64_t itersize;
     uint64_t total_size;
     int ret;
@@ -31,6 +30,11 @@ int test_fuzz_full_regexvm_match (int *count)
 
     total_size = 0;
     msg = "ok";
+
+    ecfg.tokens = 50;
+
+    icfg.generosity = 80;
+    icfg.whitespace = 10;
 
     for (i = 0; i < NUM_TESTS_FUZZ_FULL_MATCH; ++i) {
         itersize = 0;
@@ -46,10 +50,8 @@ int test_fuzz_full_regexvm_match (int *count)
             continue;
         }
 
-        icfg.compiled = &compiled;
-
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = gen_randinput(&icfg, &gensize)) == NULL) {
+            if ((gen = gen_randinput(&compiled, &icfg)) == NULL) {
                 test_err(exp, "", __func__,
                         "Memory allocation failed during input generation", 0);
                 continue;
@@ -61,7 +63,7 @@ int test_fuzz_full_regexvm_match (int *count)
                     ++ret;
                 }
 
-                itersize += gensize;
+                itersize += strlen(gen);
                 fflush(stdout);
                 free(gen);
             }

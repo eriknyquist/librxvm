@@ -5,65 +5,87 @@
 #include "lex.h"
 #include "test_common.h"
 
-char *gen_randinput (randinput_cfg_t *cfg, uint64_t *len)
+#define DEFAULT_WS_PROB        10
+#define DEFAULT_GEN_PROB       50
+
+/*unsigned int rand_range (unsigned int low, unsigned int high)
+{
+        return (unsigned int) low + (rand() % ((high - low) + 1));
+}*/
+
+static int choice (int prob)
+{
+    return (rand_range(0, 100) < prob);
+}
+
+char *gen_randinput (regexvm_t *compiled, randinput_cfg_t *cfg)
 {
     inst_t **exe;
     inst_t *inst;
     char *ret;
+    int val;
     char rand;
     size_t size;
     unsigned int ip;
     unsigned int ix;
     strb_t strb;
 
-    if (cfg->compiled->simple) {
-        size = sizeof(char) * (strlen(cfg->compiled->simple) + 1);
+    if (compiled->simple) {
+        size = sizeof(char) * (strlen(compiled->simple) + 1);
         if ((ret = malloc(size)) == NULL) {
             return NULL;
         }
 
-        memcpy(ret, cfg->compiled->simple, size);
+        memcpy(ret, compiled->simple, size);
         return ret;
     }
 
-    cfg->strb = &strb;
-    strb_init(cfg->strb, 50);
+    strb_init(&strb, 50);
     ip = 0;
 
-    exe = cfg->compiled->exe;
+    exe = compiled->exe;
     inst = exe[ip];
     while (inst->op != OP_MATCH) {
         switch (inst->op) {
             case OP_CHAR:
-                strb_addc(cfg->strb, inst->c);
+                strb_addc(&strb, inst->c);
                 ++ip;
             break;
             case OP_ANY:
-                rand = (char) rand_range(PRINTABLE_LOW, PRINTABLE_HIGH);
-                strb_addc(cfg->strb, rand);
-                ++ip;
+                val = (cfg) ? cfg->whitespace : DEFAULT_WS_PROB;
+                if (choice(val)) {
+                    rand = (char) rand_range(WS_LOW, WS_HIGH);
+                    strb_addc(&strb, rand);
+                    ++ip;
+                } else {
+                    rand = (char) rand_range(PRINTABLE_LOW, PRINTABLE_HIGH);
+                    strb_addc(&strb, rand);
+                    ++ip;
+                }
+
             break;
             case OP_SOL:
-                if (cfg->strb->size &&
-                        cfg->strb->buf[cfg->strb->size - 1] != '\n') {
-                    strb_addc(cfg->strb, '\n');
+                if (strb.size &&
+                        strb.buf[strb.size - 1] != '\n') {
+                    strb_addc(&strb, '\n');
                 }
                 ++ip;
             break;
             case OP_EOL:
-                if (cfg->compiled->size > ip && (exe[ip + 1] != OP_CHAR
+                if (compiled->size > ip && (exe[ip + 1] != OP_CHAR
                             || exe[ip + 1]->c != '\n')) {
-                    strb_addc(cfg->strb, '\n');
+                    strb_addc(&strb, '\n');
                 }
                 ++ip;
             break;
             case OP_CLASS:
                 ix = rand_range(0, strlen(inst->ccs) - 1);
-                strb_addc(cfg->strb, inst->ccs[ix]);
+                strb_addc(&strb, inst->ccs[ix]);
                 ++ip;
             break;
             case OP_BRANCH:
-                ip = (rand_range(0, 1)) ? inst->x : inst->y;
+                val = (cfg) ? cfg->generosity : DEFAULT_GEN_PROB;
+                ip = (choice(val)) ? inst->x : inst->y;
             break;
             case OP_JMP:
                 ip = inst->x;
@@ -73,10 +95,6 @@ char *gen_randinput (randinput_cfg_t *cfg, uint64_t *len)
         inst = exe[ip];
     }
 
-    if (len) {
-        *len = cfg->strb->size;
-    }
-
-    strb_addc(cfg->strb, '\0');
-    return cfg->strb->buf;
+    strb_addc(&strb, '\0');
+    return strb.buf;
 }

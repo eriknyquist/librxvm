@@ -291,15 +291,15 @@ char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len)
 {
     strb_t strb;
 
+    strb_init(&strb, 50);
     cfg->strb = &strb;
-    strb_init(cfg->strb, 50);
 
     nonterm_re(cfg);
 
     if (len) {
-        *len = cfg->strb->size;
+        *len = strb.size;
     }
 
-    strb_addc(cfg->strb, '\0');
-    return cfg->strb->buf;
+    strb_addc(&strb, '\0');
+    return strb.buf;
 }

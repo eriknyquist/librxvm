@@ -66,6 +66,6 @@ void strb_addu (strb_t *cfg, unsigned int i)
     int chars;
     char num[20];
 
-    chars = snprintf(num, sizeof(num), "%d", i);
+    chars = snprintf(num, sizeof(num), "%u", i);
     strb_adds(cfg, num, chars);
 }

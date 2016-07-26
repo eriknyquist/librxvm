@@ -42,11 +42,12 @@ int main (int argc, char *argv[])
         num = parse_int(argv[2]);
     }
 
-    cfg.compiled = &compiled;
+    cfg.generosity = 95;
+    cfg.whitespace = 0;
     srand(time(NULL));
 
     /* Compile the expression */
-    if ((ret = regexvm_compile(cfg.compiled, argv[1])) < 0) {
+    if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
         regexvm_print_err(ret);
         exit(ret);
     }
@@ -55,7 +56,7 @@ int main (int argc, char *argv[])
         printf("%s\n", compiled.simple);
     } else {
         for (i = 0; i < num; ++i) {
-            gen = gen_randinput(&cfg, NULL);
+            gen = gen_randinput(&compiled, &cfg);
             printf("%s\n", gen);
             free(gen);
         }

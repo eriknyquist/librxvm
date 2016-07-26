@@ -63,7 +63,6 @@ int test_fuzz_regexvm_match (int *count)
     randinput_cfg_t cfg;
 
     regexvm_t compiled;
-    uint64_t gensize;
     uint64_t itersize;
     uint64_t total_size;
     int ret;
@@ -74,16 +73,18 @@ int test_fuzz_regexvm_match (int *count)
     msg = "ok";
     srand(time(NULL));
 
+    cfg.generosity = 50;
+    cfg.whitespace = 10;
+
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
         itersize = 0;
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             test_err(testexp[i], "", __func__, "Compilation failed", ret);
             exit(ret);
         }
-        cfg.compiled = &compiled;
 
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = gen_randinput(&cfg, &gensize)) == NULL) {
+            if ((gen = gen_randinput(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
                 ++ret;
@@ -95,7 +96,7 @@ int test_fuzz_regexvm_match (int *count)
                     ++ret;
                 }
 
-                itersize += gensize;
+                itersize += strlen(gen);
                 fflush(stdout);
                 free(gen);
             }
