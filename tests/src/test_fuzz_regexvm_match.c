@@ -60,7 +60,7 @@ int test_fuzz_regexvm_match (int *count)
     const char *msg;
     char *gen;
     char *sizestr;
-    randinput_cfg_t cfg;
+    rxvm_gencfg_t cfg;
 
     regexvm_t compiled;
     uint64_t itersize;
@@ -84,7 +84,7 @@ int test_fuzz_regexvm_match (int *count)
         }
 
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = gen_randinput(&compiled, &cfg)) == NULL) {
+            if ((gen = regexvm_gen(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
                 ++ret;

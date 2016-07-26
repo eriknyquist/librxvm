@@ -2,23 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include "regexvm.h"
+#include "string_builder.h"
 #include "lex.h"
-#include "test_common.h"
 
 #define DEFAULT_WS_PROB        10
 #define DEFAULT_GEN_PROB       50
 
-/*unsigned int rand_range (unsigned int low, unsigned int high)
+static unsigned int rand_range (unsigned int low, unsigned int high)
 {
         return (unsigned int) low + (rand() % ((high - low) + 1));
-}*/
+}
 
 static int choice (int prob)
 {
     return (rand_range(0, 100) < prob);
 }
 
-char *gen_randinput (regexvm_t *compiled, randinput_cfg_t *cfg)
+char *regexvm_gen (regexvm_t *compiled, rxvm_gencfg_t *cfg)
 {
     inst_t **exe;
     inst_t *inst;

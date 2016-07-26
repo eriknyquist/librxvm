@@ -31,6 +31,7 @@
 #define REGEXVM_NONGREEDY       0x2
 #define REGEXVM_MULTILINE       0x4
 
+typedef struct rxvm_gencfg rxvm_gencfg_t;
 typedef struct regexvm regexvm_t;
 
 struct regexvm {
@@ -39,14 +40,20 @@ struct regexvm {
     char *simple;
 };
 
+struct rxvm_gencfg {
+    uint8_t generosity;
+    uint8_t whitespace;
+};
+
+char *regexvm_gen   (regexvm_t *compiled, rxvm_gencfg_t *cfg);
 int regexvm_compile (regexvm_t *compiled, char *exp);
-int regexvm_match (regexvm_t *compiled, char *input, int flags);
+int regexvm_match   (regexvm_t *compiled, char *input, int flags);
 int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
                      int flags);
-int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
-                  int flags);
+int regexvm_search  (regexvm_t *compiled, char *input, char **start, char **end,
+                     int flags);
 
-void regexvm_free (regexvm_t *compiled);
-void regexvm_print (regexvm_t *compiled);
+void regexvm_free   (regexvm_t *compiled);
+void regexvm_print  (regexvm_t *compiled);
 
 #endif

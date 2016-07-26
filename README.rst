@@ -171,7 +171,7 @@ Reference
 
 .. code:: c
 
-   int regexvm_compile (regexvm_t *compiled, char *exp)
+   int regexvm_compile (regexvm_t *compiled, char *exp);
 
 Compiles the regular expression ``exp``, and places the resulting VM
 instructions into the ``regexvm_t`` type pointed to by ``compiled``.
@@ -192,7 +192,7 @@ instructions into the ``regexvm_t`` type pointed to by ``compiled``.
 
 .. code:: c
 
-   int regexvm_match (regexvm_t *compiled, char *input, int flags)
+   int regexvm_match (regexvm_t *compiled, char *input, int flags);
 
 Check if the string ``input`` matches the compiled expression ``compiled``
 exactly.
@@ -214,7 +214,7 @@ exactly.
 
 .. code:: c
 
-   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end, int flags)
+   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end, int flags);
 
 Searches the string starting at ``input`` for a pattern that matches the
 compiled regular expresssion ``compiled``, until a match is found or until the
@@ -243,7 +243,7 @@ to ``NULL``.
 
    int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
 
-Searches the file at ``fp`` (``fp`` must be initialised by caller, i.e. with
+Searches the file at ``fp`` (``fp`` must be initialised by the caller, e.g. via
 ``fopen``) for a pattern that matches the compiled regular expresssion
 ``compiled``, from the current file position until EOF. If a match is found,
 the file pointer ``fp`` is re-positioned to the first character of the match,
@@ -261,12 +261,53 @@ set to 0, and ``fp`` will remain positioned at EOF.
 
 |
 
+``regexvm_gen``
+~~~~~~~~~~~~~~~
+
+.. code:: c
+
+   char *regexvm_gen (regexvm_t *compiled, rxvm_gencfg_t *cfg);
+
+Generates a string of random characters that matches the compiled expression
+``compiled`` (``compiled`` must be initialised by the caller first, e.g. via
+``regexvm_compile``).
+
+The ``rxvm_genfg_t`` type provides some control over the randomness:
+
+.. code:: c
+
+   struct rxvm_gencfg {
+       uint8_t generosity;
+       uint8_t whitespace;
+   };
+
+* ``generosity``: 0-100, representing the probability out of 100 that a ``+`` or
+  ``*`` operator will match again ("greedyness" in reverse). Higher means
+  more repeat matches.
+* ``whitespace``: 0-100, representing the probability that a whitespace
+  character will be used instead of a visible character, when the expression
+  allows it (e.g. when the expression contains a "." metacharacter). Higher
+  means more whitespace.
+
+If a null pointer is passed instead of a valid pointer to a ``rxvm_genfg_t``
+type, then default probability values will be used.
+
+**Return value**
+
+A pointer to a heap allocation that contains a null-terminated random
+matching string. If memory allocation fails, a null pointer is returned.
+
+|
+
+|
+
+
 ``regexvm_free``
 ~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   void regexvm_free (regexvm_t *compiled)
+   void regexvm_free (regexvm_t *compiled);
 
 Frees all dynamic memory associated with a compiled ``regexvm_t`` type. Always
 call this function, before exiting, on any compiled ``regexvm_t`` types.
