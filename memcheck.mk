@@ -1,4 +1,4 @@
-TESTS := regexvm_test
+TESTS := rxvm_test
 
 RVM_C_SRCS := $(wildcard src/*.c)
 TEST_SRCS := $(wildcard tests/src/test_*.c) tests/src/randexp.c

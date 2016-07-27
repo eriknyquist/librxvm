@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 char *rgx;
@@ -55,14 +55,14 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "bb(cc(dd(EE.{3,4}){6,}){2,}){8,9}"
 };
 
-int test_fuzz_regexvm_match (int *count)
+int test_fuzz_rxvm_match (int *count)
 {
     const char *msg;
     char *gen;
     char *sizestr;
     rxvm_gencfg_t cfg;
 
-    regexvm_t compiled;
+    rxvm_t compiled;
     uint64_t itersize;
     uint64_t total_size;
     int ret;
@@ -84,12 +84,12 @@ int test_fuzz_regexvm_match (int *count)
         }
 
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = regexvm_gen(&compiled, &cfg)) == NULL) {
+            if ((gen = rxvm_gen(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
                 ++ret;
             } else {
-                if (!regexvm_match(&compiled, gen, 0)) {
+                if (!rxvm_match(&compiled, gen, 0)) {
                     msg = "not ok";
                     test_err(testexp[i], gen, __func__,
                             "input falsely reported as non-matching", 0);
@@ -109,7 +109,7 @@ int test_fuzz_regexvm_match (int *count)
         free(sizestr);
         ++(*count);
 
-        regexvm_free(&compiled);
+        rxvm_free(&compiled);
     }
 
     sizestr = hrsize(total_size);

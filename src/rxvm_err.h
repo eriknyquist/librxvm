@@ -21,39 +21,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef REGEXVM_H_
-#define REGEXVM_H_
+#ifndef RXVM_ERR_H_
+#define RXVM_ERR_H_
 
-#include "regexvm_common.h"
-
-/* Config. flags */
-#define REGEXVM_ICASE           0x1
-#define REGEXVM_NONGREEDY       0x2
-#define REGEXVM_MULTILINE       0x4
-
-typedef struct rxvm_gencfg rxvm_gencfg_t;
-typedef struct regexvm regexvm_t;
-
-struct regexvm {
-    inst_t **exe;
-    unsigned int size;
-    char *simple;
-};
-
-struct rxvm_gencfg {
-    uint8_t generosity;
-    uint8_t whitespace;
-};
-
-char *regexvm_gen   (regexvm_t *compiled, rxvm_gencfg_t *cfg);
-int regexvm_compile (regexvm_t *compiled, char *exp);
-int regexvm_match   (regexvm_t *compiled, char *input, int flags);
-int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
-                     int flags);
-int regexvm_search  (regexvm_t *compiled, char *input, char **start, char **end,
-                     int flags);
-
-void regexvm_free   (regexvm_t *compiled);
-void regexvm_print  (regexvm_t *compiled);
+#define RVM_BADOP      -1   /* Operator used incorrectly */
+#define RVM_BADCLASS   -2   /* Unexpected character class closing character */
+#define RVM_BADREP     -3   /* Unexpected closing repetition character */
+#define RVM_BADPAREN   -4   /* Unexpected closing parenthesis */
+#define RVM_EPAREN     -5   /* Unterminated parenthesis group */
+#define RVM_ECLASS     -6   /* Unterminated character class */
+#define RVM_EREP       -7   /* Missing repetition closing character */
+#define RVM_MREP       -8   /* Empty repetition */
+#define RVM_ETRAIL     -9   /* Trailing escape character */
+#define RVM_EMEM       -10  /* Failed to allocate memory */
+#define RVM_EINVAL     -11  /* Invalid symbol */
 
 #endif

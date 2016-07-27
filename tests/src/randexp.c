@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 #include "lex.h"
 

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 typedef struct errtest errtest_t;
@@ -178,9 +178,9 @@ static const errtest_t *err_tests[NUM_TESTS_ERR] = {
     &test_err_mrep_30, &test_err_badop_31
 };
 
-int test_regexvm_err (int *count)
+int test_rxvm_err (int *count)
 {
-    regexvm_t compiled;
+    rxvm_t compiled;
     const errtest_t *test;
     const char *msg;
     int ret;
@@ -200,7 +200,7 @@ int test_regexvm_err (int *count)
         }
 
         if (err == 0)
-                regexvm_free(&compiled);
+                rxvm_free(&compiled);
 
         printf("%s %d %s\n", msg, *count, __func__);
         ++(*count);

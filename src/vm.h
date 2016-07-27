@@ -25,7 +25,7 @@ struct threads {
 };
 
 int vm_init (threads_t *tm, unsigned int size);
-int vm_execute (threads_t *tm, regexvm_t *compiled);
+int vm_execute (threads_t *tm, rxvm_t *compiled);
 void vm_cleanup (threads_t *tm);
 int char_match (uint8_t icase, char a, char b);
 

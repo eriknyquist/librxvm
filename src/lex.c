@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lex.h"
-#include "regexvm_err.h"
+#include "rxvm_err.h"
 
 #define isdigit(x) ((x >= '0' && x <= '9') ? 1 : 0)
 

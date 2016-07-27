@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "regexvm.h"
+#include "rxvm.h"
 
 char *rgx;
 
-static void regexvm_print_err (int err);
+static void rxvm_print_err (int err);
 
 static char *get_matching_text (FILE *fp, uint64_t size)
 {
@@ -30,7 +30,7 @@ int main (int argc, char *argv[])
     int i;
     int ret;
     char *match;
-    regexvm_t compiled;
+    rxvm_t compiled;
 
     ret = 0;
     if (argc != 3) {
@@ -39,8 +39,8 @@ int main (int argc, char *argv[])
     }
 
     /* Compile the expression */
-    if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
-        regexvm_print_err(ret);
+    if ((ret = rxvm_compile(&compiled, argv[1])) < 0) {
+        rxvm_print_err(ret);
         exit(ret);
     }
 
@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
     }
 
     /* Find all occurrences of compiled expression in file */
-    while (regexvm_fsearch(&compiled, fp, &size, 0)) {
+    while (rxvm_fsearch(&compiled, fp, &size, 0)) {
         if ((match = get_matching_text(fp, size)) == NULL) {
             printf("Error reading matching text from file '%s'\n", argv[2]);
             exit(1);
@@ -62,11 +62,11 @@ int main (int argc, char *argv[])
     }
 
     fclose(fp);
-    regexvm_free(&compiled);
+    rxvm_free(&compiled);
     return ret;
 }
 
-void regexvm_print_err (int err)
+void rxvm_print_err (int err)
 {
     const char *msg;
 

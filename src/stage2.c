@@ -24,9 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "regexvm.h"
+#include "rxvm.h"
 
-static void optimise_chain (regexvm_t *cmp, int *chain, int *lookup,
+static void optimise_chain (rxvm_t *cmp, int *chain, int *lookup,
                             int ix)
 {
     inst_t *inst;
@@ -59,7 +59,7 @@ static void optimise_chain (regexvm_t *cmp, int *chain, int *lookup,
     }
 }
 
-static int optimise_chains (regexvm_t *cmp)
+static int optimise_chains (rxvm_t *cmp)
 {
     int i;
     int *chain;
@@ -94,7 +94,7 @@ static int optimise_chains (regexvm_t *cmp)
     return 0;
 }
 
-int stage2 (stack_t *ir, regexvm_t *ret)
+int stage2 (stack_t *ir, rxvm_t *ret)
 {
     stackitem_t *item;
     stackitem_t *next;

@@ -21,7 +21,7 @@ make clean all CFLAGS=-DDBGF
 make clean all -C examples
 [ -d ".rvm_dbgf" ] || mkdir ".rvm_dbgf"
 
-examples/regexvm_match "$regex" "$input"
+examples/rxvm_match "$regex" "$input"
 mv ".rvm_dbgf" ".$name"
 printf "$regex" > ".$name/.rgx"
 

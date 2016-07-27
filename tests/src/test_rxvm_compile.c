@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 typedef struct compv compv_t;
@@ -255,7 +255,7 @@ int ccs_cmp (inst_t *inst, char **str)
     return (**str == ':') ? 0 : 1;
 }
 
-int cmpexe (char *str, regexvm_t *prog)
+int cmpexe (char *str, rxvm_t *prog)
 {
     int i;
     inst_t *inst;
@@ -343,7 +343,7 @@ void print_prog_str (char *str, int err)
     printf("\n");
 }
 
-void print_prog_cmp (regexvm_t *compiled, int err)
+void print_prog_cmp (rxvm_t *compiled, int err)
 {
     int i;
     inst_t *inst;
@@ -379,11 +379,11 @@ void print_prog_cmp (regexvm_t *compiled, int err)
     printf("\n");
 }
 
-int verify_regexvm_cmp (char *expected, char *regex)
+int verify_rxvm_cmp (char *expected, char *regex)
 {
     int ret;
     int err;
-    regexvm_t compiled;
+    rxvm_t compiled;
 
     if ((ret = compile_testexp(&compiled, regex)) < 0)
         return ret;
@@ -399,11 +399,11 @@ int verify_regexvm_cmp (char *expected, char *regex)
         ret = 0;
     }
 
-    regexvm_free(&compiled);
+    rxvm_free(&compiled);
     return ret;
 }
 
-int test_regexvm_compile (int *count)
+int test_rxvm_compile (int *count)
 {
     const char *msg;
     int ret;
@@ -412,7 +412,7 @@ int test_regexvm_compile (int *count)
 
     ret = 0;
     for (i = 0; i < NUM_TESTS_COMPILE; ++i) {
-        if ((err = verify_regexvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
+        if ((err = verify_rxvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
             ret += err;
             msg = "not ok";
         } else {

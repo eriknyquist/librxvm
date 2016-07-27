@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 
-static void print_substring (char *start, char  *end);
-static void regexvm_print_err (int err);
+char *rgx;
+char *input;
+
+static void rxvm_print_err (int err);
 
 int main (int argc, char *argv[])
 {
-    char *start;
-    char *end;
     int ret;
-    regexvm_t compiled;
+    rxvm_t compiled;
 
     ret = 0;
     if (argc != 3) {
@@ -19,38 +19,27 @@ int main (int argc, char *argv[])
     }
 
     /* Compile the expression */
-    if ((ret = regexvm_compile(&compiled, argv[1])) < 0) {
-        regexvm_print_err(ret);
+    if ((ret = rxvm_compile(&compiled, argv[1])) < 0) {
+        rxvm_print_err(ret);
         exit(ret);
     }
 
     /* print the compiled expression (VM instructions) */
-    regexvm_print(&compiled);
+    rxvm_print(&compiled);
 
     /* Check if input string matches expression */
-    if (regexvm_search(&compiled, argv[2], &start, &end, 0)) {
+    if (rxvm_match(&compiled, argv[2], 0)) {
         printf("Match!\n");
-        printf("Found matching substring:\n");
-        print_substring(start, end);
     } else {
         printf("No match.\n");
         ret = 1;
     }
 
-    regexvm_free(&compiled);
+    rxvm_free(&compiled);
     return ret;
 }
 
-void print_substring (char *start, char *end)
-{
-    while (start != end) {
-        printf("%c", *start);
-        ++start;
-    }
-    printf("\n");
-}
-
-void regexvm_print_err (int err)
+void rxvm_print_err (int err)
 {
     const char *msg;
 

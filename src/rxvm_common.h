@@ -21,19 +21,62 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef REGEXVM_ERR_H_
-#define REGEXVM_ERR_H_
+#include <stdint.h>
+#include "rxvm_err.h"
 
-#define RVM_BADOP      -1   /* Operator used incorrectly */
-#define RVM_BADCLASS   -2   /* Unexpected character class closing character */
-#define RVM_BADREP     -3   /* Unexpected closing repetition character */
-#define RVM_BADPAREN   -4   /* Unexpected closing parenthesis */
-#define RVM_EPAREN     -5   /* Unterminated parenthesis group */
-#define RVM_ECLASS     -6   /* Unterminated character class */
-#define RVM_EREP       -7   /* Missing repetition closing character */
-#define RVM_MREP       -8   /* Empty repetition */
-#define RVM_ETRAIL     -9   /* Trailing escape character */
-#define RVM_EMEM       -10  /* Failed to allocate memory */
-#define RVM_EINVAL     -11  /* Invalid symbol */
+#ifndef RXVM_COMMON_H_
+#define RXVM_COMMON_H_
+
+#define CHARC_BLOCK_SIZE      10
+
+typedef struct stackitem stackitem_t;
+typedef struct inst inst_t;
+typedef struct stack stack_t;
+typedef struct context context_t;
+
+/*  one node in a list */
+struct stackitem {
+    void *data;
+    stackitem_t *next;
+    stackitem_t *previous;
+};
+
+/* a list */
+struct stack {
+    stackitem_t *head;
+    stackitem_t *tail;
+    stackitem_t *dangling_alt;
+    int size;
+    int dsize;
+};
+
+/* VM instruction types */
+enum {
+    OP_CHAR, OP_ANY, OP_CLASS, OP_BRANCH, OP_JMP, OP_SOL, OP_EOL, OP_MATCH
+};
+
+/* instruction */
+struct inst {
+    char *ccs;
+    int x;
+    int y;
+    char c;
+    uint8_t op;
+};
+
+struct context {
+    char *ccs;
+    stack_t *target;
+    stack_t *buf;
+    stack_t *prog;
+    stackitem_t *operand;
+    stack_t *parens;
+    char *simple;
+    int tok;
+    int lasttok;
+    unsigned int clen;
+    unsigned int cspace;
+    uint8_t chained;
+};
 
 #endif

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 #define NUMVARIATIONS        5
@@ -110,9 +110,9 @@ char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
         NULL}
 };
 
-int test_regexvm_match (int *count)
+int test_rxvm_match (int *count)
 {
-    regexvm_t compiled;
+    rxvm_t compiled;
     char *msg;
     int ret;
     int total_err;
@@ -131,7 +131,7 @@ int test_regexvm_match (int *count)
 
         /* matching input */
         for (j = 1; j <= NUMVARIATIONS; ++j) {
-            if (tests[i][j] && !regexvm_match(&compiled, tests[i][j], 0)) {
+            if (tests[i][j] && !rxvm_match(&compiled, tests[i][j], 0)) {
                 fprintf(stderr, "Error: matching input %s against expression "
                         "%s falsely reports non-matching input\n", tests[i][j],
                         tests[i][0]);
@@ -141,7 +141,7 @@ int test_regexvm_match (int *count)
 
         /* non-matching input */
         for (j = NUMVARIATIONS + 1; j <= (NUMVARIATIONS * 2); ++j) {
-            if (tests[i][j] && regexvm_match(&compiled, tests[i][j], 0)) {
+            if (tests[i][j] && rxvm_match(&compiled, tests[i][j], 0)) {
                 fprintf(stderr, "Error: non-matching input %s against "
                         "expression %s falsely reports matching input\n",
                         tests[i][j], tests[i][0]);
@@ -149,7 +149,7 @@ int test_regexvm_match (int *count)
             }
         }
 
-        regexvm_free(&compiled);
+        rxvm_free(&compiled);
 
         if (test_err) {
             msg = "not ok";

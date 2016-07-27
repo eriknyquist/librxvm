@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "vm.h"
 
 #define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
@@ -32,7 +32,7 @@
 #if (DBGF)
 int fcnt;
 
-void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
+void rxvm_print_pointer (FILE *fp, rxvm_t *compiled, int point)
 {
     unsigned int i;
     inst_t *inst;
@@ -75,7 +75,7 @@ void regexvm_print_pointer (FILE *fp, regexvm_t *compiled, int point)
     }
 }
 
-void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
+void print_threads_state (rxvm_t *compiled, threads_t *tm, int cur,
                           char *input)
 {
     FILE *fp;
@@ -96,7 +96,7 @@ void print_threads_state (regexvm_t *compiled, threads_t *tm, int cur,
         fprintf(fp, " ");
     }
     fprintf(fp, "^\n\n");
-    regexvm_print_pointer(fp, compiled, tm->cp[cur]);
+    rxvm_print_pointer(fp, compiled, tm->cp[cur]);
     fprintf(fp, "\n");
 
     fprintf(fp, "Threads for current input character:\n");
@@ -180,7 +180,7 @@ static void vm_zero (threads_t *tm, unsigned int size)
     memset(tm->np, 0, sizeof(int) * size);
 }
 
-int vm_execute (threads_t *tm, regexvm_t *compiled)
+int vm_execute (threads_t *tm, rxvm_t *compiled)
 {
     char C;
     int t;

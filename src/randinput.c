@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "string_builder.h"
 #include "lex.h"
 
@@ -18,7 +18,7 @@ static int choice (int prob)
     return (rand_range(0, 100) < prob);
 }
 
-char *regexvm_gen (regexvm_t *compiled, rxvm_gencfg_t *cfg)
+char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
 {
     inst_t **exe;
     inst_t *inst;

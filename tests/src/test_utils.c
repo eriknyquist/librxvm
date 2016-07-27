@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 #define NUMNAMES        7
@@ -12,7 +12,7 @@ unsigned int rand_range (unsigned int low, unsigned int high)
     return (unsigned int) low + (rand() % ((high - low) + 1));
 }
 
-void regexvm_print_err (int err)
+void rxvm_print_err (int err)
 {
     const char *msg;
 
@@ -57,7 +57,7 @@ void regexvm_print_err (int err)
     printf("Error %d: %s\n", err, msg);
 }
 
-void regexvm_print_oneline (regexvm_t *compiled)
+void rxvm_print_oneline (rxvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
@@ -106,17 +106,17 @@ static void print_heap_usage (unsigned int size)
     size_t progsize;
     size_t vmsize;
 
-    progsize = sizeof(regexvm_t) + (sizeof(inst_t) * size);
+    progsize = sizeof(rxvm_t) + (sizeof(inst_t) * size);
     vmsize = ((sizeof(int) * size) * 2) + (size * 2);
     printf("compiled size: %zu bytes\nVM size: %zu bytes\n", progsize, vmsize);
 }
 #endif
 
-int compile_testexp (regexvm_t *compiled, char *exp)
+int compile_testexp (rxvm_t *compiled, char *exp)
 {
     int ret;
 
-    if ((ret = regexvm_compile(compiled, exp)) < 0)
+    if ((ret = rxvm_compile(compiled, exp)) < 0)
         return ret;
 
 #if (TEST_PRINT_SIZES)

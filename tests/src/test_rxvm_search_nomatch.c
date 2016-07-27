@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 char *nomatch_tests[NUM_TESTS_NOMATCH][2] =
@@ -12,9 +12,9 @@ char *nomatch_tests[NUM_TESTS_NOMATCH][2] =
     {"aa|bb|cc|dd", "ababacadacabdcadcbdcdabcdbdca"}
 };
 
-int test_regexvm_search_nomatch (int *count)
+int test_rxvm_search_nomatch (int *count)
 {
-    regexvm_t compiled;
+    rxvm_t compiled;
     const char *msg;
     char *start, *end, *regex, *input;
     int ret;
@@ -30,7 +30,7 @@ int test_regexvm_search_nomatch (int *count)
             printf("Error compiling regex %s\n", regex);
             ++ret;
         } else {
-            if (regexvm_search(&compiled, input, &start, &end, 0)) {
+            if (rxvm_search(&compiled, input, &start, &end, 0)) {
                 printf("Error- input %s wrongly reported as containing match "
                        "to expression %s\n", input, regex);
                 ++ret;
@@ -43,7 +43,7 @@ int test_regexvm_search_nomatch (int *count)
                 }
             }
 
-            regexvm_free(&compiled);
+            rxvm_free(&compiled);
         }
 
         msg = (ret) ? "not ok" : "ok";

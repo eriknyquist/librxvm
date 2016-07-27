@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 int parse_int (char *input)

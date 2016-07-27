@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include "regexvm_err.h"
-#include "regexvm_common.h"
+#include "rxvm_err.h"
+#include "rxvm_common.h"
 #include "stack.h"
 #include "vmcode.h"
 

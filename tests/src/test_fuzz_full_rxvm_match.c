@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 
 #define NUM_ITER     100
 
-int test_fuzz_full_regexvm_match (int *count)
+int test_fuzz_full_rxvm_match (int *count)
 {
     const char *msg;
     char *gen;
@@ -17,7 +17,7 @@ int test_fuzz_full_regexvm_match (int *count)
     rxvm_gencfg_t icfg;
     randexp_cfg_t ecfg;
 
-    regexvm_t compiled;
+    rxvm_t compiled;
     uint64_t itersize;
     uint64_t total_size;
     int ret;
@@ -51,12 +51,12 @@ int test_fuzz_full_regexvm_match (int *count)
         }
 
         for (j = 0; j < NUM_ITER; ++j) {
-            if ((gen = regexvm_gen(&compiled, &icfg)) == NULL) {
+            if ((gen = rxvm_gen(&compiled, &icfg)) == NULL) {
                 test_err(exp, "", __func__,
                         "Memory allocation failed during input generation", 0);
                 continue;
             } else {
-                if (!regexvm_match(&compiled, gen, 0)) {
+                if (!rxvm_match(&compiled, gen, 0)) {
                     msg = "not ok";
                     test_err(exp, gen, __func__,
                             "input falsely reported as non-matching", 0);
@@ -77,7 +77,7 @@ int test_fuzz_full_regexvm_match (int *count)
         ++(*count);
 
         free(exp);
-        regexvm_free(&compiled);
+        rxvm_free(&compiled);
     }
 
     sizestr = hrsize(total_size);

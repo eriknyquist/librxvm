@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "test_common.h"
 
 char *iter_tests[NUM_TESTS_ITER][3] =
@@ -39,9 +39,9 @@ static int substring_match (char *string, char *start, char *end)
     return (start == end) ? 1 : 0;
 }
 
-int test_regexvm_search (int *count)
+int test_rxvm_search (int *count)
 {
-    regexvm_t compiled;
+    rxvm_t compiled;
     const char *msg;
     char *start;
     char *end;
@@ -55,7 +55,7 @@ int test_regexvm_search (int *count)
             printf("Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;
         } else {
-            if (regexvm_search(&compiled, iter_tests[i][1], &start, &end, 0)) {
+            if (rxvm_search(&compiled, iter_tests[i][1], &start, &end, 0)) {
                 if (substring_match(iter_tests[i][2], start, end)) {
                 } else {
                     printf("Error matching regex %s\n", iter_tests[i][0]);
@@ -75,7 +75,7 @@ int test_regexvm_search (int *count)
                 ++ret;
             }
 
-            regexvm_free(&compiled);
+            rxvm_free(&compiled);
         }
 
         msg = (ret) ? "not ok" : "ok";

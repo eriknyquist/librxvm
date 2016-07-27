@@ -21,62 +21,38 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdint.h>
-#include "regexvm_err.h"
+#ifndef RXVM_H_
+#define RXVM_H_
 
-#ifndef REGEXVM_COMMON_H_
-#define REGEXVM_COMMON_H_
+#include "rxvm_common.h"
 
-#define CHARC_BLOCK_SIZE      10
+/* Config. flags */
+#define RXVM_ICASE           0x1
+#define RXVM_NONGREEDY       0x2
+#define RXVM_MULTILINE       0x4
 
-typedef struct stackitem stackitem_t;
-typedef struct inst inst_t;
-typedef struct stack stack_t;
-typedef struct context context_t;
+typedef struct rxvm_gencfg rxvm_gencfg_t;
+typedef struct rxvm rxvm_t;
 
-/*  one node in a list */
-struct stackitem {
-    void *data;
-    stackitem_t *next;
-    stackitem_t *previous;
-};
-
-/* a list */
-struct stack {
-    stackitem_t *head;
-    stackitem_t *tail;
-    stackitem_t *dangling_alt;
-    int size;
-    int dsize;
-};
-
-/* VM instruction types */
-enum {
-    OP_CHAR, OP_ANY, OP_CLASS, OP_BRANCH, OP_JMP, OP_SOL, OP_EOL, OP_MATCH
-};
-
-/* instruction */
-struct inst {
-    char *ccs;
-    int x;
-    int y;
-    char c;
-    uint8_t op;
-};
-
-struct context {
-    char *ccs;
-    stack_t *target;
-    stack_t *buf;
-    stack_t *prog;
-    stackitem_t *operand;
-    stack_t *parens;
+struct rxvm {
+    inst_t **exe;
+    unsigned int size;
     char *simple;
-    int tok;
-    int lasttok;
-    unsigned int clen;
-    unsigned int cspace;
-    uint8_t chained;
 };
+
+struct rxvm_gencfg {
+    uint8_t generosity;
+    uint8_t whitespace;
+};
+
+char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);
+int rxvm_compile (rxvm_t *compiled, char *exp);
+int rxvm_match   (rxvm_t *compiled, char *input, int flags);
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
+int rxvm_search  (rxvm_t *compiled, char *input, char **start, char **end,
+                  int flags);
+
+void rxvm_free   (rxvm_t *compiled);
+void rxvm_print  (rxvm_t *compiled);
 
 #endif

@@ -1,4 +1,4 @@
-libregexvm: small and fast C library for regular expressions
+librxvm: small and fast C library for regular expressions
 ============================================================
 
 This implementation is inspired by
@@ -53,23 +53,23 @@ Using the examples
 ------------------
 ::
 
-   $> ./regexvm_search
+   $> ./rxvm_search
 
-     Usage: ./regexvm_search <regex> <input>
+     Usage: ./rxvm_search <regex> <input>
 
-   $>./regexvm_search "regex(vm)*" "UtrUygHIuregexvmvmvmllTRDrHIOIP"
-
-     Match!
-     Found matching substring:
-     regexvmvmvm
-
-   $> ./regexvm_search "regex(vm)*" "UtrUygHIuregexllTRDrHIOIP"
+   $>./rxvm_search "rx(vm)*" "UtrUygHIu_rxvmvmvm_llTRDrHIOIP"
 
      Match!
      Found matching substring:
-     regex
+     rxvmvmvm
 
-   $> ./regexvm_search "regex(vm)*" "UtrUygHIuregellTRDrHIOIP"
+   $> ./rxvm_search "rx(vm)*" "UtrUygHIu_rx_llTRDrHIOIP"
+
+     Match!
+     Found matching substring:
+     rx
+
+   $> ./rxvm_search "rx(vm)*" "UtrUygHIu_rxv_llTRDrHIOIP"
 
      No match.
 
@@ -132,7 +132,7 @@ A description of the available special characters follows.
     +---------+-----------------------+---------------------------------------+
     | **^**   | start anchor          | by default, matches immediately       |
     |         |                       | following the beginning of the input  |
-    |         |                       | string. If the REGEXVM_MULTILINE flag |
+    |         |                       | string. If the RXVM_MULTILINE flag |
     |         |                       | is set, then it also matches          |
     |         |                       | immediately following each newline    |
     |         |                       | character                             |
@@ -140,7 +140,7 @@ A description of the available special characters follows.
     | **$**   | end anchor            | by default, matches immediately       |
     |         |                       | preceding the end of the input string |
     |         |                       | or newline character at the end of the|
-    |         |                       | input string. If the REGEXVM_MULTILINE|
+    |         |                       | input string. If the RXVM_MULTILINE|
     |         |                       | flag is set, then it also matches     |
     |         |                       | immediately preceding each newline    |
     |         |                       | character                             |
@@ -166,15 +166,15 @@ A description of the available special characters follows.
 Reference
 ---------
 
-``regexvm_compile``
+``rxvm_compile``
 ~~~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   int regexvm_compile (regexvm_t *compiled, char *exp);
+   int rxvm_compile (rxvm_t *compiled, char *exp);
 
 Compiles the regular expression ``exp``, and places the resulting VM
-instructions into the ``regexvm_t`` type pointed to by ``compiled``.
+instructions into the ``rxvm_t`` type pointed to by ``compiled``.
 
 |
 
@@ -187,12 +187,12 @@ instructions into the ``regexvm_t`` type pointed to by ``compiled``.
 
 |
 
-``regexvm_match``
+``rxvm_match``
 ~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   int regexvm_match (regexvm_t *compiled, char *input, int flags);
+   int rxvm_match (rxvm_t *compiled, char *input, int flags);
 
 Check if the string ``input`` matches the compiled expression ``compiled``
 exactly.
@@ -209,12 +209,12 @@ exactly.
 
 |
 
-``regexvm_search``
+``rxvm_search``
 ~~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end, int flags);
+   int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end, int flags);
 
 Searches the string starting at ``input`` for a pattern that matches the
 compiled regular expresssion ``compiled``, until a match is found or until the
@@ -236,12 +236,12 @@ to ``NULL``.
 
 |
 
-``regexvm_fsearch``
+``rxvm_fsearch``
 ~~~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
+   int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
 
 Searches the file at ``fp`` (``fp`` must be initialised by the caller, e.g. via
 ``fopen``) for a pattern that matches the compiled regular expresssion
@@ -261,16 +261,16 @@ set to 0, and ``fp`` will remain positioned at EOF.
 
 |
 
-``regexvm_gen``
+``rxvm_gen``
 ~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   char *regexvm_gen (regexvm_t *compiled, rxvm_gencfg_t *cfg);
+   char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg);
 
 Generates a string of random characters that matches the compiled expression
 ``compiled`` (``compiled`` must be initialised by the caller first, e.g. via
-``regexvm_compile``).
+``rxvm_compile``).
 
 The ``rxvm_genfg_t`` type provides some control over the randomness:
 
@@ -302,15 +302,15 @@ matching string. If memory allocation fails, a null pointer is returned.
 |
 
 
-``regexvm_free``
+``rxvm_free``
 ~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   void regexvm_free (regexvm_t *compiled);
+   void rxvm_free (rxvm_t *compiled);
 
-Frees all dynamic memory associated with a compiled ``regexvm_t`` type. Always
-call this function, before exiting, on any compiled ``regexvm_t`` types.
+Frees all dynamic memory associated with a compiled ``rxvm_t`` type. Always
+call this function, before exiting, on any compiled ``rxvm_t`` types.
 
 |
 
@@ -320,12 +320,12 @@ call this function, before exiting, on any compiled ``regexvm_t`` types.
 
 |
 
-``regexvm_print``
+``rxvm_print``
 ~~~~~~~~~~~~~~~~~
 
 .. code:: c
 
-   void regexvm_print (regexvm_t *compiled)
+   void rxvm_print (rxvm_t *compiled)
 
 Prints a compiled expression in a human-readable format.
 
@@ -336,27 +336,27 @@ Prints a compiled expression in a human-readable format.
 Flags
 -----
 
-``regexvm_match`` and ``regexvm_search`` take a ``flags`` parameter. You can use
+``rxvm_match`` and ``rxvm_search`` take a ``flags`` parameter. You can use
 the masks below to set bit-flags which will change the behaviour of these
 functions (combine multiple flags by bitwise OR-ing them together):
 
 |
 
-``REGEXVM_ICASE``
+``RXVM_ICASE``
 ~~~~~~~~~~~~~~~~~
 
 case insensitive: ignore case when matching alphabet characters. Matching is
 case-sensitive by default.
 
-``REGEXVM_NONGREEDY``
+``RXVM_NONGREEDY``
 ~~~~~~~~~~~~~~~~~~~~~
 
 non-greedy matching: by default, the operators ``+``, ``*``, and ``?`` will
-match as many characters as possible, e.g. running ``regexvm_search`` with
+match as many characters as possible, e.g. running ``rxvm_search`` with
 the expression ``<.*>`` against the input string ``<tag>name<tag>`` will match
 the entire string. With this flag set, it will match only ``<tag>``.
 
-``REGEXVM_MULTILINE``
+``RXVM_MULTILINE``
 ~~~~~~~~~~~~~~~~~~~~~
 
 Multiline: By default, ``^`` matches immediately following the start of input,
@@ -364,28 +364,28 @@ and ``$`` matches immediately preceding the end of input or the newline before
 the end of input. With this flag set, ``^`` will also match immediately
 following each newline character, and ``$`` will also match immediately
 preceding each newline character. This flag is ignored and automatically
-enabled when ``regexvm_match`` is used; since ``regexvm_match`` effectively
+enabled when ``rxvm_match`` is used; since ``rxvm_match`` effectively
 requires a matching string to be anchored at both the start and end of input,
 then ``^`` and ``$`` are only useful if they can also act as line anchors.
 
 |
 
-Building your own code with libregexvm
+Building your own code with librxvm
 --------------------------------------
 
-To link your own code with libregexvm, compile with
+To link your own code with librxvm, compile with
 ::
 
-    -I/usr/local/include/libregexvm
+    -I/usr/local/include/librxvm
 
 and link with
 ::
 
-    -lregexvm
+    -lrxvm
 
 for example, to build the example applications manually, you would do
 ::
 
     cd examples
-    gcc regexvm_search.c -o regexvm_search -I/usr/local/include/libregexvm -lregexvm
-    gcc regexvm_match.c -o regexvm_match -I/usr/local/include/libregexvm -lregexvm
+    gcc rxvm_search.c -o rxvm_search -I/usr/local/include/librxvm -lrxvm
+    gcc rxvm_match.c -o rxvm_match -I/usr/local/include/librxvm -lrxvm

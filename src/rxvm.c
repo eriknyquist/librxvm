@@ -24,13 +24,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "regexvm.h"
+#include "rxvm.h"
 #include "stage1.h"
 #include "stage2.h"
 #include "stack.h"
 #include "vm.h"
 
-int regexvm_compile (regexvm_t *compiled, char *exp)
+int rxvm_compile (rxvm_t *compiled, char *exp)
 {
     stack_t *ir;
     int ret;
@@ -94,7 +94,7 @@ int simple_match (threads_t *tm, char *simple)
     return 1;
 }
 
-int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
                      int flags)
 {
     threads_t tm;
@@ -107,9 +107,9 @@ int regexvm_fsearch (regexvm_t *compiled, FILE *fp, uint64_t *match_size,
     tm.endchar = EOF;
 
     *match_size = 0;
-    tm.icase = (flags & REGEXVM_ICASE);
-    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
-    tm.multiline = (flags & REGEXVM_MULTILINE);
+    tm.icase = (flags & RXVM_ICASE);
+    tm.nongreedy = (flags & RXVM_NONGREEDY);
+    tm.multiline = (flags & RXVM_MULTILINE);
 
     ret = 0;
     if (compiled->simple) {
@@ -133,7 +133,7 @@ cleanup:
     return ret;
 }
 
-int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
+int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
                   int flags)
 {
     char *sot;
@@ -146,9 +146,9 @@ int regexvm_search (regexvm_t *compiled, char *input, char **start, char **end,
     tm.endchar = '\0';
 
     sot = input;
-    tm.icase = (flags & REGEXVM_ICASE);
-    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
-    tm.multiline = (flags & REGEXVM_MULTILINE);
+    tm.icase = (flags & RXVM_ICASE);
+    tm.nongreedy = (flags & RXVM_NONGREEDY);
+    tm.multiline = (flags & RXVM_MULTILINE);
 
     ret = 0;
     if (compiled->simple) {
@@ -178,7 +178,7 @@ cleanup:
     return ret;
 }
 
-int regexvm_match (regexvm_t *compiled, char *input, int flags)
+int rxvm_match (rxvm_t *compiled, char *input, int flags)
 {
     char *sot;
     threads_t tm;
@@ -191,8 +191,8 @@ int regexvm_match (regexvm_t *compiled, char *input, int flags)
 
     sot = input;
     tm.multiline = 1;
-    tm.icase = (flags & REGEXVM_ICASE);
-    tm.nongreedy = (flags & REGEXVM_NONGREEDY);
+    tm.icase = (flags & RXVM_ICASE);
+    tm.nongreedy = (flags & RXVM_NONGREEDY);
 
     ret = 0;
     if (compiled->simple) {
@@ -214,7 +214,7 @@ cleanup:
     return ret;
 }
 
-void regexvm_print (regexvm_t *compiled)
+void rxvm_print (rxvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
@@ -256,7 +256,7 @@ void regexvm_print (regexvm_t *compiled)
     }
 }
 
-void regexvm_free (regexvm_t *compiled)
+void rxvm_free (rxvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;

@@ -26,7 +26,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "regexvm_common.h"
+#include "rxvm_common.h"
 
 static stackitem_t *create_item (void *data)
 {
