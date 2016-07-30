@@ -272,7 +272,7 @@ Generates a string of random characters that matches the compiled expression
 ``compiled`` (``compiled`` must be initialised by the caller first, e.g. via
 ``rxvm_compile``).
 
-The ``rxvm_genfg_t`` type provides some control over the randomness:
+The ``rxvm_gencfg_t`` type provides some control over the randomness:
 
 .. code:: c
 
