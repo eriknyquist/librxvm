@@ -35,5 +35,6 @@
 #define RVM_ETRAIL     -9   /* Trailing escape character */
 #define RVM_EMEM       -10  /* Failed to allocate memory */
 #define RVM_EINVAL     -11  /* Invalid symbol */
+#define RVM_EPARAM     -12  /* Invalid parameter passed to library function */
 
 #endif

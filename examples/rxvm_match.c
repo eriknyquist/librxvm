@@ -77,6 +77,9 @@ void rxvm_print_err (int err)
         case RVM_EINVAL:
             msg = "Invalid symbol";
         break;
+        case RVM_EPARAM:
+            msg = "Invalid parameter passed to library function";
+        break;
         default:
             msg = "Unrecognised error code";
     }

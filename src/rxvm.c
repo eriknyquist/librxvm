@@ -36,8 +36,8 @@ int rxvm_compile (rxvm_t *compiled, char *exp)
     int ret;
     size_t size;
 
-    if ((ret = stage1(exp, &ir)) < 0)
-        return ret;
+    if (!compiled || !exp)              return RVM_EPARAM;
+    if ((ret = stage1(exp, &ir)) < 0)   return ret;
 
     if (ir == NULL) {
         size = sizeof(char) * (strlen(exp) + 1);
@@ -50,9 +50,7 @@ int rxvm_compile (rxvm_t *compiled, char *exp)
         return 0;
     }
 
-    if ((ret = stage2(ir, compiled)) < 0)
-        return ret;
-
+    if ((ret = stage2(ir, compiled)) < 0) return ret;
     return 0;
 }
 
@@ -95,11 +93,14 @@ int simple_match (threads_t *tm, char *simple)
 }
 
 int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
-                     int flags)
+                  int flags)
 {
     threads_t tm;
     int ret;
-    uint64_t seek_size;
+    uint64_t size;
+    long int seek_size;
+
+    if (!compiled || !fp) return RVM_EPARAM;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_file;
@@ -122,8 +123,9 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     }
 
     if (tm.match_end) {
-        *match_size = (tm.match_end - tm.match_start) - 1;
-        seek_size = -((long int)*match_size + (compiled->simple == NULL));
+        size = (tm.match_end - tm.match_start) - 1;
+        if (match_size) *match_size = size;
+        seek_size = -(size + (compiled->simple == NULL));
         fseek(fp, seek_size, SEEK_CUR);
         ret = 1;
     }
@@ -134,11 +136,13 @@ cleanup:
 }
 
 int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
-                  int flags)
+                 int flags)
 {
     char *sot;
     threads_t tm;
     int ret;
+
+    if (!compiled || !input) return RVM_EPARAM;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_str;
@@ -184,6 +188,8 @@ int rxvm_match (rxvm_t *compiled, char *input, int flags)
     threads_t tm;
     int ret;
 
+    if (!compiled || !input) return RVM_EPARAM;
+
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_str;
     tm.getchar_data = &input;
@@ -218,6 +224,8 @@ void rxvm_print (rxvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
+
+    if (!compiled) return;
 
     if (compiled->simple) {
         printf("\"%s\" no compilation required\n", compiled->simple);
@@ -260,6 +268,8 @@ void rxvm_free (rxvm_t *compiled)
 {
     unsigned int i;
     inst_t *inst;
+
+    if (!compiled) return;
 
     if (compiled->simple) {
         free(compiled->simple);

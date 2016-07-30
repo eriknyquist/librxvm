@@ -24,7 +24,7 @@ static int enlarge_buf (strb_t *cfg, int blocks)
 
 int strb_init (strb_t *cfg, unsigned int block_size)
 {
-    if (!cfg) return;
+    if (!cfg) return RVM_EPARAM;
 
     memset(cfg, 0, sizeof(strb_t));
     cfg->block_size = (block_size) ? block_size : DEFAULT_BLOCK_SIZE;
