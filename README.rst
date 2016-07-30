@@ -132,7 +132,7 @@ A description of the available special characters follows.
     +---------+-----------------------+---------------------------------------+
     | **^**   | start anchor          | by default, matches immediately       |
     |         |                       | following the beginning of the input  |
-    |         |                       | string. If the RXVM_MULTILINE flag |
+    |         |                       | string. If the RXVM_MULTILINE flag    |
     |         |                       | is set, then it also matches          |
     |         |                       | immediately following each newline    |
     |         |                       | character                             |
@@ -140,7 +140,7 @@ A description of the available special characters follows.
     | **$**   | end anchor            | by default, matches immediately       |
     |         |                       | preceding the end of the input string |
     |         |                       | or newline character at the end of the|
-    |         |                       | input string. If the RXVM_MULTILINE|
+    |         |                       | input string. If the RXVM_MULTILINE   |
     |         |                       | flag is set, then it also matches     |
     |         |                       | immediately preceding each newline    |
     |         |                       | character                             |
