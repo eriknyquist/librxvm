@@ -126,12 +126,11 @@ void nonterm_setitem (randexp_cfg_t *cfg)
 
 void nonterm_setitems (randexp_cfg_t *cfg)
 {
-    if (rand_range(0, 1)) {
-        nonterm_setitem(cfg);
-    } else {
-        nonterm_setitem(cfg);
-        nonterm_setitems(cfg);
-    }
+    uint8_t val;
+
+    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
+    nonterm_setitem(cfg);
+    if (choice(val)) nonterm_setitems(cfg);
 }
 
 void nonterm_set (randexp_cfg_t *cfg)
@@ -266,11 +265,7 @@ void nonterm_simple (randexp_cfg_t *cfg)
 {
     uint8_t val;
 
-    if (cfg->strb->size >= cfg->limit) {
-        val = 0;
-    } else {
-        val = cfg->tokens;
-    }
+    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
 
     if (choice(val)) {
         nonterm_concat(cfg);
@@ -288,7 +283,11 @@ void nonterm_union (randexp_cfg_t *cfg)
 
 void nonterm_re (randexp_cfg_t *cfg)
 {
-    if (rand_range(0, 1)) {
+    uint8_t val;
+
+    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
+
+    if (choice(val)) {
         nonterm_union(cfg);
     } else {
         nonterm_simple(cfg);
