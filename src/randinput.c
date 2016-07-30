@@ -71,7 +71,9 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     whitespace = (cfg) ? cfg->whitespace : DEFAULT_WS_PROB;
     limit =      (cfg) ? cfg->limit      : DEFAULT_LIMIT;
 
-    strb_init(&strb, 128);
+    if (strb_init(&strb, 128) < 0)
+        return NULL;
+
     ip = 0;
 
     exe = compiled->exe;
@@ -79,38 +81,37 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     while (inst->op != OP_MATCH) {
         switch (inst->op) {
             case OP_CHAR:
-                strb_addc(&strb, inst->c);
+                if (strb_addc(&strb, inst->c) < 0) return NULL;
                 ++ip;
             break;
             case OP_ANY:
                 if (choice(whitespace)) {
                     rand = (char) rand_range(WS_LOW, WS_HIGH);
-                    strb_addc(&strb, rand);
+                    if (strb_addc(&strb, rand) < 0) return NULL;
                     ++ip;
                 } else {
                     rand = (char) rand_range(PRINTABLE_LOW, PRINTABLE_HIGH);
-                    strb_addc(&strb, rand);
+                    if (strb_addc(&strb, rand) < 0) return NULL;
                     ++ip;
                 }
 
             break;
             case OP_SOL:
-                if (strb.size &&
-                        strb.buf[strb.size - 1] != '\n') {
-                    strb_addc(&strb, '\n');
+                if (strb.size && strb.buf[strb.size - 1] != '\n') {
+                    if (strb_addc(&strb, '\n') < 0) return NULL;
                 }
                 ++ip;
             break;
             case OP_EOL:
                 if (compiled->size > ip && (exe[ip + 1] != OP_CHAR
                             || exe[ip + 1]->c != '\n')) {
-                    strb_addc(&strb, '\n');
+                    if (strb_addc(&strb, '\n') < 0) return NULL;
                 }
                 ++ip;
             break;
             case OP_CLASS:
                 ix = rand_range(0, strlen(inst->ccs) - 1);
-                strb_addc(&strb, inst->ccs[ix]);
+                if (strb_addc(&strb, inst->ccs[ix]) < 0) return NULL;
                 ++ip;
             break;
             case OP_BRANCH:
@@ -125,7 +126,7 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
         inst = exe[ip];
     }
 
-    strb_addc(&strb, '\0');
+    if (strb_addc(&strb, '\0') < 0) return NULL;
     if (cfg) cfg->len = strb.size;
     return strb.buf;
 }
