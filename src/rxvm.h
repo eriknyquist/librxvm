@@ -43,6 +43,8 @@ struct rxvm {
 struct rxvm_gencfg {
     uint8_t generosity;
     uint8_t whitespace;
+
+    uint64_t limit;
 };
 
 char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);

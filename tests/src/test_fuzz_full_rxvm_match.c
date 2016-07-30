@@ -5,8 +5,9 @@
 #include "rxvm.h"
 #include "test_common.h"
 
-
-#define NUM_ITER     100
+#define RANDEXP_LIMIT     100
+#define RANDINPUT_LIMIT   500
+#define NUM_ITER          1000
 
 int test_fuzz_full_rxvm_match (int *count)
 {
@@ -31,9 +32,11 @@ int test_fuzz_full_rxvm_match (int *count)
     total_size = 0;
     msg = "ok";
 
+    ecfg.limit = RANDEXP_LIMIT;
     ecfg.tokens = 50;
 
-    icfg.generosity = 80;
+    icfg.limit = RANDINPUT_LIMIT;
+    icfg.generosity = 50;
     icfg.whitespace = 10;
 
     for (i = 0; i < NUM_TESTS_FUZZ_FULL_MATCH; ++i) {

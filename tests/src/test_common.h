@@ -26,6 +26,8 @@ struct randexp_cfg {
     uint8_t literals;   /* 0-100; higher means more literals */
     uint8_t escapes;    /* 0-100; higher means more escaped literals */
     uint8_t tokens;     /* 0-100; higher means more tokens */
+
+    uint64_t limit;
 };
 
 void init_charmap(void);

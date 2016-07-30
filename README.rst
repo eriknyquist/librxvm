@@ -279,18 +279,30 @@ The ``rxvm_genfg_t`` type provides some control over the randomness:
    struct rxvm_gencfg {
        uint8_t generosity;
        uint8_t whitespace;
+       uint64_t limit;
+
+       uint64_t len;
    };
 
-* ``generosity``: 0-100, representing the probability out of 100 that a ``+`` or
-  ``*`` operator will match again ("greedyness" in reverse). Higher means
-  more repeat matches.
-* ``whitespace``: 0-100, representing the probability that a whitespace
-  character will be used instead of a visible character, when the expression
-  allows it (e.g. when the expression contains a "." metacharacter). Higher
-  means more whitespace.
+* ``generosity``: This value is expected to be between 0-100, and represents the
+  probability out of 100 that a ``+`` or ``*`` operator will match again
+  ("greedyness" in reverse). Higher means more repeat matches.
+* ``whitespace``: This value is expected to be between 0-100, and represents the
+  probability that a whitespace character will be used instead of a visible
+  character, when the expression allows it (e.g. when the expression contains a
+  "." metacharacter). Higher means more whitespace.
+* ``limit``: This value represents the generated input string size at which the
+  generation process should stop. This is not hard limit on the size of the
+  generated string; when the generated string reaches a size of ``limit``, then
+  ``generosity`` is effectively set to 0, and generation will stop at the
+  earliest possible opportunity, while also ensuring that the generated string
+  matches the pattern ``compiled``.
+* ``len``: If ``rxvm_gen`` returns a valid (non-null) pointer, then ``len`` will
+  contain the number of characters in the generated string (excluding the
+  terminating null-character).
 
 If a null pointer is passed instead of a valid pointer to a ``rxvm_genfg_t``
-type, then default probability values will be used.
+type, then default values will be used.
 
 **Return value**
 

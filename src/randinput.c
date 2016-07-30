@@ -28,6 +28,7 @@
 #include "string_builder.h"
 #include "lex.h"
 
+#define DEFAULT_LIMIT          1000
 #define DEFAULT_WS_PROB        10
 #define DEFAULT_GEN_PROB       50
 
@@ -52,6 +53,9 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     unsigned int ip;
     unsigned int ix;
     strb_t strb;
+    uint8_t generosity;
+    uint8_t whitespace;
+    uint64_t limit;
 
     if (compiled->simple) {
         size = sizeof(char) * (strlen(compiled->simple) + 1);
@@ -63,7 +67,11 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
         return ret;
     }
 
-    strb_init(&strb, 50);
+    generosity = (cfg) ? cfg->generosity : DEFAULT_GEN_PROB;
+    whitespace = (cfg) ? cfg->whitespace : DEFAULT_WS_PROB;
+    limit =      (cfg) ? cfg->limit      : DEFAULT_LIMIT;
+
+    strb_init(&strb, 128);
     ip = 0;
 
     exe = compiled->exe;
@@ -75,8 +83,7 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
                 ++ip;
             break;
             case OP_ANY:
-                val = (cfg) ? cfg->whitespace : DEFAULT_WS_PROB;
-                if (choice(val)) {
+                if (choice(whitespace)) {
                     rand = (char) rand_range(WS_LOW, WS_HIGH);
                     strb_addc(&strb, rand);
                     ++ip;
@@ -107,7 +114,7 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
                 ++ip;
             break;
             case OP_BRANCH:
-                val = (cfg) ? cfg->generosity : DEFAULT_GEN_PROB;
+                val = (strb.size >= limit) ? 0 : generosity;
                 ip = (choice(val)) ? inst->x : inst->y;
             break;
             case OP_JMP:

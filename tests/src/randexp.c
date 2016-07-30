@@ -264,7 +264,15 @@ void nonterm_concat (randexp_cfg_t *cfg)
 
 void nonterm_simple (randexp_cfg_t *cfg)
 {
-    if (choice(cfg->tokens)) {
+    uint8_t val;
+
+    if (cfg->strb->size >= cfg->limit) {
+        val = 0;
+    } else {
+        val = cfg->tokens;
+    }
+
+    if (choice(val)) {
         nonterm_concat(cfg);
     } else {
         nonterm_basic(cfg);
@@ -291,7 +299,7 @@ char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len)
 {
     strb_t strb;
 
-    strb_init(&strb, 50);
+    strb_init(&strb, 128);
     cfg->strb = &strb;
 
     nonterm_re(cfg);
