@@ -44,6 +44,7 @@ struct rxvm_gencfg {
     uint8_t generosity;
     uint8_t whitespace;
 
+    uint64_t len;
     uint64_t limit;
 };
 

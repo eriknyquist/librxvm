@@ -126,5 +126,6 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     }
 
     strb_addc(&strb, '\0');
+    if (cfg) cfg->len = strb.size;
     return strb.buf;
 }

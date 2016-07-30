@@ -66,7 +66,7 @@ int test_fuzz_full_rxvm_match (int *count)
                     ++ret;
                 }
 
-                itersize += strlen(gen);
+                itersize += icfg.len;
                 fflush(stdout);
                 free(gen);
             }
