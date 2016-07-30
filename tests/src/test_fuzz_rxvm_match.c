@@ -67,9 +67,12 @@ int test_fuzz_rxvm_match (int *count)
     uint64_t itersize;
     uint64_t total_size;
     int ret;
+    int passed;
+    int failed;
     int i;
     int j;
 
+    ret = 0;
     total_size = 0;
     msg = "ok";
     srand(time(NULL));
@@ -80,22 +83,30 @@ int test_fuzz_rxvm_match (int *count)
 
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
         itersize = 0;
+        passed = 0;
+        failed = 0;
+
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             test_err(testexp[i], "", __func__, "Compilation failed", ret);
-            exit(ret);
+            ++failed;
+            goto end_iter;
         }
 
         for (j = 0; j < NUM_ITER; ++j) {
             if ((gen = rxvm_gen(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
-                ++ret;
+                ++failed;
+                rxvm_free(&compiled);
+                goto end_iter;
             } else {
-                if (!rxvm_match(&compiled, gen, 0)) {
+                if (rxvm_match(&compiled, gen, 0)) {
+                    ++passed;
+                } else {
                     msg = "not ok";
                     test_err(testexp[i], gen, __func__,
                             "input falsely reported as non-matching", 0);
-                    ++ret;
+                    ++failed;
                 }
 
                 itersize += strlen(gen);
@@ -103,15 +114,16 @@ int test_fuzz_rxvm_match (int *count)
                 free(gen);
             }
         }
+        rxvm_free(&compiled);
 
+end_iter:
         total_size += itersize;
+        ret += failed;
         sizestr = hrsize(itersize);
-        printf("%s %d %s: %d failed, %d passed, %s\n", msg, *count, __func__,
-               ret, NUM_ITER - ret, sizestr);
+        printf("%s %d %s: %d failed, %d passed (out of %d), %s\n", msg, *count,
+                __func__, failed, passed, NUM_ITER, sizestr);
         free(sizestr);
         ++(*count);
-
-        rxvm_free(&compiled);
     }
 
     sizestr = hrsize(total_size);

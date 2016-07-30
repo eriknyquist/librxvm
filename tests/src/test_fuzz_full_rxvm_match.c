@@ -5,9 +5,9 @@
 #include "rxvm.h"
 #include "test_common.h"
 
-#define RANDEXP_LIMIT     10
-#define RANDINPUT_LIMIT   200
-#define NUM_ITER          100
+#define RANDEXP_LIMIT     80
+#define RANDINPUT_LIMIT   500
+#define NUM_ITER          1000
 
 int test_fuzz_full_rxvm_match (int *count)
 {
@@ -22,6 +22,9 @@ int test_fuzz_full_rxvm_match (int *count)
     uint64_t itersize;
     uint64_t total_size;
     int ret;
+    int passed;
+    int failed;
+    int err;
     int i;
     int j;
 
@@ -29,6 +32,7 @@ int test_fuzz_full_rxvm_match (int *count)
     init_charmap();
     srand(time(NULL));
 
+    ret = 0;
     total_size = 0;
     msg = "ok";
 
@@ -38,32 +42,42 @@ int test_fuzz_full_rxvm_match (int *count)
     icfg.limit = RANDINPUT_LIMIT;
     icfg.generosity = 80;
     icfg.whitespace = 10;
+    icfg.len = 0;
 
     for (i = 0; i < NUM_TESTS_FUZZ_FULL_MATCH; ++i) {
+        passed = 0;
+        failed = 0;
         itersize = 0;
+
         if ((exp = gen_randexp(&ecfg, NULL)) == NULL) {
             test_err("", "", __func__,
                    "Memory allocation failed during expression generation", 0);
             exit(1);
         }
 
-        if ((ret = compile_testexp(&compiled, exp)) < 0) {
-            test_err(exp, "", __func__, "Compilation failed", ret);
+        if ((err = compile_testexp(&compiled, exp)) < 0) {
+            test_err(exp, "", __func__, "Compilation failed", err);
             free(exp);
-            continue;
+            ++failed;
+            goto iter_end;
         }
 
         for (j = 0; j < NUM_ITER; ++j) {
             if ((gen = rxvm_gen(&compiled, &icfg)) == NULL) {
                 test_err(exp, "", __func__,
                         "Memory allocation failed during input generation", 0);
-                continue;
+                ++failed;
+                free(exp);
+                rxvm_free(&compiled);
+                goto iter_end;
             } else {
-                if (!rxvm_match(&compiled, gen, 0)) {
+                if (rxvm_match(&compiled, gen, 0)) {
+                    ++passed;
+                } else {
                     msg = "not ok";
                     test_err(exp, gen, __func__,
                             "input falsely reported as non-matching", 0);
-                    ++ret;
+                    ++failed;
                 }
 
                 itersize += icfg.len;
@@ -72,15 +86,17 @@ int test_fuzz_full_rxvm_match (int *count)
             }
         }
 
-        total_size += itersize;
-        sizestr = hrsize(itersize);
-        printf("%s %d %s: %d failed, %d passed, %s\n", msg, *count, __func__,
-               ret, NUM_ITER - ret, sizestr);
-        free(sizestr);
-        ++(*count);
-
         free(exp);
         rxvm_free(&compiled);
+
+iter_end:
+        total_size += itersize;
+        ret += failed;
+        sizestr = hrsize(itersize);
+        printf("%s %d %s: %d failed, %d passed (out of %d) %s\n", msg, *count,
+                __func__, failed, passed, NUM_ITER, sizestr);
+        free(sizestr);
+        ++(*count);
     }
 
     sizestr = hrsize(total_size);
