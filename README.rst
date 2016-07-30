@@ -203,7 +203,7 @@ exactly.
 
 * 1 if the input matches the expression
 * 0 if the input doesn't match the compiled expression
-* RVM_EMEM if memory allocation fails
+* RXVM_EMEM if memory allocation fails
 
 |
 

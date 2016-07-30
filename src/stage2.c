@@ -67,12 +67,12 @@ static int optimise_chains (rxvm_t *cmp)
     inst_t *inst;
 
     if ((chain = malloc(sizeof(int) * cmp->size)) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     if ((lookup = malloc(sizeof(int) * cmp->size)) == NULL) {
         free(chain);
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     memset(chain, 0, sizeof(int) * cmp->size);
@@ -104,7 +104,7 @@ int stage2 (stack_t *ir, rxvm_t *ret)
 
     /* array to hold pointers to the already-allocated instructions */
     if ((ret->exe = malloc(sizeof(inst_t *) * ir->size)) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     err = 0;
     item = ir->tail;

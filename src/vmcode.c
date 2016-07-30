@@ -94,13 +94,13 @@ static int stack_dupe_from_item (stack_t *stack1, stackitem_t *stop,
             ccslen = strlen(inst.ccs) + 1;
             temp = inst.ccs;
             if ((inst.ccs = malloc(sizeof(char) * ccslen)) == NULL) {
-                return RVM_EMEM;
+                return RXVM_EMEM;
             }
             memcpy(inst.ccs, temp, sizeof(char) * ccslen);
         }
 
         if (stack_add_inst_head(stack1, &inst) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
 
         if (i == stop) break;
@@ -147,7 +147,7 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
 
     for (j = 0; j < rep_n; ++j) {
         if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
     }
 
@@ -155,14 +155,14 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
         end = (size + 1) * ((rep_m - rep_n) - j);
         set_op_branch(&inst, 1, end);
         if (stack_add_inst_head(cp->target, &inst) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
 
         if (j == ((rep_m - rep_n) - 1)) {
             stack_cat_from_item(cp->target, cp->buf->head, i);
         } else {
             if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
-                return RVM_EMEM;
+                return RXVM_EMEM;
             }
         }
     }
@@ -178,7 +178,7 @@ int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 
     for (j = 0; j < (rep_n - 1); ++j) {
         if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
     }
 
@@ -186,7 +186,7 @@ int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 
     set_op_branch(&inst, -(size), 1);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     return 0;
@@ -202,14 +202,14 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
         end = (size + 1) * (rep_m - j);
         set_op_branch(&inst, 1, end);
         if (stack_add_inst_head(cp->target, &inst) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
 
         if (j == (rep_m - 1)) {
             stack_cat_from_item(cp->target, cp->buf->head, i);
         } else {
             if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
-                return RVM_EMEM;
+                return RXVM_EMEM;
             }
         }
     }
@@ -223,7 +223,7 @@ int code_rep_n (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 
     for (j = 0; j < (rep_n - 1); ++j) {
         if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
     }
 
@@ -241,7 +241,7 @@ int code_one (context_t *cp, unsigned int size, stackitem_t *i)
     stack_cat_from_item(cp->target, cp->buf->head, i);
 
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     return 0;
@@ -255,13 +255,13 @@ int code_zero (context_t *cp, unsigned int size, stackitem_t *i)
      * y = current position PLUS size of operand buf PLUS 2 */
     set_op_branch(&inst, 1, size + 2);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
     set_op_branch(&inst, -(size), 1);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     return 0;
@@ -276,7 +276,7 @@ int code_onezero (context_t *cp, unsigned int size, stackitem_t *i)
     set_op_branch(&inst, 1, size + 1);
 
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
@@ -302,13 +302,13 @@ int code_alt (context_t *cp, unsigned int size, stackitem_t *i)
     set_op_branch(&inst, 1, cp->target->size + 2);
 
     if (stack_add_inst_tail(cp->target, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     set_op_jmp(&inst, 0);
     cp->target->dangling_alt = stack_add_inst_head(cp->target, &inst);
     if (cp->target->dangling_alt == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     cp->target->dsize = cp->target->size;
@@ -324,7 +324,7 @@ int code_ccs (context_t *cp)
     cp->operand =
                 stack_add_inst_head((stack_t *) cp->parens->tail->data, &inst);
     if (cp->operand == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     cp->ccs = NULL;
@@ -339,7 +339,7 @@ int code_match (context_t *cp)
 
     set_op_match(&inst);
     if (stack_add_inst_head(cp->prog, &inst) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     return 0;

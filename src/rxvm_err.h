@@ -24,17 +24,17 @@
 #ifndef RXVM_ERR_H_
 #define RXVM_ERR_H_
 
-#define RVM_BADOP      -1   /* Operator used incorrectly */
-#define RVM_BADCLASS   -2   /* Unexpected character class closing character */
-#define RVM_BADREP     -3   /* Unexpected closing repetition character */
-#define RVM_BADPAREN   -4   /* Unexpected closing parenthesis */
-#define RVM_EPAREN     -5   /* Unterminated parenthesis group */
-#define RVM_ECLASS     -6   /* Unterminated character class */
-#define RVM_EREP       -7   /* Missing repetition closing character */
-#define RVM_MREP       -8   /* Empty repetition */
-#define RVM_ETRAIL     -9   /* Trailing escape character */
-#define RVM_EMEM       -10  /* Failed to allocate memory */
-#define RVM_EINVAL     -11  /* Invalid symbol */
-#define RVM_EPARAM     -12  /* Invalid parameter passed to library function */
+#define RXVM_BADOP      -1   /* Operator used incorrectly */
+#define RXVM_BADCLASS   -2   /* Unexpected character class closing character */
+#define RXVM_BADREP     -3   /* Unexpected closing repetition character */
+#define RXVM_BADPAREN   -4   /* Unexpected closing parenthesis */
+#define RXVM_EPAREN     -5   /* Unterminated parenthesis group */
+#define RXVM_ECLASS     -6   /* Unterminated character class */
+#define RXVM_EREP       -7   /* Missing repetition closing character */
+#define RXVM_MREP       -8   /* Empty repetition */
+#define RXVM_ETRAIL     -9   /* Trailing escape character */
+#define RXVM_EMEM       -10  /* Failed to allocate memory */
+#define RXVM_EINVAL     -11  /* Invalid symbol */
+#define RXVM_EPARAM     -12  /* Invalid parameter passed to library function */
 
 #endif

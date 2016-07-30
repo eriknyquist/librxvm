@@ -26,40 +26,40 @@ void rxvm_print_err (int err)
     const char *msg;
 
     switch (err) {
-        case RVM_BADOP:
+        case RXVM_BADOP:
             msg = "Operator used incorrectly";
         break;
-        case RVM_BADCLASS:
+        case RXVM_BADCLASS:
             msg = "Unexpected character class closing character";
         break;
-        case RVM_BADREP:
+        case RXVM_BADREP:
             msg = "Unexpected closing repetition character";
         break;
-        case RVM_BADPAREN:
+        case RXVM_BADPAREN:
             msg = "Unexpected parenthesis group closing character";
         break;
-        case RVM_EPAREN:
+        case RXVM_EPAREN:
             msg = "Unterminated parenthesis group";
         break;
-        case RVM_ECLASS:
+        case RXVM_ECLASS:
             msg = "Unterminated character class";
         break;
-        case RVM_EREP:
+        case RXVM_EREP:
             msg = "Missing repetition closing character";
         break;
-        case RVM_MREP:
+        case RXVM_MREP:
             msg = "Empty repetition";
         break;
-        case RVM_ETRAIL:
+        case RXVM_ETRAIL:
             msg = "Trailing escape character";
         break;
-        case RVM_EMEM:
+        case RXVM_EMEM:
             msg = "Failed to allocate memory";
         break;
-        case RVM_EINVAL:
+        case RXVM_EINVAL:
             msg = "Invalid symbol";
         break;
-        case RVM_EPARAM:
+        case RXVM_EPARAM:
             msg = "Invalid parameter passed to library function";
         break;
         default:

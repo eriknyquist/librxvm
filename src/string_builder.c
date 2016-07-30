@@ -14,7 +14,7 @@ static int enlarge_buf (strb_t *cfg, int blocks)
 
     size = cfg->block_size * blocks;
     if ((temp = realloc(cfg->buf, cfg->space + size)) == NULL) {
-         return RVM_EMEM;
+         return RXVM_EMEM;
     }
 
     cfg->space += size;
@@ -24,13 +24,13 @@ static int enlarge_buf (strb_t *cfg, int blocks)
 
 int strb_init (strb_t *cfg, unsigned int block_size)
 {
-    if (!cfg) return RVM_EPARAM;
+    if (!cfg) return RXVM_EPARAM;
 
     memset(cfg, 0, sizeof(strb_t));
     cfg->block_size = (block_size) ? block_size : DEFAULT_BLOCK_SIZE;
 
     if ((cfg->buf = malloc(cfg->block_size)) == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     cfg->space = cfg->block_size;
@@ -41,7 +41,7 @@ int strb_addc (strb_t *cfg, char c)
 {
     if ((cfg->size + 1) > cfg->space) {
         if (enlarge_buf(cfg, 1) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
     }
 
@@ -57,7 +57,7 @@ int strb_adds (strb_t *cfg, char *s, int n)
     if ((cfg->size + n) > cfg->space) {
         blocks = (((cfg->size + n) - cfg->space) / cfg->block_size) + 1;
         if (enlarge_buf(cfg, blocks) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
     }
 

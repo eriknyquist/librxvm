@@ -36,13 +36,13 @@ int rxvm_compile (rxvm_t *compiled, char *exp)
     int ret;
     size_t size;
 
-    if (!compiled || !exp)              return RVM_EPARAM;
+    if (!compiled || !exp)              return RXVM_EPARAM;
     if ((ret = stage1(exp, &ir)) < 0)   return ret;
 
     if (ir == NULL) {
         size = sizeof(char) * (strlen(exp) + 1);
         if ((compiled->simple = malloc(size)) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
 
         memcpy(compiled->simple, exp, size);
@@ -100,7 +100,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     uint64_t size;
     long int seek_size;
 
-    if (!compiled || !fp) return RVM_EPARAM;
+    if (!compiled || !fp) return RXVM_EPARAM;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_file;
@@ -142,7 +142,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
     threads_t tm;
     int ret;
 
-    if (!compiled || !input) return RVM_EPARAM;
+    if (!compiled || !input) return RXVM_EPARAM;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_str;
@@ -188,7 +188,7 @@ int rxvm_match (rxvm_t *compiled, char *input, int flags)
     threads_t tm;
     int ret;
 
-    if (!compiled || !input) return RVM_EPARAM;
+    if (!compiled || !input) return RXVM_EPARAM;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_str;

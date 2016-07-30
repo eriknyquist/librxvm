@@ -99,7 +99,7 @@ int lex (char **input)
                 } else if (**input == REP_OPEN_SYM) {
                     state = trans(literal, input, 0, STATE_REP, NULL);
                 } else if (**input == REP_CLOSE_SYM) {
-                    state = trans(literal, input, RVM_BADREP, STATE_END, &ret);
+                    state = trans(literal, input, RXVM_BADREP, STATE_END, &ret);
                 } else if (**input == LPAREN_SYM) {
                     state = trans(literal, input, LPAREN, STATE_END, &ret);
                 } else if (**input == RPAREN_SYM) {
@@ -121,13 +121,13 @@ int lex (char **input)
                 } else if (isprintable(**input)) {
                     state = STATE_LITERAL;
                 } else {
-                    return RVM_EINVAL;
+                    return RXVM_EINVAL;
                 }
 
             break;
             case STATE_LITERAL:
                 if (**input == RANGE_SEP_SYM && literal) {
-                    return RVM_EINVAL;
+                    return RXVM_EINVAL;
                 } else if (*(*input + 1) == RANGE_SEP_SYM && literal) {
                     state = STATE_RANGE;
                     *input += 2;
@@ -140,7 +140,7 @@ int lex (char **input)
             break;
             case STATE_DEREF:
                 if (!**input) {
-                    return RVM_EINVAL;
+                    return RXVM_EINVAL;
                 } else {
                     ret = LITERAL;
                     lp1 += 1;
@@ -156,7 +156,7 @@ int lex (char **input)
                     ret = CHAR_RANGE;
                     *input += 1;
                 } else {
-                    return RVM_EINVAL;
+                    return RXVM_EINVAL;
                 }
 
             break;
@@ -164,18 +164,18 @@ int lex (char **input)
                 if (**input == REP_CLOSE_SYM) {
                     if (!isdigit(*(*input - 1)) &&
                             !isdigit(*(lp1 + 1))) {
-                        return RVM_MREP;
+                        return RXVM_MREP;
                     }
 
                     state = STATE_END;
                     ret = REP;
                 } else if (**input == ',') {
                     if (comma)
-                        return RVM_EINVAL;
+                        return RXVM_EINVAL;
 
                     comma = 1;
                 } else if (!isdigit(**input)) {
-                    return RVM_EINVAL;
+                    return RXVM_EINVAL;
                 }
 
                 *input += 1;
@@ -184,9 +184,9 @@ int lex (char **input)
     }
 
     if (state == STATE_DEREF) {
-        ret = RVM_ETRAIL;
+        ret = RXVM_ETRAIL;
     } else if (state == STATE_REP) {
-        ret = RVM_EREP;
+        ret = RXVM_EREP;
     }
 
     lpn = *input;

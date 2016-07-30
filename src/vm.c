@@ -293,16 +293,16 @@ int vm_init (threads_t *tm, unsigned int size)
     tm->chars = 0;
 
     if ((tm->cp = malloc(size * sizeof(int))) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     if ((tm->np = malloc(size * sizeof(int))) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     if ((tm->cp_lookup = malloc(size)) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     if ((tm->np_lookup = malloc(size)) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     return 0;
 }

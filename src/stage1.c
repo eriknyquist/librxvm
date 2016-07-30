@@ -181,7 +181,7 @@ static int process_op (context_t *cp)
             size = cur->size;
             i = NULL;
         } else {
-            return RVM_BADOP;
+            return RXVM_BADOP;
         }
     } else {
         size = cp->buf->size;
@@ -285,7 +285,7 @@ static int stage1_main_state (context_t *cp, int *state)
             *state = STATE_CHARC;
 
             if ((cp->ccs = malloc(CHARC_BLOCK_SIZE)) == NULL)
-                return RVM_EMEM;
+                return RXVM_EMEM;
 
             cp->cspace = CHARC_BLOCK_SIZE;
         break;
@@ -296,14 +296,14 @@ static int stage1_main_state (context_t *cp, int *state)
 
 
             if ((new = create_stack()) == NULL)
-                    return RVM_EMEM;
+                    return RXVM_EMEM;
 
             stack_add_head(cp->parens, (void *) new);
             cp->target = new;
         break;
         case RPAREN:
             if (cp->parens->head == cp->parens->tail) {
-                return RVM_BADPAREN;
+                return RXVM_BADPAREN;
 
             } else {
                 stack_cat(cp->target, base);
@@ -319,11 +319,11 @@ static int stage1_main_state (context_t *cp, int *state)
             }
         break;
         case CHARC_CLOSE:
-            return RVM_BADCLASS;
+            return RXVM_BADCLASS;
         break;
 single:
         if ((cp->operand = stack_add_inst_head(cp->buf, &inst)) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
         break;
 
@@ -339,7 +339,7 @@ static int charc_enlarge (context_t *cp, size_t size)
     new = realloc(cp->ccs, cp->cspace + size);
 
     if (new == NULL) {
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     cp->ccs = new;
@@ -410,7 +410,7 @@ static int stage1_charc_state (context_t *cp, int *state)
             *state = STATE_START;
         break;
         default:
-            ret = RVM_EINVAL;
+            ret = RXVM_EINVAL;
     }
 
     return ret;
@@ -439,17 +439,17 @@ static int stage1_init (context_t *cp, stack_t **ret)
     memset(cp, 0, sizeof(context_t));
 
     if ((cp->parens = create_stack()) == NULL)
-        return RVM_EMEM;
+        return RXVM_EMEM;
 
     if ((*ret = create_stack()) == NULL) {
         free(cp->parens);
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     if ((base = create_stack()) == NULL) {
         free(cp->parens);
         free(*ret);
-        return RVM_EMEM;
+        return RXVM_EMEM;
     }
 
     cp->simple = NULL;
@@ -471,7 +471,7 @@ int compile_simple_backlog (context_t *cp, char *orig)
 
         set_op_char(&inst, *orig);
         if ((stack_add_inst_head(cp->buf, &inst)) == NULL) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
         ++orig;
     }
@@ -515,7 +515,7 @@ int stage1 (char *input, stack_t **ret)
         return 0;
     } else if (cp->simple) {
         if (compile_simple_backlog(cp, orig) < 0) {
-            return RVM_EMEM;
+            return RXVM_EMEM;
         }
         cp->simple = NULL;
     }
@@ -556,10 +556,10 @@ int stage1 (char *input, stack_t **ret)
 
     if (state == STATE_CHARC) {
         stage1_err_cleanup(cp);
-        return RVM_ECLASS;
+        return RXVM_ECLASS;
     } else if (cp->parens->head != cp->parens->tail) {
         stage1_err_cleanup(cp);
-        return RVM_EPAREN;
+        return RXVM_EPAREN;
     }
 
     /* End of input-- anything left in the buffer
