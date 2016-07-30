@@ -1,24 +1,32 @@
 TESTS := rxvm_test
 
-RVM_C_SRCS := $(wildcard src/*.c)
+RXVM_C_SRCS := $(wildcard src/*.c)
 TEST_SRCS := $(wildcard tests/src/test_*.c) tests/src/randexp.c
-RVM_OBJS := ${RVM_C_SRCS:.c=.o}
+RXVM_OBJS := ${RXVM_C_SRCS:.c=.o}
 TEST_OBJS := ${TEST_SRCS:.c=.o}
 
-RVM_INC := src
+RXVM_INC := src
 TEST_INC := tests/src
 MEMCHECK := tests/scripts/memcheck.sh
 
-CFLAGS := -Wall -Wno-trigraphs -I$(RVM_INC) -I$(TEST_INC) -g -O0
+CFLAGS := -Wall -Wno-trigraphs -I$(RXVM_INC)
 
+testobjs: CFLAGS += -I$(TEST_INC)
+testobjs: $(TEST_OBJS)
 
-all: $(TESTS)
+$(TESTS): $(RXVM_OBJS) testobjs
+	$(CC) $(RXVM_OBJS) $(TEST_OBJS) -o $@
+
+debug: CFLAGS += -g -O0
+debug: $(TESTS)
+
+release: CFLAGS += -O3
+release: $(TESTS)
+
+all: debug
 	./$(MEMCHECK) $(TESTS)
 
-$(TESTS): $(RVM_OBJS) $(TEST_OBJS)
-	$(CC) $(RVM_OBJS) $(TEST_OBJS) -o $@
-
 clean:
-	@- $(RM) $(TESTS) $(RVM_OBJS) $(TEST_OBJS)
+	@- $(RM) $(TESTS) $(RXVM_OBJS) $(TEST_OBJS)
 
 distclean: clean
