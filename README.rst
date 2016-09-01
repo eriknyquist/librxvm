@@ -301,7 +301,7 @@ The ``rxvm_gencfg_t`` type provides some control over the randomness:
   contain the number of characters in the generated string (excluding the
   terminating null-character).
 
-If a null pointer is passed instead of a valid pointer to a ``rxvm_genfg_t``
+If a null pointer is passed instead of a valid pointer to a ``rxvm_gencfg_t``
 type, then default values will be used.
 
 **Return value**
