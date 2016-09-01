@@ -27,7 +27,6 @@ int main (int argc, char *argv[])
 {
     char *gen;
     int ret;
-    rxvm_gencfg_t cfg;
     rxvm_t compiled;
     int num;
     int i;
@@ -43,9 +42,6 @@ int main (int argc, char *argv[])
         num = parse_int(argv[2]);
     }
 
-    cfg.limit = 256;
-    cfg.generosity = 80;
-    cfg.whitespace = 0;
     srand(time(NULL));
 
     /* Compile the expression */
@@ -60,7 +56,7 @@ int main (int argc, char *argv[])
         }
     } else {
         for (i = 0; i < num; ++i) {
-            gen = rxvm_gen(&compiled, &cfg);
+            gen = rxvm_gen(&compiled, NULL);
             printf("%s\n", gen);
             free(gen);
         }
