@@ -56,10 +56,10 @@ int rxvm_compile (rxvm_t *compiled, char *exp)
 
 char getchar_str (void *data)
 {
-    char ret;
-    ret = **((char**)data);
-    ++(*((char**)data));
-    return ret;
+    char **input;
+
+    input = (char **)data;
+    return *(*input)++;
 }
 
 char getchar_file (void *data)
