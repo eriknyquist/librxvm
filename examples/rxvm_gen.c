@@ -15,8 +15,8 @@ int main (int argc, char *argv[])
     rxvm_t compiled;
 
     ret = 0;
-    if (argc != 1) {
-        printf("Usage: %s <regex> [<num>]\n", argv[0]);
+    if (argc != 2) {
+        printf("Usage: %s <regex>\n", argv[0]);
         exit(1);
     }
 
