@@ -8,38 +8,16 @@
 char *rgx;
 char *input;
 
-int parse_int (char *input)
-{
-    int ret;
-
-    ret = 0;
-    while (*input) {
-        if (*input < '0' || *input > '9')
-            return -1;
-        ret = (ret * 10) + (*input - '0');
-        ++input;
-    }
-
-    return ret;
-}
-
 int main (int argc, char *argv[])
 {
     char *gen;
     int ret;
     rxvm_t compiled;
-    int num;
-    int i;
 
-    num = 1;
     ret = 0;
-    if (argc < 2) {
+    if (argc != 1) {
         printf("Usage: %s <regex> [<num>]\n", argv[0]);
         exit(1);
-    }
-
-    if (argc == 3) {
-        num = parse_int(argv[2]);
     }
 
     srand(time(NULL));
@@ -51,15 +29,14 @@ int main (int argc, char *argv[])
     }
 
     if (compiled.simple) {
-        for (i = 0; i < num; ++i) {
-            printf("%s\n", compiled.simple);
-        }
+        /* If the expression contains no meta-characters, then no
+         * instructions will be generated and the "simple" pointer
+         * will be populated */
+        printf("%s\n", compiled.simple);
     } else {
-        for (i = 0; i < num; ++i) {
-            gen = rxvm_gen(&compiled, NULL);
-            printf("%s\n", gen);
-            free(gen);
-        }
+        gen = rxvm_gen(&compiled, NULL);
+        printf("%s\n", gen);
+        free(gen);
     }
 
     rxvm_free(&compiled);
