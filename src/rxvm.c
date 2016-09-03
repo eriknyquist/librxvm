@@ -124,7 +124,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     }
 
     if (tm.match_end) {
-        size = (tm.match_end - tm.match_start) - 1;
+        size = (tm.match_end - tm.match_start);
         if (match_size) *match_size = size;
         seek_size = -(size + (compiled->simple == NULL));
         fseek(fp, seek_size, SEEK_CUR);
