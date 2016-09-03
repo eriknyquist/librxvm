@@ -31,6 +31,7 @@
 #include "stack.h"
 #include "vmcode.h"
 #include "stage1.h"
+#include "setop.h"
 
 #define REP_NO_FIELD        -1
 #define REP_FIELD_EMPTY     -2
@@ -44,31 +45,6 @@ extern char *lp1;
 extern char *lpn;
 
 enum {STATE_START, STATE_CHARC};
-
-static void set_op_char (inst_t *inst, char c)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_CHAR;
-    inst->c = c;
-}
-
-static void set_op_any (inst_t *inst)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_ANY;
-}
-
-static void set_op_sol (inst_t *inst)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_SOL;
-}
-
-static void set_op_eol (inst_t *inst)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_EOL;
-}
 
 static void stack_reset (stack_t *stack)
 {
@@ -285,7 +261,7 @@ static int stage1_main_state (context_t *cp, int *state)
         break;
         case CHARC_OPEN:
             *state = STATE_CHARC;
-            strb_init(&cp->strb, 10);
+            strb_init(&cp->strb, 0);
         break;
         case LPAREN:
 

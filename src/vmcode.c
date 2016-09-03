@@ -29,37 +29,7 @@
 #include "stack.h"
 #include "vmcode.h"
 #include "stage1.h"
-
-/* set_op functions:
- * a bunch of convenience functions for populating
- * inst_t types for all instructions */
-static void set_op_class (inst_t *inst, char *ccs)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_CLASS;
-    inst->ccs = ccs;
-}
-
-static void set_op_branch (inst_t *inst, int x, int y)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_BRANCH;
-    inst->x = x;
-    inst->y = y;
-}
-
-static void set_op_jmp (inst_t *inst, int x)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_JMP;
-    inst->x = x;
-}
-
-static void set_op_match (inst_t *inst)
-{
-    memset(inst, 0, sizeof(inst_t));
-    inst->op = OP_MATCH;
-}
+#include "setop.h"
 
 /* create_inst: allocate space for an inst_t, populate it
    with the data in 'inst' and return a pointer to it */
