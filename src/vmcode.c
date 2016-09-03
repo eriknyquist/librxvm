@@ -25,8 +25,10 @@
 #include <string.h>
 #include "rxvm_err.h"
 #include "rxvm_common.h"
+#include "string_builder.h"
 #include "stack.h"
 #include "vmcode.h"
+#include "stage1.h"
 
 /* set_op functions:
  * a bunch of convenience functions for populating
@@ -340,18 +342,18 @@ int code_alt (context_t *cp, unsigned int size, stackitem_t *i)
 
 int code_ccs (context_t *cp)
 {
+    stack_t *topmost;
     inst_t inst;
 
-    cp->ccs[cp->clen] = '\0';
-    set_op_class(&inst, cp->ccs);
-    cp->operand =
-                stack_add_inst_head((stack_t *) cp->parens->tail->data, &inst);
+    strb_addc(&cp->strb, '\0');
+    set_op_class(&inst, cp->strb.buf);
+
+    topmost = (stack_t *)cp->parens->tail->data;
+    cp->operand = stack_add_inst_head(topmost, &inst);
+
     if (cp->operand == NULL) {
         return RXVM_EMEM;
     }
-
-    cp->ccs = NULL;
-    cp->clen = 0;
 
     return 0;
 }

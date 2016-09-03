@@ -27,8 +27,8 @@
 typedef struct strb strb_t;
 
 struct strb {
-    uint64_t size;
-    uint64_t space;
+    unsigned long int size;
+    unsigned long int space;
 
     char *buf;
     unsigned int block_size;

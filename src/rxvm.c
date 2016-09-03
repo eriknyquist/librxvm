@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxvm.h"
+#include "string_builder.h"
 #include "stage1.h"
 #include "stage2.h"
 #include "stack.h"

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  * Copyright (c) 2016 Erik K. Nyquist
- *
+ *9
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
@@ -62,21 +62,6 @@ struct inst {
     int y;
     char c;
     uint8_t op;
-};
-
-struct context {
-    char *ccs;
-    stack_t *target;
-    stack_t *buf;
-    stack_t *prog;
-    stackitem_t *operand;
-    stack_t *parens;
-    char *simple;
-    int tok;
-    int lasttok;
-    unsigned int clen;
-    unsigned int cspace;
-    uint8_t chained;
 };
 
 #endif

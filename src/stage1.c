@@ -26,9 +26,11 @@
 #include <string.h>
 #include "lex.h"
 #include "rxvm_err.h"
+#include "string_builder.h"
 #include "rxvm_common.h"
 #include "stack.h"
 #include "vmcode.h"
+#include "stage1.h"
 
 #define REP_NO_FIELD        -1
 #define REP_FIELD_EMPTY     -2
@@ -103,7 +105,7 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
     int err;
 
     /* {n,m} */
-    if (rep_n >= 0 && rep_m >=0) {
+    if (rep_n >= 0 && rep_m >= 0) {
         if ((err = code_rep_range(cp, rep_n, rep_m, size, i)) < 0) {
             return err;
         }
@@ -283,11 +285,7 @@ static int stage1_main_state (context_t *cp, int *state)
         break;
         case CHARC_OPEN:
             *state = STATE_CHARC;
-
-            if ((cp->ccs = malloc(CHARC_BLOCK_SIZE)) == NULL)
-                return RXVM_EMEM;
-
-            cp->cspace = CHARC_BLOCK_SIZE;
+            strb_init(&cp->strb, 10);
         break;
         case LPAREN:
 
@@ -332,28 +330,11 @@ single:
     return 0;
 }
 
-static int charc_enlarge (context_t *cp, size_t size)
-{
-    char *new;
-
-    new = realloc(cp->ccs, cp->cspace + size);
-
-    if (new == NULL) {
-        return RXVM_EMEM;
-    }
-
-    cp->ccs = new;
-    cp->cspace += size;
-    return 0;
-}
-
 static int expand_char_range (context_t *cp)
 {
     char rhi;
     char rlo;
     int err;
-    size_t size;
-    size_t delta;
 
     /* Figure out which character is highest */
     if (*lp1 > *(lp1 + 2)) {
@@ -364,19 +345,11 @@ static int expand_char_range (context_t *cp)
         rlo = *lp1;
     }
 
-    /* No. of characters in range */
-    size = (size_t) rhi - rlo;
-
-    /* Enlarge char. class buffer if needed */
-    if ((cp->clen + size + 1) > cp->cspace) {
-        delta = (cp->clen + size + 1) - cp->cspace;
-        if ((err = charc_enlarge(cp, delta)) < 0)
-            return err;
-    }
-
     /* Expand range */
     while (rlo <= rhi) {
-        cp->ccs[cp->clen++] = rlo++;
+        if ((err = strb_addc(&cp->strb, rlo++)) < 0) {
+            return err;
+        }
     }
 
     return 0;
@@ -388,19 +361,11 @@ static int expand_char_range (context_t *cp)
  * buffer parens[0]. */
 static int stage1_charc_state (context_t *cp, int *state)
 {
-    int ret;
-
-    /* Enlarge char. class buffer if it is full */
-    if ((cp->clen + 1) >= cp->cspace) {
-        if ((ret = charc_enlarge(cp, CHARC_BLOCK_SIZE)) < 0)
-            return ret;
-    } else {
-        ret = 0;
-    }
+    int ret = 0;
 
     switch (cp->tok) {
         case LITERAL:
-            cp->ccs[cp->clen++] = *lp1;
+            strb_addc(&cp->strb, *lp1);
         break;
         case CHAR_RANGE:
             ret = expand_char_range(cp);
@@ -425,9 +390,6 @@ static void stage1_cleanup (context_t *cp)
 
 static void stage1_err_cleanup (context_t *cp)
 {
-    if (cp->ccs)
-        free(cp->ccs);
-
     stack_free(cp->parens, stack_stack_cleanup);
     stack_free(cp->prog, inst_stack_cleanup);
 }

@@ -24,6 +24,19 @@
 #ifndef STAGE1_H_
 #define STAGE1_H_
 
+struct context {
+    stack_t *target;
+    stack_t *buf;
+    stack_t *prog;
+    stackitem_t *operand;
+    stack_t *parens;
+    strb_t strb;
+    char *simple;
+    int tok;
+    int lasttok;
+    uint8_t chained;
+};
+
 int stage1 (char *input, stack_t **ret);
 
 #endif
