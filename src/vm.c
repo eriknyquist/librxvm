@@ -120,64 +120,72 @@ void print_threads_state (rxvm_t *compiled, threads_t *tm, int cur,
 }
 #endif  /* DBGF */
 
-int char_match (uint8_t icase, char a, char b)
+int inline __attribute__((always_inline))
+char_match (uint8_t _icase, char _a, char _b)
 {
-    return (icase) ? tolower(a) == tolower(b) : a == b;
+    return (_icase) ? tolower(_a) == tolower(_b) : _a == _b;
 }
 
-static int ccs_match (uint8_t icase, char *ccs, char c)
+static int inline __attribute__((always_inline))
+ccs_match (uint8_t _icase, char *_ccs, char _c)
 {
-    while (*ccs) {
-        if (char_match(icase, *ccs, c))
+    while (*_ccs) {
+        if (char_match(_icase, *_ccs, _c))
             return 1;
-        ccs += 1;
+        _ccs += 1;
     }
 
     return 0;
 }
 
-static void add_thread (int *list, uint8_t *lookup, int *lsize, int val)
+static inline __attribute__((always_inline))
+void add_thread (int *_list, uint8_t *_lookup, int *_lsize, int _val)
 {
-    if (!lookup[val]) {
-        lookup[val] = 1;
-        list[(*lsize)++] = val;
+    if (!_lookup[_val]) {
+        _lookup[_val] = 1;
+        _list[(*_lsize)++] = _val;
     }
 }
 
-static int is_sol (threads_t *tm)
+static inline __attribute__((always_inline))
+int is_sol (threads_t *_tm)
 {
-    if (tm->chars == 1) {
+    if (_tm->chars == 1) {
         return 1;
     } else {
-        return (tm->multiline && tm->lastinput == '\n') ? 1 : 0;
+        return (_tm->multiline && _tm->lastinput == '\n') ? 1 : 0;
     }
 }
 
-static int is_eol (threads_t *tm, char c)
+static inline __attribute__((always_inline))
+int is_eol (threads_t *_tm, char _c)
 {
-    if (c == tm->endchar) {
+    if (_c == _tm->endchar) {
         return 1;
     } else {
-        return (tm->multiline && c == '\n') ? 1 : 0;
+        return (_tm->multiline && _c == '\n') ? 1 : 0;
     }
 }
 
-static void add_thread_curr (threads_t *tm, int val)
+static inline __attribute__((always_inline))
+void add_thread_curr (threads_t *_tm, int _val)
 {
-    add_thread(tm->cp, tm->cp_lookup, &tm->csize, val);
+    add_thread(_tm->cp, _tm->cp_lookup, &_tm->csize, _val);
 }
 
-static void add_thread_next (threads_t *tm, int val)
+static inline __attribute__((always_inline))
+void add_thread_next (threads_t *_tm, int _val)
 {
-    add_thread(tm->np, tm->np_lookup, &tm->nsize, val);
+    add_thread(_tm->np, _tm->np_lookup, &_tm->nsize, _val);
 }
 
-static void vm_zero (threads_t *tm, unsigned int size)
+static inline __attribute__((always_inline))
+void vm_zero (threads_t *_tm, unsigned int _size)
 {
-    memset(tm->cp_lookup, 0, size);
-    memset(tm->np_lookup, 0, size);
-    memset(tm->cp, 0, sizeof(int) * size);
-    memset(tm->np, 0, sizeof(int) * size);
+    memset(_tm->cp_lookup, 0, _size);
+    memset(_tm->np_lookup, 0, _size);
+    memset(_tm->cp, 0, sizeof(int) * _size);
+    memset(_tm->np, 0, sizeof(int) * _size);
 }
 
 int vm_execute (threads_t *tm, rxvm_t *compiled)

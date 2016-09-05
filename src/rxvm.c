@@ -31,6 +31,13 @@
 #include "stack.h"
 #include "vm.h"
 
+#define FBUF_SIZE  256
+
+static char *fbuf;
+static int bufpos;
+static uint64_t fpos;
+static uint64_t *charcp;
+
 int rxvm_compile (rxvm_t *compiled, char *exp)
 {
     stack_t *ir;
@@ -65,31 +72,47 @@ char getchar_str (void *data)
 
 char getchar_file (void *data)
 {
-    return fgetc((FILE *)data);
-}
+    size_t num;
+    FILE *fp;
 
-int simple_match (threads_t *tm, char *simple)
-{
-    char c;
+    fp = (FILE *)data;
 
-    tm->match_start = tm->chars;
-    while (*simple) {
-        c = (*tm->getchar)(tm->getchar_data);
-        ++tm->chars;
+    if (bufpos == FBUF_SIZE) {
+        bufpos = 0;
+        num = fread(fbuf, sizeof(char), FBUF_SIZE, fp);
+        fpos = *charcp + FBUF_SIZE;
 
-        if (c == tm->endchar)
-            return 1;
-
-        if (*simple == '\\')
-            ++simple;
-
-        if (!char_match(tm->icase, *simple, c))
-            return 0;
-
-        ++simple;
+        if (num < FBUF_SIZE) {
+            fbuf[num] = EOF;
+        }
     }
 
-    tm->match_end = tm->chars + 1;
+    return fbuf[bufpos++];
+}
+
+static inline __attribute__((always_inline))
+int simple_match (threads_t *_tm, char *_simple)
+{
+    char _c;
+
+    _tm->match_start = _tm->chars;
+    while (*_simple) {
+        _c = (*_tm->getchar)(_tm->getchar_data);
+        ++_tm->chars;
+
+        if (_c == _tm->endchar)
+            return 1;
+
+        if (*_simple == '\\')
+            ++_simple;
+
+        if (!char_match(_tm->icase, *_simple, _c))
+            return 0;
+
+        ++_simple;
+    }
+
+    _tm->match_end = _tm->chars + 1;
     return 1;
 }
 
@@ -98,8 +121,8 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 {
     threads_t tm;
     int ret;
-    uint64_t size;
     long int seek_size;
+    char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
 
@@ -108,10 +131,13 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     tm.getchar_data = fp;
     tm.endchar = EOF;
 
+    fbuf = file_buffer;
+    bufpos = FBUF_SIZE - 1;
     *match_size = 0;
     tm.icase = (flags & RXVM_ICASE);
     tm.nongreedy = (flags & RXVM_NONGREEDY);
     tm.multiline = (flags & RXVM_MULTILINE);
+    charcp = &tm.chars;
 
     ret = 0;
     if (compiled->simple) {
@@ -124,9 +150,11 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     }
 
     if (tm.match_end) {
-        size = (tm.match_end - tm.match_start);
-        if (match_size) *match_size = size;
-        seek_size = -(size + (compiled->simple == NULL));
+        if (match_size) {
+            *match_size = (tm.match_end - tm.match_start) - 1;
+        }
+
+        seek_size = ((tm.match_start + 1) - fpos) - 1;
         fseek(fp, seek_size, SEEK_CUR);
         ret = 1;
     }
