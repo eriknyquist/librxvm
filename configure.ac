@@ -6,7 +6,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
-CFLAGS="-O3"
+CFLAGS="-O3 -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables"
 AC_PROG_CC
 AC_PROG_AWK
 AC_PROG_INSTALL
