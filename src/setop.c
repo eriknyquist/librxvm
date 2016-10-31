@@ -21,8 +21,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "rxvm_common.h"
 

@@ -22,7 +22,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "lex.h"
 #include "rxvm_err.h"
 
