@@ -133,7 +133,7 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
     int temp;
 
     if (rep_n == rep_m) {
-        return code_rep_n(cp, rep_n, size, i);
+        return code_rep_n(cp, rep_n, i);
     } else if (rep_n > rep_m) {
         temp = rep_n;
         rep_n = rep_m;
@@ -212,7 +212,7 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
     return 0;
 }
 
-int code_rep_n (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
+int code_rep_n (context_t *cp, int rep_n, stackitem_t *i)
 {
     int j;
 
@@ -278,7 +278,7 @@ int code_onezero (context_t *cp, unsigned int size, stackitem_t *i)
     return 0;
 }
 
-int code_alt (context_t *cp, unsigned int size, stackitem_t *i)
+int code_alt (context_t *cp, stackitem_t *i)
 {
     inst_t inst;
 

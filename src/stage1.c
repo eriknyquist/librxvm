@@ -100,7 +100,7 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
 
     /* {n} */
     } else if (rep_m == REP_NO_FIELD) {
-        if ((err = code_rep_n(cp, rep_n, size, i)) < 0) {
+        if ((err = code_rep_n(cp, rep_n, i)) < 0) {
             return err;
         }
 
@@ -198,7 +198,7 @@ static int process_op (context_t *cp)
             }
         break;
         case ALT:
-            if ((err = code_alt(cp, size, i)) < 0) {
+            if ((err = code_alt(cp, i)) < 0) {
                 return err;
             }
         break;

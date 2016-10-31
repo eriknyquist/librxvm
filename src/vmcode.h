@@ -32,8 +32,8 @@ int code_ccs (context_t *cp);
 int code_one (context_t *cp, unsigned int size, stackitem_t *i);
 int code_zero (context_t *cp, unsigned int size, stackitem_t *i);
 int code_onezero (context_t *cp, unsigned int size, stackitem_t *i);
-int code_alt (context_t *cp, unsigned int size, stackitem_t *i);
-int code_rep_n (context_t *cp, int rep_n, unsigned int size, stackitem_t *i);
+int code_alt (context_t *cp, stackitem_t *i);
+int code_rep_n (context_t *cp, int rep_n, stackitem_t *i);
 int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i);
 int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i);
 int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,

@@ -61,7 +61,7 @@ static void optimise_chain (rxvm_t *cmp, int *chain, int *lookup,
 
 static int optimise_chains (rxvm_t *cmp)
 {
-    int i;
+    unsigned int i;
     int *chain;
     int *lookup;
     inst_t *inst;
@@ -99,8 +99,7 @@ int stage2 (stack_t *ir, rxvm_t *ret)
     stackitem_t *item;
     stackitem_t *next;
     inst_t *inst;
-    unsigned int i;
-    int err;
+    int i, err;
 
     /* array to hold pointers to the already-allocated instructions */
     if ((ret->exe = malloc(sizeof(inst_t *) * ir->size)) == NULL)

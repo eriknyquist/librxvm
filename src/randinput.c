@@ -37,7 +37,7 @@ static unsigned int rand_range (unsigned int low, unsigned int high)
         return (unsigned int) low + (rand() % ((high - low) + 1));
 }
 
-static int choice (int prob)
+static unsigned int choice (unsigned int prob)
 {
     return (rand_range(0, 100) < prob);
 }
@@ -47,9 +47,9 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     inst_t **exe;
     inst_t *inst;
     char *ret;
-    int val;
     char rand;
     size_t size;
+    unsigned int val;
     unsigned int ip;
     unsigned int ix;
     strb_t strb;
