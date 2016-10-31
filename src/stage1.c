@@ -398,7 +398,7 @@ static int stage1_init (context_t *cp, stack_t **ret)
     return 0;
 }
 
-int compile_simple_backlog (context_t *cp, char *orig)
+static int compile_simple_backlog (context_t *cp, char *orig)
 {
     inst_t inst;
 
