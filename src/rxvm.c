@@ -90,29 +90,28 @@ char getchar_file (void *data)
     return fbuf[bufpos++];
 }
 
-static inline __attribute__((always_inline))
-int simple_match (threads_t *_tm, char *_simple)
+static int simple_match (threads_t *tm, char *simple)
 {
     char _c;
 
-    _tm->match_start = _tm->chars;
-    while (*_simple) {
-        _c = (*_tm->getchar)(_tm->getchar_data);
-        ++_tm->chars;
+    tm->match_start = tm->chars;
+    while (*simple) {
+        _c = (*tm->getchar)(tm->getchar_data);
+        ++tm->chars;
 
-        if (_c == _tm->endchar)
+        if (_c == tm->endchar)
             return 1;
 
-        if (*_simple == '\\')
-            ++_simple;
+        if (*simple == '\\')
+            ++simple;
 
-        if (!char_match(_tm->icase, *_simple, _c))
+        if (!char_match(tm->icase, *simple, _c))
             return 0;
 
-        ++_simple;
+        ++simple;
     }
 
-    _tm->match_end = _tm->chars + 1;
+    tm->match_end = tm->chars + 1;
     return 1;
 }
 

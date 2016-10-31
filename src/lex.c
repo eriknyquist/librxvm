@@ -36,12 +36,12 @@ enum {STATE_START, STATE_LITERAL, STATE_RANGE, STATE_CLASS, STATE_DEREF,
 
 static unsigned int literal;
 
-static inline int isreserved (char x)
+static int isreserved (char x)
 {
     return (x == CHARC_OPEN_SYM || x == CHARC_CLOSE_SYM) ? 1 : 0;
 }
 
-static inline int isprintable (char x)
+static int isprintable (char x)
 {
     return ((x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ||
         (x >= WS_LOW && x <= WS_HIGH)) ? 1 : 0;
