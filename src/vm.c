@@ -29,97 +29,6 @@
 
 #define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
 
-#if (DBGF)
-int fcnt;
-
-void rxvm_print_pointer (FILE *fp, rxvm_t *compiled, int point)
-{
-    unsigned int i;
-    inst_t *inst;
-
-    for (i = 0; i < compiled->size; i++) {
-        inst = compiled->exe[i];
-
-        if (i == point) {
-            fprintf(fp, "----> ");
-        } else {
-            fprintf(fp, "      ");
-        }
-
-        switch(inst->op) {
-            case OP_CHAR:
-                fprintf(fp, "%-4dchar %c\n", i, inst->c);
-            break;
-            case OP_ANY:
-                fprintf(fp, "%-4dany\n", i);
-            break;
-            case OP_SOL:
-                fprintf(fp, "%-4dsol\n", i);
-            break;
-            case OP_EOL:
-                fprintf(fp, "%-4deol\n", i);
-            break;
-            case OP_CLASS:
-                fprintf(fp, "%-4dclass %s\n", i, inst->ccs);
-            break;
-            case OP_BRANCH:
-                fprintf(fp, "%-4dbranch %d %d\n", i, inst->x, inst->y);
-            break;
-            case OP_JMP:
-                fprintf(fp, "%-4djmp %d\n", i, inst->x);
-            break;
-            case OP_MATCH:
-                fprintf(fp, "%-4dmatch\n", i);
-            break;
-        }
-    }
-}
-
-void print_threads_state (rxvm_t *compiled, threads_t *tm, int cur,
-                          char *input)
-{
-    FILE *fp;
-    char *sot;
-    char filename[50];
-    int i;
-
-    sot = input - tm->chars;
-    snprintf(filename, 50, ".rvm_dbgf/%d.dbgf", ++fcnt);
-
-    if ((fp = fopen(filename, "w")) == NULL) {
-        printf("Error opening file %s for writing\n", filename);
-        return;
-    }
-
-    fprintf(fp, "%s\n", sot);
-    for (i = 0; i < (tm->chars - 1); ++i) {
-        fprintf(fp, " ");
-    }
-    fprintf(fp, "^\n\n");
-    rxvm_print_pointer(fp, compiled, tm->cp[cur]);
-    fprintf(fp, "\n");
-
-    fprintf(fp, "Threads for current input character:\n");
-    fprintf(fp, "-----------------------------------\n\n");
-    for (i = 0; i < tm->csize; ++i) {
-        fprintf(fp, "%-4d", tm->cp[i]);
-    }
-    fprintf(fp, "\n");
-    for (i = 0; i < cur; ++i) {
-        fprintf(fp, "    ");
-    }
-    fprintf(fp, "^\n\n\n");
-
-    fprintf(fp, "Threads for next input character:\n");
-    fprintf(fp, "--------------------------------\n\n");
-    for (i = 0; i < tm->nsize; ++i) {
-        fprintf(fp, "%-4d", tm->np[i]);
-    }
-    fprintf(fp, "\n");
-    fclose(fp);
-}
-#endif  /* DBGF */
-
 int char_match (uint8_t icase, char a, char b)
 {
     return (icase) ? tolower(a) == tolower(b) : a == b;
@@ -196,10 +105,6 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     vm_zero(tm, compiled->size);
     add_thread_curr(tm, 0);
 
-#if (DBGF)
-    fcnt = 0;
-#endif
-
     do {
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
@@ -214,10 +119,6 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
             ip = compiled->exe[ii]; /* pointer to instruction data */
-
-#if (DBGF)
-            print_threads_state(compiled, tm, t, *((char **)tm->getchar_data));
-#endif
 
             switch (ip->op) {
                 case OP_CHAR:
@@ -259,9 +160,6 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
                     if (tm->nongreedy) return 1;
                 break;
             }
-#if (DBGF)
-            print_threads_state(compiled, tm, t, *((char**)tm->getchar_data));
-#endif
         }
 
         /* Threads saved for the next input character
