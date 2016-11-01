@@ -217,7 +217,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     tm.endchar = EOF;
 
     fbuf = file_buffer;
-    bufpos = FBUF_SIZE - 1;
+    bufpos = FBUF_SIZE;
     *match_size = 0;
     tm.icase = (flags & RXVM_ICASE);
     tm.nongreedy = (flags & RXVM_NONGREEDY);
