@@ -236,6 +236,42 @@ to ``NULL``.
 
 |
 
+``rxvm_free``
+~~~~~~~~~~~~~~~~
+
+.. code:: c
+
+   void rxvm_free (rxvm_t *compiled);
+
+Frees all dynamic memory associated with a compiled ``rxvm_t`` type. Always
+call this function, before exiting, on any compiled ``rxvm_t`` types.
+
+|
+
+**Returns** nothing.
+
+|
+
+|
+
+Non-essential features
+----------------------
+
+The following functions ``rxvm_fsearch``, ``rxvm_gen`` and ``rxvm_print``
+are compiled in by default. However, if you don't need them and you want the
+final library to be a bit smaller, you can exlude them by passing the
+``--disable-extras`` flag to the ``configure`` script, i.e.
+
+|
+
+|
+
+>  ``./configure --disable-extras``
+
+|
+
+|
+
 ``rxvm_fsearch``
 ~~~~~~~~~~~~~~~~~~~
 
@@ -314,24 +350,6 @@ matching string. If memory allocation fails, a null pointer is returned.
 |
 
 
-``rxvm_free``
-~~~~~~~~~~~~~~~~
-
-.. code:: c
-
-   void rxvm_free (rxvm_t *compiled);
-
-Frees all dynamic memory associated with a compiled ``rxvm_t`` type. Always
-call this function, before exiting, on any compiled ``rxvm_t`` types.
-
-|
-
-**Returns** nothing.
-
-|
-
-|
-
 ``rxvm_print``
 ~~~~~~~~~~~~~~~~~
 
@@ -342,6 +360,8 @@ call this function, before exiting, on any compiled ``rxvm_t`` types.
 Prints a compiled expression in a human-readable format.
 
 **Returns** nothing.
+
+|
 
 |
 
