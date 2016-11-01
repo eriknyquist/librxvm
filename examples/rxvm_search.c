@@ -25,8 +25,10 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
+#ifndef NOEXTRAS
     /* print the compiled expression (VM instructions) */
     rxvm_print(&compiled);
+#endif /* NOEXTRAS */
 
     /* Check if input string matches expression */
     if (rxvm_search(&compiled, argv[2], &start, &end, 0)) {

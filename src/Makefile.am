@@ -5,6 +5,12 @@ rxvminclude_HEADERS = lex.h rxvm_common.h rxvm_err.h rxvm.h \
 
 lib_LIBRARIES = librxvm.a
 librxvm_a_SOURCES = stack.c lex.c stage1.c stage2.c vm.c rxvm.c vmcode.c \
-					   randinput.c string_builder.c setop.c
+					   string_builder.c setop.c
 
 AM_CFLAGS =-W -pedantic
+
+if NOEXTRAS
+AM_CFLAGS += -DNOEXTRAS
+else
+librxvm_a_SOURCES += randinput.c
+endif

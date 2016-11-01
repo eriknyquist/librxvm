@@ -70,26 +70,6 @@ char getchar_str (void *data)
     return *(*input)++;
 }
 
-char getchar_file (void *data)
-{
-    size_t num;
-    FILE *fp;
-
-    fp = (FILE *)data;
-
-    if (bufpos == FBUF_SIZE) {
-        bufpos = 0;
-        num = fread(fbuf, sizeof(char), FBUF_SIZE, fp);
-        fpos = *charcp + FBUF_SIZE;
-
-        if (num < FBUF_SIZE) {
-            fbuf[num] = EOF;
-        }
-    }
-
-    return fbuf[bufpos++];
-}
-
 static int simple_match (threads_t *tm, char *simple)
 {
     char _c;
@@ -113,54 +93,6 @@ static int simple_match (threads_t *tm, char *simple)
 
     tm->match_end = tm->chars + 1;
     return 1;
-}
-
-int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
-                  int flags)
-{
-    threads_t tm;
-    int ret;
-    long int seek_size;
-    char file_buffer[FBUF_SIZE];
-
-    if (!compiled || !fp) return RXVM_EPARAM;
-
-    memset(&tm, 0, sizeof(threads_t));
-    tm.getchar = getchar_file;
-    tm.getchar_data = fp;
-    tm.endchar = EOF;
-
-    fbuf = file_buffer;
-    bufpos = FBUF_SIZE - 1;
-    *match_size = 0;
-    tm.icase = (flags & RXVM_ICASE);
-    tm.nongreedy = (flags & RXVM_NONGREEDY);
-    tm.multiline = (flags & RXVM_MULTILINE);
-    charcp = &tm.chars;
-
-    ret = 0;
-    if (compiled->simple) {
-        while (!simple_match(&tm, compiled->simple));
-    } else {
-        if ((ret = vm_init(&tm, compiled->size)) != 0)
-            goto cleanup;
-
-        while (vm_execute(&tm, compiled) && tm.match_end == 0);
-    }
-
-    if (tm.match_end) {
-        if (match_size) {
-            *match_size = (tm.match_end - tm.match_start) - 1;
-        }
-
-        seek_size = ((tm.match_start + 1) - fpos) - 1;
-        fseek(fp, seek_size, SEEK_CUR);
-        ret = 1;
-    }
-
-cleanup:
-    vm_cleanup(&tm);
-    return ret;
 }
 
 int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
@@ -248,6 +180,75 @@ cleanup:
     return ret;
 }
 
+#ifndef NOEXTRAS
+static char getchar_file (void *data)
+{
+    size_t num;
+    FILE *fp;
+
+    fp = (FILE *)data;
+
+    if (bufpos == FBUF_SIZE) {
+        bufpos = 0;
+        num = fread(fbuf, sizeof(char), FBUF_SIZE, fp);
+        fpos = *charcp + FBUF_SIZE;
+
+        if (num < FBUF_SIZE) {
+            fbuf[num] = EOF;
+        }
+    }
+
+    return fbuf[bufpos++];
+}
+
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
+                  int flags)
+{
+    threads_t tm;
+    int ret;
+    long int seek_size;
+    char file_buffer[FBUF_SIZE];
+
+    if (!compiled || !fp) return RXVM_EPARAM;
+
+    memset(&tm, 0, sizeof(threads_t));
+    tm.getchar = getchar_file;
+    tm.getchar_data = fp;
+    tm.endchar = EOF;
+
+    fbuf = file_buffer;
+    bufpos = FBUF_SIZE - 1;
+    *match_size = 0;
+    tm.icase = (flags & RXVM_ICASE);
+    tm.nongreedy = (flags & RXVM_NONGREEDY);
+    tm.multiline = (flags & RXVM_MULTILINE);
+    charcp = &tm.chars;
+
+    ret = 0;
+    if (compiled->simple) {
+        while (!simple_match(&tm, compiled->simple));
+    } else {
+        if ((ret = vm_init(&tm, compiled->size)) != 0)
+            goto cleanup;
+
+        while (vm_execute(&tm, compiled) && tm.match_end == 0);
+    }
+
+    if (tm.match_end) {
+        if (match_size) {
+            *match_size = (tm.match_end - tm.match_start) - 1;
+        }
+
+        seek_size = ((tm.match_start + 1) - fpos) - 1;
+        fseek(fp, seek_size, SEEK_CUR);
+        ret = 1;
+    }
+
+cleanup:
+    vm_cleanup(&tm);
+    return ret;
+}
+
 void rxvm_print (rxvm_t *compiled)
 {
     unsigned int i;
@@ -291,6 +292,7 @@ void rxvm_print (rxvm_t *compiled)
         }
     }
 }
+#endif /* NOEXTRAS */
 
 void rxvm_free (rxvm_t *compiled)
 {

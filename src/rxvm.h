@@ -48,14 +48,16 @@ struct rxvm_gencfg {
     uint64_t limit;
 };
 
-char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);
 int rxvm_compile (rxvm_t *compiled, char *exp);
 int rxvm_match   (rxvm_t *compiled, char *input, int flags);
-int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
 int rxvm_search  (rxvm_t *compiled, char *input, char **start, char **end,
                   int flags);
 
 void rxvm_free   (rxvm_t *compiled);
+#ifndef NOEXTRAS
 void rxvm_print  (rxvm_t *compiled);
+char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
+#endif /* NOEXTRAS */
 
 #endif

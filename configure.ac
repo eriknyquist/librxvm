@@ -11,6 +11,13 @@ AC_PROG_CC
 AC_PROG_AWK
 AC_PROG_INSTALL
 
+AC_ARG_ENABLE([extras],
+[AS_HELP_STRING([--disable-extras], [exclude non-essential features
+(rxvm_fsearch, rxvm_gen)])],
+[extras=true],
+[extras=false])
+AM_CONDITIONAL([NOEXTRAS], [test x$extras = xtrue])
+
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h])
 
 AC_C_INLINE
