@@ -27,6 +27,7 @@
 #include "rxvm.h"
 #include "vm.h"
 
+#define VM_TABLE_SIZE(size) ((size * 2) + (sizeof(int) * size * 2))
 #define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
 
 int char_match (uint8_t icase, char a, char b)
@@ -81,14 +82,6 @@ static void add_thread_next (threads_t *tm, int val)
     add_thread(tm->np, tm->np_lookup, &tm->nsize, val);
 }
 
-static void vm_zero (threads_t *tm, unsigned int size)
-{
-    memset(tm->cp_lookup, 0, size);
-    memset(tm->np_lookup, 0, size);
-    memset(tm->cp, 0, sizeof(int) * size);
-    memset(tm->np, 0, sizeof(int) * size);
-}
-
 int vm_execute (threads_t *tm, rxvm_t *compiled)
 {
     char C;
@@ -101,8 +94,8 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     tm->nsize = 0;
     tm->csize = 0;
 
+    memset(tm->table_base, 0, VM_TABLE_SIZE(compiled->size));
     tm->match_start = tm->chars;
-    vm_zero(tm, compiled->size);
     add_thread_curr(tm, 0);
 
     do {
@@ -190,29 +183,19 @@ int vm_init (threads_t *tm, unsigned int size)
     tm->lastinput = 0;
     tm->chars = 0;
 
-    if ((tm->cp = malloc(size * sizeof(int))) == NULL)
+    if ((tm->table_base = (uint8_t *)malloc(VM_TABLE_SIZE(size))) == NULL)
         return RXVM_EMEM;
 
-    if ((tm->np = malloc(size * sizeof(int))) == NULL)
-        return RXVM_EMEM;
-
-    if ((tm->cp_lookup = malloc(size)) == NULL)
-        return RXVM_EMEM;
-
-    if ((tm->np_lookup = malloc(size)) == NULL)
-        return RXVM_EMEM;
+    tm->cp = (int *)tm->table_base;
+    tm->np = (int *)(tm->table_base + (sizeof(int) * size));
+    tm->cp_lookup = tm->table_base + (sizeof(int) * size * 2);
+    tm->np_lookup = tm->table_base + (sizeof(int) * size * 2) + size;
 
     return 0;
 }
 
 void vm_cleanup(threads_t *tm)
 {
-    if (tm->cp)
-        free(tm->cp);
-    if (tm->np)
-        free(tm->np);
-    if (tm->cp_lookup)
-        free(tm->cp_lookup);
-    if (tm->np_lookup)
-        free(tm->np_lookup);
+    if (tm->table_base)
+        free(tm->table_base);
 }

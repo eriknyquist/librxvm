@@ -34,6 +34,7 @@ struct threads {
     int *np;                /* Threads for next input char. */
     uint8_t *cp_lookup;     /* Lookup table for current input char. */
     uint8_t *np_lookup;     /* Lookup table for next input char. */
+    uint8_t *table_base;    /* Base address for memory area containing tables */
     char (*getchar)(void*); /* Ptr to function for getting next input char */
     void *getchar_data;     /* Data for getchar function */
     char endchar;           /* The char that signals the end of input */
