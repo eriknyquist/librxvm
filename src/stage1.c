@@ -494,6 +494,7 @@ int stage1 (char *input, stack_t **ret)
 
     if (state == STATE_CHARC) {
         stage1_err_cleanup(cp);
+        free(cp->strb.buf);
         return RXVM_ECLASS;
     } else if (cp->parens->head != cp->parens->tail) {
         stage1_err_cleanup(cp);
