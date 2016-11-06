@@ -44,8 +44,8 @@ static unsigned int choice (unsigned int prob)
 
 char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
 {
-    inst_t **exe;
-    inst_t *inst;
+    inst_t *exe;
+    inst_t inst;
     char *ret;
     char rand;
     size_t size;
@@ -78,10 +78,10 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
 
     exe = compiled->exe;
     inst = exe[ip];
-    while (inst->op != OP_MATCH) {
-        switch (inst->op) {
+    while (inst.op != OP_MATCH) {
+        switch (inst.op) {
             case OP_CHAR:
-                if (strb_addc(&strb, inst->c) < 0) return NULL;
+                if (strb_addc(&strb, inst.c) < 0) return NULL;
                 ++ip;
             break;
             case OP_ANY:
@@ -103,23 +103,23 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
                 ++ip;
             break;
             case OP_EOL:
-                if (compiled->size > ip && (exe[ip + 1] != OP_CHAR
-                            || exe[ip + 1]->c != '\n')) {
+                if (compiled->size > ip && (exe[ip + 1].op != OP_CHAR
+                            || exe[ip + 1].c != '\n')) {
                     if (strb_addc(&strb, '\n') < 0) return NULL;
                 }
                 ++ip;
             break;
             case OP_CLASS:
-                ix = rand_range(0, strlen(inst->ccs) - 1);
-                if (strb_addc(&strb, inst->ccs[ix]) < 0) return NULL;
+                ix = rand_range(0, strlen(inst.ccs) - 1);
+                if (strb_addc(&strb, inst.ccs[ix]) < 0) return NULL;
                 ++ip;
             break;
             case OP_BRANCH:
                 val = (strb.size >= limit) ? 0 : generosity;
-                ip = (choice(val)) ? inst->x : inst->y;
+                ip = (choice(val)) ? inst.x : inst.y;
             break;
             case OP_JMP:
-                ip = inst->x;
+                ip = inst.x;
             break;
         }
 

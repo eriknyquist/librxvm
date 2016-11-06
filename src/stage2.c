@@ -29,7 +29,7 @@
 static void optimise_chain (rxvm_t *cmp, int *chain, int *lookup,
                             int ix)
 {
-    inst_t *inst;
+    inst_t inst;
     int end;
     int j;
     int chained;
@@ -41,21 +41,21 @@ static void optimise_chain (rxvm_t *cmp, int *chain, int *lookup,
 
     /* Follow the chain of jmp instructions,
      * saving the index of each of one in 'chain' */
-    while (inst->op == OP_JMP) {
-        if (cmp->exe[inst->x]->op == OP_JMP) {
-            chain[chained++] = inst->x;
-            lookup[inst->x] = 1;
+    while (inst.op == OP_JMP) {
+        if (cmp->exe[inst.x].op == OP_JMP) {
+            chain[chained++] = inst.x;
+            lookup[inst.x] = 1;
         }
 
-        inst = cmp->exe[inst->x];
+        inst = cmp->exe[inst.x];
     }
 
     /* Get the 'x' value of the last saved jmp */
-    end = cmp->exe[chain[chained - 1]]->x;
+    end = cmp->exe[chain[chained - 1]].x;
 
     /* Apply the same 'x' value to all saved jmps */
     for (j = 0; j < chained; ++j) {
-        cmp->exe[chain[j]]->x = end;
+        cmp->exe[chain[j]].x = end;
     }
 }
 
@@ -64,7 +64,7 @@ static int optimise_chains (rxvm_t *cmp)
     unsigned int i;
     int *chain;
     int *lookup;
-    inst_t *inst;
+    inst_t inst;
 
     if ((chain = malloc(sizeof(int) * cmp->size)) == NULL) {
         return RXVM_EMEM;
@@ -82,8 +82,8 @@ static int optimise_chains (rxvm_t *cmp)
         inst = cmp->exe[i];
 
         /* If this instruction is the start of a jmp chain ... */
-        if (inst->op == OP_JMP &&
-                cmp->exe[inst->x]->op == OP_JMP && !lookup[i]) {
+        if (inst.op == OP_JMP &&
+                cmp->exe[inst.x].op == OP_JMP && !lookup[i]) {
             /* optimise it. */
             optimise_chain(cmp, chain, lookup, i);
         }
@@ -102,7 +102,7 @@ int stage2 (stack_t *ir, rxvm_t *ret)
     int i, err;
 
     /* array to hold pointers to the already-allocated instructions */
-    if ((ret->exe = malloc(sizeof(inst_t *) * ir->size)) == NULL)
+    if ((ret->exe = malloc(sizeof(inst_t) * ir->size)) == NULL)
         return RXVM_EMEM;
 
     err = 0;
@@ -123,7 +123,8 @@ int stage2 (stack_t *ir, rxvm_t *ret)
 
         /* copy instruction pointer into array
          * and free list item struct. */
-        ret->exe[i] = inst;
+        memcpy(&ret->exe[i], inst, sizeof(inst_t));
+        free(item->data);
         free(item);
         item = next;
     }

@@ -89,7 +89,7 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     int ii;
     int *dtemp;
     uint8_t *ltemp;
-    inst_t *ip;
+    inst_t inst;
 
     tm->nsize = 0;
     tm->csize = 0;
@@ -111,11 +111,11 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
         /* run all the threads for this input character */
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
-            ip = compiled->exe[ii]; /* pointer to instruction data */
+            inst = compiled->exe[ii]; /* pointer to instruction data */
 
-            switch (ip->op) {
+            switch (inst.op) {
                 case OP_CHAR:
-                    if (char_match(tm->icase, C, ip->c)) {
+                    if (char_match(tm->icase, C, inst.c)) {
                         add_thread_next(tm, ii + 1);
                     }
 
@@ -136,17 +136,17 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
 
                 break;
                 case OP_CLASS:
-                    if (ccs_match(tm->icase, ip->ccs, C)) {
+                    if (ccs_match(tm->icase, inst.ccs, C)) {
                         add_thread_next(tm, ii + 1);
                     }
 
                 break;
                 case OP_BRANCH:
-                    add_thread_curr(tm, ip->x);
-                    add_thread_curr(tm, ip->y);
+                    add_thread_curr(tm, inst.x);
+                    add_thread_curr(tm, inst.y);
                 break;
                 case OP_JMP:
-                    add_thread_curr(tm, ip->x);
+                    add_thread_curr(tm, inst.x);
                 break;
                 case OP_MATCH:
                     tm->match_end = tm->chars;

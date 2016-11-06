@@ -252,7 +252,7 @@ cleanup:
 void rxvm_print (rxvm_t *compiled)
 {
     unsigned int i;
-    inst_t *inst;
+    inst_t inst;
 
     if (!compiled) return;
 
@@ -264,9 +264,9 @@ void rxvm_print (rxvm_t *compiled)
     for (i = 0; i < compiled->size; i++) {
         inst = compiled->exe[i];
 
-        switch(inst->op) {
+        switch(inst.op) {
             case OP_CHAR:
-                printf("%d\tchar %c\n", i, inst->c);
+                printf("%d\tchar %c\n", i, inst.c);
             break;
             case OP_ANY:
                 printf("%d\tany\n", i);
@@ -278,13 +278,13 @@ void rxvm_print (rxvm_t *compiled)
                 printf("%d\teol\n", i);
             break;
             case OP_CLASS:
-                printf("%d\tclass %s\n", i, inst->ccs);
+                printf("%d\tclass %s\n", i, inst.ccs);
             break;
             case OP_BRANCH:
-                printf("%d\tbranch %d %d\n", i, inst->x, inst->y);
+                printf("%d\tbranch %d %d\n", i, inst.x, inst.y);
             break;
             case OP_JMP:
-                printf("%d\tjmp %d\n", i, inst->x);
+                printf("%d\tjmp %d\n", i, inst.x);
             break;
             case OP_MATCH:
                 printf("%d\tmatch\n", i);
@@ -297,7 +297,6 @@ void rxvm_print (rxvm_t *compiled)
 void rxvm_free (rxvm_t *compiled)
 {
     unsigned int i;
-    inst_t *inst;
 
     if (!compiled) return;
 
@@ -309,12 +308,8 @@ void rxvm_free (rxvm_t *compiled)
     }
 
     for (i = 0; i < compiled->size; i++) {
-        inst = compiled->exe[i];
-
-        if (inst->ccs != NULL)
-            free(inst->ccs);
-
-        free(inst);
+        if (compiled->exe[i].ccs != NULL)
+            free(compiled->exe[i].ccs);
     }
 
     free(compiled->exe);

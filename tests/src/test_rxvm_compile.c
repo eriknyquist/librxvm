@@ -261,7 +261,7 @@ int cmpexe (char *str, rxvm_t *prog)
     inst_t *inst;
 
     for (i = 0; i < prog->size; i++) {
-        inst = prog->exe[i];
+        inst = &prog->exe[i];
 
         if (!*str)
             return 1;
@@ -349,7 +349,7 @@ void print_prog_cmp (rxvm_t *compiled, int err)
     inst_t *inst;
 
     for (i = 0; i < compiled->size; i++) {
-        inst = compiled->exe[i];
+        inst = &compiled->exe[i];
 
         switch(inst->op) {
             case OP_CHAR:

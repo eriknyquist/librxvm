@@ -63,7 +63,7 @@ void rxvm_print_oneline (rxvm_t *compiled)
     inst_t *inst;
 
     for (i = 0; i < compiled->size; i++) {
-        inst = compiled->exe[i];
+        inst = &compiled->exe[i];
 
         switch(inst->op) {
             case OP_CHAR:

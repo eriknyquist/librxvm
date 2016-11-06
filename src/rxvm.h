@@ -35,7 +35,7 @@ typedef struct rxvm_gencfg rxvm_gencfg_t;
 typedef struct rxvm rxvm_t;
 
 struct rxvm {
-    inst_t **exe;
+    inst_t *exe;
     unsigned int size;
     char *simple;
 };
