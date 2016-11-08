@@ -66,17 +66,12 @@ static int optimise_chains (rxvm_t *cmp)
     int *lookup;
     inst_t inst;
 
-    if ((chain = malloc(sizeof(int) * cmp->size)) == NULL) {
+    if ((chain = malloc(sizeof(int) * cmp->size * 2)) == NULL) {
         return RXVM_EMEM;
     }
 
-    if ((lookup = malloc(sizeof(int) * cmp->size)) == NULL) {
-        free(chain);
-        return RXVM_EMEM;
-    }
-
-    memset(chain, 0, sizeof(int) * cmp->size);
-    memset(lookup, 0, sizeof(int) * cmp->size);
+    memset(chain, 0, sizeof(int) * cmp->size * 2);
+    lookup = chain + cmp->size;
 
     for (i = 0; i < (cmp->size - 1); ++i) {
         inst = cmp->exe[i];
@@ -90,7 +85,6 @@ static int optimise_chains (rxvm_t *cmp)
     }
 
     free(chain);
-    free(lookup);
     return 0;
 }
 
