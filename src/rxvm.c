@@ -206,7 +206,9 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 {
     threads_t tm;
     int ret;
-    long int seek_size;
+    uint64_t msize;
+    uint64_t start;
+    uint64_t seek_size;
     char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
@@ -218,11 +220,11 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 
     fbuf = file_buffer;
     bufpos = FBUF_SIZE;
-    *match_size = 0;
     tm.icase = (flags & RXVM_ICASE);
     tm.nongreedy = (flags & RXVM_NONGREEDY);
     tm.multiline = (flags & RXVM_MULTILINE);
     charcp = &tm.chars;
+    start = fpos;
 
     ret = 0;
     if (compiled->simple) {
@@ -235,12 +237,13 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     }
 
     if (tm.match_end) {
-        if (match_size) {
-            *match_size = (tm.match_end - tm.match_start) - 1;
-        }
+        msize = tm.match_end - tm.match_start - 1;
+        seek_size = (start + tm.chars) - msize - 1;
 
-        seek_size = ((tm.match_start + 1) - fpos) - 1;
-        fseek(fp, seek_size, SEEK_CUR);
+        if (match_size) *match_size = msize;
+
+        fseek(fp, seek_size, SEEK_SET);
+        fpos = seek_size + msize;
         ret = 1;
     }
 

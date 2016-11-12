@@ -15,7 +15,7 @@ static char *get_matching_text (FILE *fp, uint64_t size)
         return NULL;
     }
 
-    if (fread(ret, sizeof(char), size, fp) != (sizeof(char) * size)) {
+    if (fread(ret, sizeof(char), size, fp) != size) {
         return NULL;
     }
 
