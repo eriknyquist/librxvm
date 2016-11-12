@@ -28,12 +28,6 @@
 #include "vm.h"
 
 #define VM_TABLE_SIZE(size) ((size * 2) + (sizeof(int) * size * 2))
-#define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
-
-int char_match (uint8_t icase, char a, char b)
-{
-    return (icase) ? tolower(a) == tolower(b) : a == b;
-}
 
 static int ccs_match (uint8_t icase, char *ccs, char c)
 {

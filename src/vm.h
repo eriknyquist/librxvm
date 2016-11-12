@@ -24,6 +24,9 @@
 #ifndef VM_H_
 #define VM_H_
 
+#define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
+#define char_match(icase, a, b) ((icase) ? tolower(a) == tolower(b) : a == b)
+
 typedef struct threads threads_t;
 
 struct threads {
@@ -51,6 +54,5 @@ struct threads {
 int vm_init (threads_t *tm, unsigned int size);
 int vm_execute (threads_t *tm, rxvm_t *compiled);
 void vm_cleanup (threads_t *tm);
-int char_match (uint8_t icase, char a, char b);
 
 #endif
