@@ -238,7 +238,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 
     if (tm.match_end) {
         msize = tm.match_end - tm.match_start - 1;
-        seek_size = (start + tm.chars) - msize - 1;
+        seek_size = (start + tm.chars) - msize - (compiled->simple == NULL);
 
         if (match_size) *match_size = msize;
 
