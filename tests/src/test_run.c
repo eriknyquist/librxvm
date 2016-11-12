@@ -7,6 +7,9 @@
 //#define NUM_MODS          7
 #define NUM_MODS          6
 
+FILE *logfp;
+FILE *trsfp;
+
 const testmod_t mods[NUM_MODS] = {
     test_rxvm_err, test_rxvm_match, test_rxvm_search,
     test_rxvm_search_nomatch, test_rxvm_compile, test_fuzz_rxvm_match,
@@ -23,12 +26,24 @@ int main (void)
     count = 1;
     ret = 0;
 
-    printf("1..%d\n", NUM_TESTS);
+    if ((trsfp = fopen(TEST_TRS, "w")) == NULL) {
+        printf("Unable to open file "TEST_TRS" for writing\n");
+        return 1;
+    }
+
+    if ((logfp = fopen(TEST_LOG, "w")) == NULL) {
+        printf("Unable to open file "TEST_LOG" for writing\n");
+        return 1;
+    }
+
+    fprintf(logfp, "librxvm test suite\n%d tests in total\n", NUM_TESTS);
     /* Run all test modules */
     for (i = 0; i < NUM_MODS; ++i) {
         module = mods[i];
         ret += (*module)(&count);
     }
 
+    fclose(logfp);
+    fclose(trsfp);
 	return ret;
 }

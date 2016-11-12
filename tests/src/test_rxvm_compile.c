@@ -322,28 +322,28 @@ int cmpexe (char *str, rxvm_t *prog)
     return (*str) ? i : 0;
 }
 
-void print_prog_str (char *str, int err)
+void print_prog_str (FILE *fp, char *str, int err)
 {
     int i;
 
     i = 1;
 
-    printf("0\t");
+    fprintf(fp, "0\t");
     while(*str) {
         if (*str == ':') {
             if (err == i) {
-                printf(" <----");
+                fprintf(fp, " <----");
             }
-            printf("\n%d\t", i++);
+            fprintf(fp, "\n%d\t", i++);
         } else {
-            printf("%c", *str);
+            fprintf(fp, "%c", *str);
         }
         ++str;
     }
-    printf("\n");
+    fprintf(fp, "\n");
 }
 
-void print_prog_cmp (rxvm_t *compiled, int err)
+void print_prog_cmp (FILE *fp,  rxvm_t *compiled, int err)
 {
     int i;
     inst_t *inst;
@@ -353,30 +353,30 @@ void print_prog_cmp (rxvm_t *compiled, int err)
 
         switch(inst->op) {
             case OP_CHAR:
-                printf("%d\tchar %c", i, inst->c);
+                fprintf(fp, "%d\tchar %c", i, inst->c);
             break;
             case OP_ANY:
-                printf("%d\tany", i);
+                fprintf(fp, "%d\tany", i);
             break;
             case OP_CLASS:
-                printf("%d\tclass %s", i, inst->ccs);
+                fprintf(fp, "%d\tclass %s", i, inst->ccs);
             break;
             case OP_BRANCH:
-                printf("%d\tbranch %d %d", i, inst->x, inst->y);
+                fprintf(fp, "%d\tbranch %d %d", i, inst->x, inst->y);
             break;
             case OP_JMP:
-                printf("%d\tjmp %d", i, inst->x);
+                fprintf(fp, "%d\tjmp %d", i, inst->x);
             break;
             case OP_MATCH:
-                printf("%d\tmatch", i);
+                fprintf(fp, "%d\tmatch", i);
             break;
         }
 
         if ((i + 1) == err)
-            printf(" <----");
-        printf("\n");
+            fprintf(fp, " <----");
+        fprintf(fp, "\n");
     }
-    printf("\n");
+    fprintf(fp, "\n");
 }
 
 int verify_rxvm_cmp (char *expected, char *regex)
@@ -389,11 +389,11 @@ int verify_rxvm_cmp (char *expected, char *regex)
         return ret;
 
     if ((err = cmpexe(expected, &compiled)) != 0) {
-        fprintf(stderr, "\nFail: instructions do not match expected\n");
-        printf("\nexpected:\n\n");
-        print_prog_str(expected, err);
-        printf("\nseen:\n\n");
-        print_prog_cmp(&compiled, err);
+        fprintf(logfp, "\nFail: instructions do not match expected\n");
+        fprintf(logfp, "\nexpected:\n\n");
+        print_prog_str(logfp, expected, err);
+        fprintf(logfp, "\nseen:\n\n");
+        print_prog_cmp(logfp, &compiled, err);
         ret = 1;
     } else {
         ret = 0;
@@ -414,12 +414,12 @@ int test_rxvm_compile (int *count)
     for (i = 0; i < NUM_TESTS_COMPILE; ++i) {
         if ((err = verify_rxvm_cmp(cmp_tests[i]->cmp, cmp_tests[i]->rgx))) {
             ret += err;
-            msg = "not ok";
+            msg = "FAIL";
         } else {
-            msg = "ok";
+            msg = "PASS";
         }
 
-        printf("%s %d %s\n", msg, *count, __func__);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
         ++(*count);
     }
 

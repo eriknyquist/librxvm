@@ -129,24 +129,11 @@ int compile_testexp (rxvm_t *compiled, char *exp)
 
 void test_err (char *regex, char *input, const char *test, char *msg, int ret)
 {
-    FILE *fp;
-    uint8_t file;
-    char buf[80];
-
-    snprintf(buf, sizeof(buf), "%s.err", test);
-    if ((fp = fopen(buf, "a")) == NULL) {
-        fp = stdout;
-        file = 0;
-        fprintf(fp, "Error opening log file %s: printing to stdout", buf);
-    } else {
-        file = 1;
-    }
-
-    fprintf(fp, "reason for failure : %s\n", msg);
-    fprintf(fp, "         exit code : %d\n", ret);
-    fprintf(fp, "        expression : %s\n", regex);
-    fprintf(fp, "        input text : %s\n\n", input);
-    if (file) fclose(fp);
+    fprintf(logfp, "          test set : %s\n", test);
+    fprintf(logfp, "reason for failure : %s\n", msg);
+    fprintf(logfp, "         exit code : %d\n", ret);
+    fprintf(logfp, "        expression : %s\n", regex);
+    fprintf(logfp, "        input text : %s\n\n", input);
 }
 
 char *hrsize (uint64_t size)

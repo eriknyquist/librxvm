@@ -27,16 +27,16 @@ int test_rxvm_search_nomatch (int *count)
         input = nomatch_tests[i][1];
 
         if ((err = compile_testexp(&compiled, regex)) < 0) {
-            printf("Error compiling regex %s\n", regex);
+            fprintf(logfp, "Error compiling regex %s\n", regex);
             ++ret;
         } else {
             if (rxvm_search(&compiled, input, &start, &end, 0)) {
-                printf("Error- input %s wrongly reported as containing match "
+                fprintf(logfp, "Error- input %s wrongly reported as containing match "
                        "to expression %s\n", input, regex);
                 ++ret;
             } else {
                 if (start != NULL || end != NULL) {
-                    printf("Error- start and end pointers are not NULL after "
+                    fprintf(logfp, "Error- start and end pointers are not NULL after "
                            "no match for expression %s was found in input "
                            "%s.\n", regex, input);
                     ++ret;
@@ -46,8 +46,8 @@ int test_rxvm_search_nomatch (int *count)
             rxvm_free(&compiled);
         }
 
-        msg = (ret) ? "not ok" : "ok";
-        printf("%s %d %s\n", msg, *count, __func__);
+        msg = (ret) ? "FAIL" : "PASS";
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
         ++(*count);
     }
 

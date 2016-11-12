@@ -52,25 +52,25 @@ int test_rxvm_search (int *count)
     ret = 0;
     for (i = 0; i < NUM_TESTS_ITER; ++i) {
         if ((err = compile_testexp(&compiled, iter_tests[i][0])) < 0) {
-            printf("Error compiling regex %s\n", iter_tests[i][0]);
+            fprintf(logfp, "Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;
         } else {
             if (rxvm_search(&compiled, iter_tests[i][1], &start, &end, 0)) {
                 if (substring_match(iter_tests[i][2], start, end)) {
                 } else {
-                    printf("Error matching regex %s\n", iter_tests[i][0]);
-                    printf("Expecting \"%s\", but substring pointers show \"",
+                    fprintf(logfp, "Error matching regex %s\n", iter_tests[i][0]);
+                    fprintf(logfp, "Expecting \"%s\", but substring pointers show \"",
                            iter_tests[i][2]);
                     while (start != end) {
-                        printf("%c", *start);
+                        fprintf(logfp, "%c", *start);
                         ++start;
                     }
-                    printf("\"\n");
+                    fprintf(logfp, "\"\n");
                     ++ret;
                 }
             } else {
-                printf("Error matching regex %s\n", iter_tests[i][0]);
-                printf("Matching input %s falsely reported non-matching\n",
+                fprintf(logfp, "Error matching regex %s\n", iter_tests[i][0]);
+                fprintf(logfp, "Matching input %s falsely reported non-matching\n",
                        iter_tests[i][1]);
                 ++ret;
             }
@@ -78,8 +78,8 @@ int test_rxvm_search (int *count)
             rxvm_free(&compiled);
         }
 
-        msg = (ret) ? "not ok" : "ok";
-        printf("%s %d %s\n", msg, *count, __func__);
+        msg = (ret) ? "FAIL" : "PASS";
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
         ++(*count);
     }
 

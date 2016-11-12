@@ -124,7 +124,7 @@ int test_rxvm_match (int *count)
     test_err = 0;
     for (i = 0; i < NUM_TESTS_MATCH; ++i) {
         if ((ret = compile_testexp(&compiled, tests[i][0])) < 0) {
-            fprintf(stderr, "Error: compilation failed (%d): %s\n",
+            fprintf(logfp, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
             return ret;
         }
@@ -132,7 +132,7 @@ int test_rxvm_match (int *count)
         /* matching input */
         for (j = 1; j <= NUMVARIATIONS; ++j) {
             if (tests[i][j] && !rxvm_match(&compiled, tests[i][j], 0)) {
-                fprintf(stderr, "Error: matching input %s against expression "
+                fprintf(logfp, "Error: matching input %s against expression "
                         "%s falsely reports non-matching input\n", tests[i][j],
                         tests[i][0]);
                 ++test_err;
@@ -142,7 +142,7 @@ int test_rxvm_match (int *count)
         /* non-matching input */
         for (j = NUMVARIATIONS + 1; j <= (NUMVARIATIONS * 2); ++j) {
             if (tests[i][j] && rxvm_match(&compiled, tests[i][j], 0)) {
-                fprintf(stderr, "Error: non-matching input %s against "
+                fprintf(logfp, "Error: non-matching input %s against "
                         "expression %s falsely reports matching input\n",
                         tests[i][j], tests[i][0]);
                 ++test_err;
@@ -152,14 +152,14 @@ int test_rxvm_match (int *count)
         rxvm_free(&compiled);
 
         if (test_err) {
-            msg = "not ok";
+            msg = "FAIL";
             total_err += test_err;
             test_err = 0;
         } else {
-            msg = "ok";
+            msg = "PASS";
         }
 
-        printf("%s %d %s\n", msg, *count, __func__);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
         ++(*count);
     }
 

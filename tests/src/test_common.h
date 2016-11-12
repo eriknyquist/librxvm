@@ -3,6 +3,8 @@
 
 #include "string_builder.h"
 
+#define TEST_TRS                   "rxvm_test.trs"
+#define TEST_LOG                   "rxvm_test.log"
 #define NUM_TESTS_COMPILE          18
 #define NUM_TESTS_ERR              31
 #define NUM_TESTS_ITER             19
@@ -12,8 +14,8 @@
 #define NUM_TESTS_FUZZ_FULL_MATCH  10
 
 #define NUM_TESTS              (NUM_TESTS_COMPILE + NUM_TESTS_MATCH + \
-                                NUM_TESTS_ITER + NUM_TESTS_ERR + \
-                                NUM_TESTS_FUZZ_MATCH)
+                                NUM_TESTS_NOMATCH + NUM_TESTS_ITER + \
+                                NUM_TESTS_ERR + NUM_TESTS_FUZZ_MATCH)
 #define EXABYTES                (1024ULL * 1024ULL * 1024ULL * 1024ULL * \
                                 1024ULL * 1024ULL)
 
@@ -40,5 +42,8 @@ void test_err (char *regex, char *input, const char *test, char *msg, int ret);
 void rxvm_print_oneline (rxvm_t *compiled);
 void rxvm_print_err (int err);
 char *hrsize (uint64_t size);
+
+extern FILE *logfp;
+extern FILE *trsfp;
 
 #endif

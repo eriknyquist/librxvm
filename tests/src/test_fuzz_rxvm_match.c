@@ -74,7 +74,7 @@ int test_fuzz_rxvm_match (int *count)
 
     ret = 0;
     total_size = 0;
-    msg = "ok";
+    msg = "PASS";
     srand(time(NULL));
 
     cfg.limit = RANDINPUT_LIMIT;
@@ -103,7 +103,7 @@ int test_fuzz_rxvm_match (int *count)
                 if (rxvm_match(&compiled, gen, 0)) {
                     ++passed;
                 } else {
-                    msg = "not ok";
+                    msg = "FAIL";
                     test_err(testexp[i], gen, __func__,
                             "input falsely reported as non-matching", 0);
                     ++failed;
@@ -120,14 +120,14 @@ end_iter:
         total_size += itersize;
         ret += failed;
         sizestr = hrsize(itersize);
-        printf("%s %d %s: %d failed, %d passed (out of %d), %s\n", msg, *count,
-                __func__, failed, passed, NUM_ITER, sizestr);
+        fprintf(trsfp, ":test-result: %s %s #%d: %d fail, %d pass (out of %d),"
+            "%s\n", msg, __func__, *count, failed, passed, NUM_ITER, sizestr);
         free(sizestr);
         ++(*count);
     }
 
     sizestr = hrsize(total_size);
-    printf("Total input data used for fuzzing: %s\n", sizestr);
+    fprintf(logfp, "Total input data used for fuzzing: %s\n", sizestr);
     free(sizestr);
     return ret;
 }

@@ -191,18 +191,18 @@ int test_rxvm_err (int *count)
     for (i = 0; i < NUM_TESTS_ERR; ++i) {
         test = err_tests[i];
         if ((err = compile_testexp(&compiled, test->rgx)) == test->err) {
-            msg = "ok";
+            msg = "PASS";
         } else {
-            fprintf(stderr, "On compilation of regex %s:\ngot return code %d,"
+            fprintf(logfp, "On compilation of regex %s:\ngot return code %d,"
                             " expecting %d\n", test->rgx, err, test->err);
-            msg = "not ok";
+            msg = "FAIL";
             ++ret;
         }
 
         if (err == 0)
                 rxvm_free(&compiled);
 
-        printf("%s %d %s\n", msg, *count, __func__);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
         ++(*count);
     }
 
