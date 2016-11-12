@@ -171,8 +171,6 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
 
 int vm_init (threads_t *tm, unsigned int size)
 {
-    tm->cp_lookup = tm->np_lookup = NULL;
-    tm->cp = tm->np = NULL;
     tm->match_start = tm->match_end = 0;
     tm->lastinput = 0;
     tm->chars = 0;
