@@ -30,6 +30,7 @@
 #define RXVM_ICASE           0x1
 #define RXVM_NONGREEDY       0x2
 #define RXVM_MULTILINE       0x4
+#define RXVM_SEARCH          0x8
 
 typedef struct rxvm_gencfg rxvm_gencfg_t;
 typedef struct rxvm rxvm_t;

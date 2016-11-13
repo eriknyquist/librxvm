@@ -113,6 +113,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
     tm.icase = (flags & RXVM_ICASE);
     tm.nongreedy = (flags & RXVM_NONGREEDY);
     tm.multiline = (flags & RXVM_MULTILINE);
+    tm.search = 1;
 
     ret = 0;
     if (compiled->simple) {
@@ -121,7 +122,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
 
-        while (vm_execute(&tm, compiled) && tm.match_end == 0);
+        vm_execute(&tm, compiled);
     }
 
     if (tm.match_end == 0) {
@@ -223,6 +224,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     tm.icase = (flags & RXVM_ICASE);
     tm.nongreedy = (flags & RXVM_NONGREEDY);
     tm.multiline = (flags & RXVM_MULTILINE);
+    tm.search = 1;
     charcp = &tm.chars;
     start = fpos;
 
@@ -233,7 +235,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
 
-        while (vm_execute(&tm, compiled) && tm.match_end == 0);
+        vm_execute(&tm, compiled);
     }
 
     if (tm.match_end) {

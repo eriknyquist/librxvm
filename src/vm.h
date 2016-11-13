@@ -49,6 +49,7 @@ struct threads {
     uint8_t icase;
     uint8_t nongreedy;
     uint8_t multiline;
+    uint8_t search;
 };
 
 int vm_init (threads_t *tm, unsigned int size);

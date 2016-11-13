@@ -89,6 +89,7 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     tm->csize = 0;
 
     memset(tm->table_base, 0, VM_TABLE_SIZE(compiled->size));
+start:
     tm->match_start = tm->chars;
     add_thread_curr(tm, 0);
 
@@ -96,7 +97,8 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
         /* if no threads are queued for this input character,
          * then the expression cannot match, so exit */
         if (!tm->csize) {
-            return 1;
+            if (!tm->search || tm->match_end) return 1;
+            else goto start;
         }
 
         C = (*tm->getchar)(tm->getchar_data);
@@ -149,21 +151,30 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
             }
         }
 
-        /* Threads saved for the next input character
-         * are now threads for the current character.
-         * Threads for the next character are empty again.*/
-        dtemp = tm->cp;
-        tm->cp = tm->np;
-        tm->np = dtemp;
-        tm->csize = tm->nsize;
-        tm->nsize = 0;
+        if (!tm->nsize && tm->csize == 1) {
+            /* If we've used no thread slots for the next character
+             * and only one for the current character (common case when
+             * searching through a file with many non-matching characters),
+             * then we can avoid the full swap and do this shorter version */
+            tm->cp_lookup[0] = 0;
+            tm->csize = 0;
+        } else {
+            /* Full swap. Threads saved for the next input character
+             * are now threads for the current character.
+             * Threads for the next character are empty again.*/
+            dtemp = tm->cp;
+            tm->cp = tm->np;
+            tm->np = dtemp;
+            tm->csize = tm->nsize;
+            tm->nsize = 0;
 
-        /* swap lookup tables */
-        ltemp = tm->cp_lookup;
-        tm->cp_lookup = tm->np_lookup;
-        tm->np_lookup = ltemp;
+            /* Swap lookup tables */
+            ltemp = tm->cp_lookup;
+            tm->cp_lookup = tm->np_lookup;
+            tm->np_lookup = ltemp;
+            memset(tm->np_lookup, 0, compiled->size);
+        }
 
-        memset(tm->np_lookup, 0, compiled->size);
         tm->lastinput = C;
     } while (C != tm->endchar);
     return 0;
