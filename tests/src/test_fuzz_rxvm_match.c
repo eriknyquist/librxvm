@@ -74,7 +74,6 @@ int test_fuzz_rxvm_match (int *count)
 
     ret = 0;
     total_size = 0;
-    msg = "PASS";
     srand(time(NULL));
 
     cfg.limit = RANDINPUT_LIMIT;
@@ -101,6 +100,7 @@ int test_fuzz_rxvm_match (int *count)
                 goto end_iter;
             } else {
                 if (rxvm_match(&compiled, gen, 0)) {
+                    msg = "PASS";
                     ++passed;
                 } else {
                     msg = "FAIL";
@@ -109,6 +109,7 @@ int test_fuzz_rxvm_match (int *count)
                     ++failed;
                 }
 
+                fprintf(trsfp, ":test-result: %s %s #%d.%d\n", msg, __func__, i, j);
                 itersize += strlen(gen);
                 fflush(stdout);
                 free(gen);
@@ -120,8 +121,7 @@ end_iter:
         total_size += itersize;
         ret += failed;
         sizestr = hrsize(itersize);
-        fprintf(trsfp, ":test-result: %s %s #%d: %d fail, %d pass (out of %d),"
-            "%s\n", msg, __func__, *count, failed, passed, NUM_ITER, sizestr);
+        fprintf(logfp, "%s #%d, %s of test data generated\n", __func__, i, sizestr);
         free(sizestr);
         ++(*count);
     }
