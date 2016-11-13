@@ -49,8 +49,8 @@ int test_rxvm_search (int *count)
     int err;
     int i;
 
-    ret = 0;
     for (i = 0; i < NUM_TESTS_ITER; ++i) {
+        ret = 0;
         if ((err = compile_testexp(&compiled, iter_tests[i][0])) < 0) {
             fprintf(logfp, "Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;

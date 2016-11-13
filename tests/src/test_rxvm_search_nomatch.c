@@ -21,8 +21,8 @@ int test_rxvm_search_nomatch (int *count)
     int err;
     int i;
 
-    ret = 0;
     for (i = 0; i < NUM_TESTS_NOMATCH; ++i) {
+        ret = 0;
         regex = nomatch_tests[i][0];
         input = nomatch_tests[i][1];
 

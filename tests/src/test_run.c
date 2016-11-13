@@ -45,5 +45,5 @@ int main (void)
 
     fclose(logfp);
     fclose(trsfp);
-	return ret;
+	return 0;
 }

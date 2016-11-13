@@ -121,8 +121,8 @@ int test_rxvm_match (int *count)
     int j;
 
     total_err = 0;
-    test_err = 0;
     for (i = 0; i < NUM_TESTS_MATCH; ++i) {
+        test_err = 0;
         if ((ret = compile_testexp(&compiled, tests[i][0])) < 0) {
             fprintf(logfp, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
