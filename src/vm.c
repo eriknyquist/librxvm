@@ -80,6 +80,7 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
 {
     char C;
     int t;
+    int i;
     int ii;
     int *dtemp;
     uint8_t *ltemp;
@@ -93,14 +94,7 @@ start:
     tm->match_start = tm->chars;
     add_thread_curr(tm, 0);
 
-    do {
-        /* if no threads are queued for this input character,
-         * then the expression cannot match, so exit */
-        if (!tm->csize) {
-            if (!tm->search || tm->match_end) return 1;
-            else goto start;
-        }
-
+    while (1) {
         C = (*tm->getchar)(tm->getchar_data);
         ++tm->chars;
 
@@ -151,13 +145,23 @@ start:
             }
         }
 
-        if (!tm->nsize && tm->csize == 1) {
+        if (C == tm->endchar) break;
+
+        if (!tm->nsize) {
             /* If we've used no thread slots for the next character
              * and only one for the current character (common case when
              * searching through a file with many non-matching characters),
              * then we can avoid the full swap and do this shorter version */
-            tm->cp_lookup[0] = 0;
+            if (!tm->search || tm->match_end) {
+                return 1;
+            }
+
+            for (i = 0; i < tm->csize; ++i) {
+                tm->cp_lookup[tm->cp[i]] = 0;
+            }
+
             tm->csize = 0;
+            goto start;
         } else {
             /* Full swap. Threads saved for the next input character
              * are now threads for the current character.
@@ -176,7 +180,8 @@ start:
         }
 
         tm->lastinput = C;
-    } while (C != tm->endchar);
+    }
+
     return 0;
 }
 
