@@ -35,7 +35,7 @@
 
 static char *fbuf;
 static int bufpos;
-static uint64_t fpos;
+static long fpos;
 static uint64_t *charcp;
 
 int rxvm_compile (rxvm_t *compiled, char *exp)
@@ -192,7 +192,7 @@ static char getchar_file (void *data)
     if (bufpos == FBUF_SIZE) {
         bufpos = 0;
         num = fread(fbuf, sizeof(char), FBUF_SIZE, fp);
-        fpos = *charcp + FBUF_SIZE;
+        fpos += FBUF_SIZE;
 
         if (num < FBUF_SIZE) {
             fbuf[num] = EOF;
@@ -213,6 +213,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
+    if ((fpos = ftell(fp)) == -1L) return RXVM_IOERR;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_file;

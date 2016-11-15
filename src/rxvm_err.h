@@ -37,4 +37,8 @@
 #define RXVM_EINVAL     -11  /* Invalid symbol */
 #define RXVM_EPARAM     -12  /* Invalid parameter passed to library function */
 
+#ifndef NOEXTRAS
+#define RXVM_IOERR      -13  /* rxvm_fsearch file I/O error  */
+#endif /* NOEXTRAS */
+
 #endif
