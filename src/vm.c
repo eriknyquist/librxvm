@@ -86,6 +86,7 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     uint8_t *ltemp;
     inst_t inst;
 
+    C = 0;
     tm->nsize = 0;
     tm->csize = 0;
 
@@ -95,6 +96,7 @@ start:
     add_thread_curr(tm, 0);
 
     while (1) {
+        tm->lastinput = C;
         C = (*tm->getchar)(tm->getchar_data);
         ++tm->chars;
 
@@ -178,8 +180,6 @@ start:
             tm->np_lookup = ltemp;
             memset(tm->np_lookup, 0, compiled->size);
         }
-
-        tm->lastinput = C;
     }
 
     return 0;
