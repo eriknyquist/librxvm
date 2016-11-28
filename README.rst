@@ -19,8 +19,9 @@ Installation
 
 **Dependencies:**
 
+#. GNU Make
 #. GNU Autotools
-#. A C compiler
+#. A C compiler (GCC, Clang)
 
 To install, do the usual stuff:
 ::
@@ -39,41 +40,86 @@ used, and then build them to try out some test expressions from your shell.
 
 |
 
-Building the examples
----------------------
 
-After running the main Makefile from the **Installation** section, the examples
-can be built like so:
+Example applications
+--------------------
+
+``rxvm_match``
+~~~~~~~~~~~~~~
+Accepts two arguments, a regular expression and an input
+string. Prints a message indicating if the input string matches the expression
+or not.
+
 ::
 
-    cd examples
-    make
+   $> rxvm_match
 
-Using the examples
-------------------
-::
+     Usage: rxvm_match <regex> <input>
 
-   $> ./rxvm_search
-
-     Usage: ./rxvm_search <regex> <input>
-
-   $>./rxvm_search "rx(vm)*" "UtrUygHIu_rxvmvmvm_llTRDrHIOIP"
-
-     Match!
-     Found matching substring:
-     rxvmvmvm
-
-   $> ./rxvm_search "rx(vm)*" "UtrUygHIu_rx_llTRDrHIOIP"
-
-     Match!
-     Found matching substring:
-     rx
-
-   $> ./rxvm_search "rx(vm)*" "UtrUygHIu_rxv_llTRDrHIOIP"
+   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxvm"
 
      No match.
 
-   $>
+   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxVMvmVM"
+
+     Match!
+
+``rxvm_search``
+~~~~~~~~~~~~~~~
+Accepts two arguments, a regular expression and an input
+string. Prints any instances of the regular expression that occur inside the
+input string.
+
+::
+
+   $> rxvm_search
+
+     Usage: rxvm_search <regex> <input>
+
+   $> rxvm_search "rx(vm)*" "------------rx---------"
+
+     Found match: rx
+
+   $> rxvm_search "rx(vm)*" "------rxvm-------rxvmvm----"
+
+     Found match: rxvm
+     Found match: rxvmvm
+
+``rxvm_fsearch``
+~~~~~~~~~~~~~~~~
+Accepts two arguments, a regular expression and a filename.
+Prints any instances of the regular expression that occur inside the file.
+
+::
+
+   $> rxvm_fsearch
+
+     Usage: rxvm_fsearch <regex> <filename>
+
+   $> echo "------rxvm-------rxvmvm----" > file.txt
+   $> rxvm_fsearch "rx(vm)*" file.txt
+
+     Found match: rxvm
+     Found match: rxvmvm
+
+``rxvm_gen``
+~~~~~~~~~~~~
+Accepts one argument, a regular expression. Generates a
+pseudo-random string which matches the expression.
+
+::
+
+   $> rxvm_gen
+
+     Usage: rxvm_gen <regex>
+
+   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+
+     rRrrRrrxvmm rxvmm rrRrrrRXVm Rrxvm rrRRrXVmm RXVmm
+
+   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+
+     Rxvm rrrxvmm RXVm RRxvmm
 
 |
 
@@ -83,6 +129,8 @@ Regular Expression Syntax
 A regular expression consists of ordinary characters and special characters.
 An ordinary character matches itself exactly (e.g. the expression ``abc``
 matches only the input string ``abc``).
+
+Full grammar rules can be seen `here <https://github.com/eriknyquist/regexvm/blob/master/tests/grammar.txt>`_.
 
 |
 
@@ -194,7 +242,7 @@ instructions into the ``rxvm_t`` type pointed to by ``compiled``.
 
    int rxvm_match (rxvm_t *compiled, char *input, int flags);
 
-Check if the string ``input`` matches the compiled expression ``compiled``
+Checks if the string ``input`` matches the compiled expression ``compiled``
 exactly.
 
 |
@@ -219,10 +267,9 @@ exactly.
 Searches the string starting at ``input`` for a pattern that matches the
 compiled regular expresssion ``compiled``, until a match is found or until the
 string's null termination character is reached. When a match is found,
-the pointers pointed to by ``start`` and ``end`` are populated with the
-locations within the input string where the matching portion starts and ends,
-respectively. If no match is found, then both ``start`` and ``end`` will be set
-to ``NULL``.
+the pointers pointed to by ``start`` and ``end`` are pointed at the first and
+last characters of the matching substring. If no match is found, then both
+``start`` and ``end`` are set to ``NULL``.
 
 |
 
@@ -284,8 +331,8 @@ Searches the file at ``fp`` (``fp`` must be initialised by the caller, e.g. via
 ``compiled``, from the current file position until EOF. If a match is found,
 the file pointer ``fp`` is re-positioned to the first character of the match,
 and ``match_size`` is populated with a positive integer representing the match
-size (number of characters). If no match is found, then ``match_end`` will be
-set to 0, and ``fp`` will remain positioned at EOF.
+size (number of characters). If no match is found, then ``match_end`` is set to
+0, and ``fp`` remains positioned at EOF.
 
 **Return value**
 
@@ -338,7 +385,7 @@ The ``rxvm_gencfg_t`` type provides some control over the randomness:
   terminating null-character).
 
 If a null pointer is passed instead of a valid pointer to a ``rxvm_gencfg_t``
-type, then default values will be used.
+type, then default values are used.
 
 **Return value**
 
