@@ -36,7 +36,7 @@ static int substring_match (char *string, char *start, char *end)
             return 0;
     }
 
-    return (start == end) ? 1 : 0;
+    return ((start - 1) == end) ? 1 : 0;
 }
 
 int test_rxvm_search (int *count)

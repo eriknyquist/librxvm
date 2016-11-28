@@ -6,8 +6,9 @@
 
 void print_substring (char *start, char *end)
 {
-    while (start != end) {
+    while (*start) {
         printf("%c", *start);
+        if (start == end) break;
         ++start;
     }
     printf("\n");

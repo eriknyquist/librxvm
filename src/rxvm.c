@@ -147,7 +147,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
         if (start)
             *start = sot + tm.match_start;
         if (end)
-            *end = sot + (tm.match_end - 1);
+            *end = sot + (tm.match_end - 2);
         ret = 1;
     }
 
