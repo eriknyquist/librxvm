@@ -91,7 +91,7 @@ int vm_execute (threads_t *tm, rxvm_t *compiled)
     tm->csize = 0;
 
     memset(tm->table_base, 0, VM_TABLE_SIZE(compiled->size));
-start:
+vm_start:
     tm->match_start = tm->chars;
     add_thread_curr(tm, 0);
 
@@ -100,6 +100,7 @@ start:
         C = (*tm->getchar)(tm->getchar_data);
         ++tm->chars;
 
+skip_readchar:
         /* run all the threads for this input character */
         for (t = 0; t < tm->csize; ++t) {
             ii = tm->cp[t];    /* index of current instruction */
@@ -150,10 +151,10 @@ start:
         if (C == tm->endchar) break;
 
         if (!tm->nsize) {
-            /* If we've used no thread slots for the next character
-             * and only one for the current character (common case when
-             * searching through a file with many non-matching characters),
-             * then we can avoid the full swap and do this shorter version */
+            /* If we've used no thread slots for the next character, avoid
+             * the full swap and do this shorter version. Also, if tm->search
+             * is set, we can avoid returning from vm_execute() and just jump
+             * back to the start instead */
             if (!tm->search || tm->match_end) {
                 return 1;
             }
@@ -163,7 +164,14 @@ start:
             }
 
             tm->csize = 0;
-            goto start;
+
+            if ((tm->chars - 1) != tm->match_start) {
+                tm->match_start = tm->chars - 1;
+                add_thread_curr(tm, 0);
+                goto skip_readchar;
+            }
+
+            goto vm_start;
         } else {
             /* Full swap. Threads saved for the next input character
              * are now threads for the current character.

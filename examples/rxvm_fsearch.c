@@ -29,6 +29,7 @@ int main (int argc, char *argv[])
     uint64_t size;
     int i;
     int ret;
+    int flags;
     char *match;
     rxvm_t compiled;
 
@@ -50,8 +51,9 @@ int main (int argc, char *argv[])
         exit(1);
     }
 
+    flags = RXVM_MULTILINE;
     /* Find all occurrences of compiled expression in file */
-    while (rxvm_fsearch(&compiled, fp, &size, 0)) {
+    while (rxvm_fsearch(&compiled, fp, &size, flags)) {
         if ((match = get_matching_text(fp, size)) == NULL) {
             printf("Error reading matching text from file '%s'\n", argv[2]);
             exit(1);

@@ -72,23 +72,36 @@ char getchar_str (void *data)
 
 static int simple_match (threads_t *tm, char *simple)
 {
-    char _c;
+    char c;
+    char *orig;
 
+    orig = simple;
     tm->match_start = tm->chars;
+
     while (*simple) {
-        _c = (*tm->getchar)(tm->getchar_data);
+        c = (*tm->getchar)(tm->getchar_data);
         ++tm->chars;
 
-        if (_c == tm->endchar)
+        if (c == tm->endchar)
             return 1;
 
         if (*simple == '\\')
             ++simple;
 
-        if (!char_match(tm->icase, *simple, _c))
-            return 0;
+skip_readchar:
+        if (!char_match(tm->icase, *simple, c)) {
+            if (!tm->search) return 0;
 
-        ++simple;
+            tm->match_start = tm->chars;
+
+            if (simple != orig) {
+                simple = orig;
+                --tm->match_start;
+                goto skip_readchar;
+            }
+        } else {
+            ++simple;
+        }
     }
 
     tm->match_end = tm->chars + 1;
@@ -117,7 +130,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
 
     ret = 0;
     if (compiled->simple) {
-        while (!simple_match(&tm, compiled->simple));
+        simple_match(&tm, compiled->simple);
     } else {
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
@@ -213,7 +226,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
-    if ((fpos = ftell(fp)) == -1L) return RXVM_IOERR;
+    if ((fpos = ftell(fp)) < 0) return RXVM_IOERR;
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_file;
@@ -246,7 +259,6 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
         if (match_size) *match_size = msize;
 
         fseek(fp, seek_size, SEEK_SET);
-        fpos = seek_size + msize;
         ret = 1;
     }
 
