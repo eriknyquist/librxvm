@@ -4,46 +4,6 @@
 
 #include "example_print_err.h"
 
-static void print_substring (char *start, char  *end);
-
-int main (int argc, char *argv[])
-{
-    char *start;
-    char *end;
-    int ret;
-    rxvm_t compiled;
-
-    ret = 0;
-    if (argc != 3) {
-        printf("Usage: %s <regex> <input>\n", argv[0]);
-        exit(1);
-    }
-
-    /* Compile the expression */
-    if ((ret = rxvm_compile(&compiled, argv[1])) < 0) {
-        example_print_err(ret);
-        exit(ret);
-    }
-
-#ifndef NOEXTRAS
-    /* print the compiled expression (VM instructions) */
-    rxvm_print(&compiled);
-#endif /* NOEXTRAS */
-
-    /* Check if input string matches expression */
-    if (rxvm_search(&compiled, argv[2], &start, &end, 0)) {
-        printf("Match!\n");
-        printf("Found matching substring:\n");
-        print_substring(start, end);
-    } else {
-        printf("No match.\n");
-        ret = 1;
-    }
-
-    rxvm_free(&compiled);
-    return ret;
-}
-
 void print_substring (char *start, char *end)
 {
     while (start != end) {
@@ -51,4 +11,39 @@ void print_substring (char *start, char *end)
         ++start;
     }
     printf("\n");
+}
+
+int main (int argc, char *argv[])
+{
+    char *start;
+    char *end;
+    int ret;
+    char *input;
+    rxvm_t compiled;
+
+    if (argc != 3) {
+        printf("Usage: %s <regex> <input>\n", argv[0]);
+        return 1;
+    }
+
+    input = argv[2];
+    ret = 0;
+
+    /* Compile the expression */
+    if ((ret = rxvm_compile(&compiled, argv[1])) < 0) {
+        example_print_err(ret);
+        return ret;
+    }
+
+    /* Look for occurrences of expression in the input string */
+    while (rxvm_search(&compiled, input, &start, &end, 0)) {
+        printf("Found matching substring: ");
+        print_substring(start, end);
+
+        /* Reset input pointer to end of the last match */
+        input = end;
+    }
+
+    rxvm_free(&compiled);
+    return 0;
 }
