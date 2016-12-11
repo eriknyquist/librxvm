@@ -3,8 +3,6 @@
 #include <time.h>
 #include "rxvm.h"
 
-#include "example_print_err.h"
-
 char *rgx;
 char *input;
 
@@ -24,7 +22,7 @@ int main (int argc, char *argv[])
 
     /* Compile the expression */
     if ((ret = rxvm_compile(&compiled, argv[1])) < 0) {
-        example_print_err(ret);
+        rxvm_print_err(ret);
         exit(ret);
     }
 

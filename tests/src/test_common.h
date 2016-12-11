@@ -40,7 +40,6 @@ char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len);
 
 void test_err (char *regex, char *input, const char *test, char *msg, int ret);
 void rxvm_print_oneline (rxvm_t *compiled);
-void rxvm_print_err (int err);
 char *hrsize (uint64_t size);
 
 extern FILE *logfp;
