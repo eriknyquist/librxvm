@@ -210,7 +210,7 @@ A description of the available special characters follows.
     |         |                       | same character class rules apply      |
     +---------+-----------------------+---------------------------------------+
     | **\\**  | escape                | used to remove special meaning from   |
-    |         |                       | characters, e.g. to match  leteral    |
+    |         |                       | characters, e.g. to match a literal   |
     |         |                       | ``*`` character                       |
     +---------+-----------------------+---------------------------------------+
 
