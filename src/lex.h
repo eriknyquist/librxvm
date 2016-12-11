@@ -45,6 +45,12 @@
 #define EOL_SYM              '$'
 #define DEREF_SYM            '\\'
 
+extern const unsigned int ws_diff;
+extern const unsigned int printable_diff;
+
+#define isprintable(x) (((unsigned) (x - PRINTABLE_LOW) <= printable_diff \
+                          || (unsigned) (x - WS_LOW) <= ws_diff) ? 1 : 0)
+
 /* lexer return tokens */
 enum {CHARC_OPEN, CHARC_CLOSE, CHAR_RANGE, LPAREN, RPAREN, ONE,
       ZERO, ONEZERO, ALT, ANY, LITERAL, REP, SOL, EOL, INVALIDSYM, END};

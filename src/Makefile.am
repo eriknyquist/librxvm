@@ -12,5 +12,6 @@ AM_CFLAGS =-W -pedantic
 if NOEXTRAS
 AM_CFLAGS += -DNOEXTRAS
 else
-librxvm_a_SOURCES += randinput.c
+librxvm_a_SOURCES += bmh.c randinput.c
+rxvminclude_HEADERS += bmh.h
 endif

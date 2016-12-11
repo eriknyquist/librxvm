@@ -30,6 +30,7 @@
 #include "stage2.h"
 #include "stack.h"
 #include "vm.h"
+#include "bmh.h"
 
 #define FBUF_SIZE  256
 
@@ -244,21 +245,22 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 
     ret = 0;
     if (compiled->simple) {
-        while (!simple_match(&tm, compiled->simple));
+        bmh_init(fp, compiled->simple, strlen(compiled->simple));
+        bmh(&tm);
     } else {
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
 
+        tm.chars = fpos;
         vm_execute(&tm, compiled);
     }
 
     if (tm.match_end) {
         msize = tm.match_end - tm.match_start - 1;
-        seek_size = (start + tm.chars) - msize - (compiled->simple == NULL);
 
         if (match_size) *match_size = msize;
 
-        fseek(fp, seek_size, SEEK_SET);
+        fseek(fp, tm.match_start, SEEK_SET);
         ret = 1;
     }
 

@@ -27,6 +27,9 @@
 
 #define isdigit(x) ((x >= '0' && x <= '9') ? 1 : 0)
 
+const unsigned int printable_diff = PRINTABLE_HIGH - PRINTABLE_LOW;
+const unsigned int ws_diff = WS_HIGH - WS_LOW;
+
 char *lp1;
 char *lpn;
 
@@ -38,12 +41,6 @@ static unsigned int literal;
 static int isreserved (char x)
 {
     return (x == CHARC_OPEN_SYM || x == CHARC_CLOSE_SYM) ? 1 : 0;
-}
-
-static int isprintable (char x)
-{
-    return ((x >= PRINTABLE_LOW && x <= PRINTABLE_HIGH) ||
-        (x >= WS_LOW && x <= WS_HIGH)) ? 1 : 0;
 }
 
 static int trans (int literal, char **input, int tok, int state, int *ret)

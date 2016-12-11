@@ -6,10 +6,11 @@ then
     exit 1
 fi
 
-sizes="1024000 5120000 10240000 51200000 102400000 256000000 512000000 768000000 1024000000"
-testfilesize=0
+size=0
+sizes="1024000 1024000 8192000 40960000 51200000 153600000 256000000 256000000 256000000 256000000"
 test_iter=10
-pattern="a+b+c+d+x+y+d+f+"
+#pattern="a+b+c+d+x+y+d+f+"
+pattern="erikkk"
 filename=.__chars_per_sec_testfile.txt
 plotfile=.__rxvm_fsearch.gnuplot
 psfile=.__rxvm_fsearch_speedplot.ps
@@ -22,7 +23,7 @@ get_ms() {
 }
 
 gen_file() {
-    cat /dev/urandom | base64 | head -c"$testfilesize" > "$1"
+    cat /dev/urandom | base64 | head -c"$2" >> "$1"
     ls -l "$1" | awk '{print $5}'
 }
 
@@ -53,7 +54,6 @@ do_test() {
         running_msecs=$((running_msecs + msecs))
         running=$((running + chars_per_sec))
         i=$((i + 1))
-        sleep 2
     done
 
     msecs=$(echo "scale=10;$running_msecs/$test_iter" | bc -l | awk -F'.' '{print $1}')
@@ -67,18 +67,17 @@ do_test() {
 
 for S in $sizes
 do
-    testfilesize="$S"
-    echo -e "\nGenerating test file (using size of $testfilesize bytes)..."
-    fsize=$(gen_file "$filename")
+    size=$((size + S))
+    echo -e "\nGenerating test file (using size of $size bytes)..."
+    fsize=$(gen_file "$filename" "$S")
     hsize=$(ls -lh "$filename" | awk '{print $5}')
     echo "Testing executable $1, using a $hsize plain text file"
     echo -e "Results averaged over $test_iter iterations\n"
 
     do_test "$pattern" "$filename" "$fsize" "$1"
-    rm -f "$filename"
 done
 
 gnuplot "$plotscript"
 ps2pdf "$psfile" "$2"
 
-rm -f "$plotfile" "$psfile"
+rm -f "$plotfile" "$psfile" "$filename"

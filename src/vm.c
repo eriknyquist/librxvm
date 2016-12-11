@@ -29,6 +29,8 @@
 
 #define VM_TABLE_SIZE(size) ((size * 2) + (sizeof(int) * size * 2))
 
+const int udiff = 'Z' - 'A';
+
 static int ccs_match (uint8_t icase, char *ccs, char c)
 {
     while (*ccs) {

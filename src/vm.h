@@ -24,7 +24,9 @@
 #ifndef VM_H_
 #define VM_H_
 
-#define tolower(x) ((x <= 'Z' && x >= 'A') ? x + 32 : x)
+extern const int udiff;
+
+#define tolower(x) (((x - 'A') <= udiff) ? x + 32 : x)
 #define char_match(icase, a, b) ((icase) ? tolower(a) == tolower(b) : a == b)
 
 typedef struct threads threads_t;
