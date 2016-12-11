@@ -28,7 +28,7 @@ stackitem_t *stack_add_inst_head (stack_t *stack, inst_t *inst);
 void attach_dangling_alt (context_t *cp);
 
 int code_match (context_t *cp);
-int code_ccs (context_t *cp);
+int code_ccs (context_t *cp, uint8_t is_nchar);
 int code_one (context_t *cp, unsigned int size, stackitem_t *i);
 int code_zero (context_t *cp, unsigned int size, stackitem_t *i);
 int code_onezero (context_t *cp, unsigned int size, stackitem_t *i);

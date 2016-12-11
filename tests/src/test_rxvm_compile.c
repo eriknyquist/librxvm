@@ -215,12 +215,28 @@ static const compv_t test_18_rep_7 = {
           ":lu:ly:ly:lu:ly:ly:lu:ly:b1592,1596:m"
 };
 
+static const compv_t test_19_nclass_1 = {
+    .rgx = "[^abc]",
+    .cmp = "nabc:m"
+};
+
+static const compv_t test_20_nclass_2 = {
+    .rgx = "[^^abc]",
+    .cmp = "n^abc:m"
+};
+
+static const compv_t test_21_nclass_3 = {
+    .rgx = "([^a-fA-F]+|[^txf])+[^IYGHBGKJ]",
+    .cmp = "b1,4:nabcdefABCDEF:b1,3:j5:ntxf:b0,6:nIYGHBGKJ:m"
+};
+
 static const compv_t *cmp_tests[NUM_TESTS_COMPILE] = {
     &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
     &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
     &test_9_nest_2, &test_10_nest_3, &test_11_nest_4, &test_12_rep_1,
     &test_13_rep_2, &test_14_rep_3, &test_15_rep_4, &test_16_rep_5,
-    &test_17_rep_6, &test_18_rep_7
+    &test_17_rep_6, &test_18_rep_7, &test_19_nclass_1, &test_20_nclass_2,
+    &test_21_nclass_3
 };
 
 unsigned int parse_int (char **str)
@@ -296,6 +312,13 @@ int cmpexe (char *str, rxvm_t *prog)
                 if (ccs_cmp(inst, &str))
                     return i + 1;
             break;
+            case 'n':
+                if (inst->op != OP_NCLASS)
+                    return i + 1;
+                ++str;
+                if (ccs_cmp(inst, &str))
+                    return i + 1;
+            break;
             case 'a':
                 if (inst->op != OP_ANY)
                     return i + 1;
@@ -360,6 +383,9 @@ void print_prog_cmp (FILE *fp,  rxvm_t *compiled, int err)
             break;
             case OP_CLASS:
                 fprintf(fp, "%d\tclass %s", i, inst->ccs);
+            break;
+            case OP_NCLASS:
+                fprintf(fp, "%d\tnclass %s", i, inst->ccs);
             break;
             case OP_BRANCH:
                 fprintf(fp, "%d\tbranch %d %d", i, inst->x, inst->y);

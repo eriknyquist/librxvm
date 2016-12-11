@@ -85,7 +85,7 @@ static int stack_dupe_from_item (stack_t *stack1, stackitem_t *stop,
 
         /* "class" instructions will require
          * extra work to copy the class string */
-        if (inst.op == OP_CLASS) {
+        if (inst.op == OP_CLASS || inst.op == OP_NCLASS) {
             ccslen = strlen(inst.ccs) + 1;
             temp = inst.ccs;
             if ((inst.ccs = malloc(sizeof(char) * ccslen)) == NULL) {
@@ -310,13 +310,18 @@ int code_alt (context_t *cp, stackitem_t *i)
     return 0;
 }
 
-int code_ccs (context_t *cp)
+int code_ccs (context_t *cp, uint8_t is_nchar)
 {
     stack_t *topmost;
     inst_t inst;
 
     strb_addc(&cp->strb, '\0');
-    set_op_class(&inst, cp->strb.buf);
+
+    if (is_nchar) {
+        set_op_nclass(&inst, cp->strb.buf);
+    } else {
+        set_op_class(&inst, cp->strb.buf);
+    }
 
     topmost = (stack_t *)cp->parens->tail->data;
     cp->operand = stack_add_inst_head(topmost, &inst);

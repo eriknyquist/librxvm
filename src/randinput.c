@@ -42,6 +42,39 @@ static unsigned int choice (unsigned int prob)
     return (rand_range(0, 100) < prob);
 }
 
+static char find_nchar (char *ccs)
+{
+    uint8_t wraps;
+    char c;
+    int i;
+
+    wraps = 0;
+    c = (char) rand_range(PRINTABLE_LOW, PRINTABLE_HIGH);
+
+    for (i = 0; ccs[i]; ++i) {
+        if (c == ccs[i]) {
+
+            if (c < PRINTABLE_HIGH) {
+                ++c;
+            } else {
+                c = PRINTABLE_LOW;
+                ++wraps;
+            }
+
+            /* In the (rare) case that a character class contains
+             * every printable character, this prevents an infinite loop */
+            if (wraps > 1) {
+                return 0;
+            } else {
+                i = -1;
+                continue;
+            }
+        }
+    }
+
+    return c;
+}
+
 char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
 {
     inst_t *exe;
@@ -112,6 +145,11 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
             case OP_CLASS:
                 ix = rand_range(0, strlen(inst.ccs) - 1);
                 if (strb_addc(&strb, inst.ccs[ix]) < 0) return NULL;
+                ++ip;
+            break;
+            case OP_NCLASS:
+                rand = find_nchar(inst.ccs);
+                if (strb_addc(&strb, rand) < 0) return NULL;
                 ++ip;
             break;
             case OP_BRANCH:

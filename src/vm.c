@@ -136,6 +136,12 @@ skip_readchar:
                     }
 
                 break;
+                case OP_NCLASS:
+                    if (!ccs_match(tm->icase, inst.ccs, C)) {
+                        add_thread_next(tm, ii + 1);
+                    }
+
+                break;
                 case OP_BRANCH:
                     add_thread_curr(tm, inst.x);
                     add_thread_curr(tm, inst.y);

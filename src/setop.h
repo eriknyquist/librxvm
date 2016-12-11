@@ -25,6 +25,7 @@
 #define _SETOP_H_
 
 void set_op_class (inst_t *inst, char *ccs);
+void set_op_nclass (inst_t *inst, char *ccs);
 void set_op_branch (inst_t *inst, int x, int y);
 void set_op_jmp (inst_t *inst, int x);
 void set_op_match (inst_t *inst);

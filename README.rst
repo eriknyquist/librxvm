@@ -196,13 +196,18 @@ A description of the available special characters follows.
     | **( )** | parenthesis group     | can contain any arbitrary expression, |
     |         |                       | and can be nested                     |
     +---------+-----------------------+---------------------------------------+
-    | **[ ]** | character class       | can contain any number of literal     |
-    |         |                       | characters (or escaped, i.e. to match |
-    |         |                       | a literal ``[`` or ``]`` character) or|
-    |         |                       | character ranges. Ranges are valid in |
-    |         |                       | both directions, e.g. ``Z-A``         |
-    |         |                       | describes the same set of characters  |
-    |         |                       | as ``A-Z``                            |
+    | **[ ]** | character class       | matches a single character inside     |
+    |         |                       | the brackets. Characters can be       |
+    |         |                       | escaped, (e.g. to match a literal     |
+    |         |                       | ``"["`` or ``"]"`` character), or part|
+    |         |                       | of a range. Ranges are valid in both  |
+    |         |                       | valid in both directions, e.g.        |
+    |         |                       | ``Z-A`` describes the same set of     |
+    |         |                       | characters as ``A-Z``                 |
+    +---------+-----------------------+---------------------------------------+
+    |**[^ ]** | negated character     | matches a single character *not*      |
+    |         | class                 | inside the brackets. Otherwise, the   |
+    |         |                       | same character class rules apply      |
     +---------+-----------------------+---------------------------------------+
     | **\\**  | escape                | used to remove special meaning from   |
     |         |                       | characters, e.g. to match  leteral    |
@@ -307,7 +312,7 @@ Non-essential features
 The following functions ``rxvm_fsearch``, ``rxvm_gen`` and ``rxvm_print``
 are compiled in by default. However, if you don't need them and you want the
 final library to be a bit smaller, you can exlude them by passing the
-``--disable-extras`` flag to the ``configure`` script, i.e.
+``--disable-extras`` flag to the ``configure`` script, e.g.
 
 |
 

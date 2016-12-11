@@ -107,7 +107,15 @@ char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
         "abxx", "abbbxxqxxdededede", "abbbbbbdedededeqxxdededede",
         "axxdededededededede", NULL,
         "abqxxdededeqxx", "abqq", "abdededededeq", "abxxdedededexxdededede",
-        NULL}
+        NULL},
+
+    {"[^a-f.]+",
+        "878", "KKIIJ", "))&U&U", "_)_)_))_$EDYTR", "+",
+        "a", ".", "00000.", "f.", "abcdef"},
+
+    {"[^^B*]*",
+        "a", "dsfgdr", "4649077", "kdfghnblkdsngblIHN", "AbCDEFGHIJKLMNOP",
+        "*", "^", "^^", "BB**BB**^^", "*^B*^BBB^^BB^"}
 };
 
 int test_rxvm_match (int *count)

@@ -337,17 +337,23 @@ static int expand_char_range (context_t *cp)
  * buffer parens[0]. */
 static int stage1_charc_state (context_t *cp, int *state)
 {
+    static uint8_t is_nchar;
     int ret = 0;
 
     switch (cp->tok) {
         case LITERAL:
-            strb_addc(&cp->strb, *lp1);
+            if (*lp1 == SOL_SYM && !is_nchar) {
+                is_nchar = 1;
+            } else {
+                strb_addc(&cp->strb, *lp1);
+            }
         break;
         case CHAR_RANGE:
             ret = expand_char_range(cp);
         break;
         case CHARC_CLOSE:
-            code_ccs(cp);
+            code_ccs(cp, is_nchar);
+            is_nchar = 0;
             *state = STATE_START;
         break;
         default:

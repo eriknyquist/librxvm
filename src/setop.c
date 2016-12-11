@@ -31,6 +31,13 @@ void set_op_class (inst_t *inst, char *ccs)
     inst->ccs = ccs;
 }
 
+void set_op_nclass (inst_t *inst, char *ccs)
+{
+    memset(inst, 0, sizeof(inst_t));
+    inst->op = OP_NCLASS;
+    inst->ccs = ccs;
+}
+
 void set_op_branch (inst_t *inst, int x, int y)
 {
     memset(inst, 0, sizeof(inst_t));
