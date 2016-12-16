@@ -5,34 +5,46 @@
 
 char *rgx;
 
-static char *get_matching_text (FILE *fp, uint64_t size)
+static int get_containing_line (FILE *fp, char *linebuf, size_t bufsize,
+                                uint64_t match_size)
 {
-    char *ret;
+    char c;
+    long start;
 
-    if ((ret = malloc(size + 1)) == NULL) {
-        return NULL;
+    start = ftell(fp);
+    fseek(fp, -1, SEEK_CUR);
+
+    /* rxvm_fsearch() sets the file pointer at the first character of
+     * the matching text; in order to print the whole line, we must
+     * backup to last newline character */
+    while ((c = fgetc(fp)) != '\n' && ftell(fp) > 1) {
+        fseek(fp, -2, SEEK_CUR);
     }
 
-    if (fread(ret, sizeof(char), size, fp) != size) {
-        return NULL;
+    /* Print the whole line */
+    if (fgets(linebuf, bufsize, fp) != linebuf) {
+        return -1;
     }
 
-    ret[size] = '\0';
-    return ret;
+    /* Reset file pointer to the first character after the matching
+     * text, so we can continue to search the file with further
+     * calls to rxvm_fsearch */
+    fseek(fp, start + match_size, SEEK_SET);
+    return 0;
 }
 
 int main (int argc, char *argv[])
 {
+    char linebuf[120];
     FILE *fp;
     uint64_t size;
     int i;
     int ret;
     int flags;
-    char *match;
     rxvm_t compiled;
 
     ret = 0;
-    if (argc != 3) {
+    if (argc < 3) {
         printf("Usage: %s <regex> <filename>\n", argv[0]);
         exit(1);
     }
@@ -43,25 +55,32 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
-    /* Open the file */
-    if ((fp = fopen(argv[2], "r")) == NULL) {
-        printf("Error opening file %s. Exiting.\n", argv[2]);
-        exit(1);
-    }
-
     flags = RXVM_MULTILINE;
-    /* Find all occurrences of compiled expression in file */
-    while (rxvm_fsearch(&compiled, fp, &size, flags)) {
-        if ((match = get_matching_text(fp, size)) == NULL) {
-            printf("Error reading matching text from file '%s'\n", argv[2]);
+
+    for (i = 2; i < argc; ++i) {
+        /* Open the file */
+        if ((fp = fopen(argv[i], "r")) == NULL) {
+            printf("Error opening file %s. Exiting.\n", argv[2]);
             exit(1);
         }
 
-        printf("Found match: %s\n", match);
-        free(match);
+        /* Find all occurrences of compiled expression in file */
+        while (rxvm_fsearch(&compiled, fp, &size, flags)) {
+            if ((get_containing_line(fp, linebuf, sizeof(linebuf), size)) < 0) {
+                printf("Error reading matching text from file '%s'\n", argv[2]);
+                exit(1);
+            }
+
+            if (argc > 3) {
+                printf("%s: %s", argv[i], linebuf);
+            } else {
+                printf("%s", linebuf);
+            }
+        }
+
+        fclose(fp);
     }
 
-    fclose(fp);
     rxvm_free(&compiled);
     return ret;
 }
