@@ -9,122 +9,41 @@ Some benefits to this approach:
 
 #. No backtracking over the input string.
 #. Matches complete in **O(n * m)** worst-case time, where **n** is the
-   input string size and **m** is the expression size (linear time, given that
-   **m** is fixed for a given expression).
+   input string size and **m** is the expression size
 #. The amount of dynamic memory used depends only on the expression size. It is
    independent of the input string size.
 
-Installation
-^^^^^^^^^^^^
+In addition to the usual string matching & searching functions, librxvm also
+provides a fast file-searching function that is ... really fast. You can try it
+out with the `rxvm_fsearch` example application below, in the
+*Example applications* section.
 
-**Dependencies:**
-
-#. GNU Make
-#. GNU Autotools
-#. A C compiler (GCC, Clang)
-
-To install, do the usual stuff:
-::
-
-    ./autogen.sh
-    ./configure
-    make
-    sudo make install
-
-Usage
-^^^^^
-
-See sample code in the ``examples`` directory. The examples compile into simple
-command-line programs, so you can look at the source to see how the library is
-used, and then build them to try out some test expressions from your shell.
-
-|
-
-
-Example applications
---------------------
-
-``rxvm_match``
-~~~~~~~~~~~~~~
-Accepts two arguments, a regular expression and an input
-string. Prints a message indicating if the input string matches the expression
-or not.
+``rxvm_fsearch`` quick test, 1GB plain-text file (using ``grep`` as a benchmark)
+--------------------------------------------------------------------------------
 
 ::
 
-   $> rxvm_match
+   $> ls -lh file
 
-     Usage: rxvm_match <regex> <input>
+   -rw-r--r-- 1 enyquist ekn 954M Dec 11 16:33 file
 
-   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxvm"
+   $> time grep "non-existent string" file
 
-     No match.
+   real 0m0.348s
 
-   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxVMvmVM"
+   $> time examples/rxvm_fsearch "non-existent string" file
 
-     Match!
+   real 0m0.358s
 
-``rxvm_search``
-~~~~~~~~~~~~~~~
-Accepts two arguments, a regular expression and an input
-string. Prints any instances of the regular expression that occur inside the
-input string.
+What's missing from ``librxvm``
+-------------------------------
 
-::
+* Currently, ``librxvm`` only works with plain ol' ASCII.
+* It's not POSIX compliant, or anything compliant as far as I know.
+* Probably a lot of things.
 
-   $> rxvm_search
-
-     Usage: rxvm_search <regex> <input>
-
-   $> rxvm_search "rx(vm)*" "------------rx---------"
-
-     Found match: rx
-
-   $> rxvm_search "rx(vm)*" "------rxvm-------rxvmvm----"
-
-     Found match: rxvm
-     Found match: rxvmvm
-
-``rxvm_fsearch``
-~~~~~~~~~~~~~~~~
-Accepts two arguments, a regular expression and a filename.
-Prints any instances of the regular expression that occur inside the file.
-
-::
-
-   $> rxvm_fsearch
-
-     Usage: rxvm_fsearch <regex> <filename>
-
-   $> echo "------rxvm-------rxvmvm----" > file.txt
-   $> rxvm_fsearch "rx(vm)*" file.txt
-
-     Found match: rxvm
-     Found match: rxvmvm
-
-``rxvm_gen``
-~~~~~~~~~~~~
-Accepts one argument, a regular expression. Generates a
-pseudo-random string which matches the expression.
-
-::
-
-   $> rxvm_gen
-
-     Usage: rxvm_gen <regex>
-
-   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
-
-     rRrrRrrxvmm rxvmm rrRrrrRXVm Rrxvm rrRRrXVmm RXVmm
-
-   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
-
-     Rxvm rrrxvmm RXVm RRxvmm
-
-|
-
-Regular Expression Syntax
--------------------------
+``librxvm`` Regular Expression Syntax
+-------------------------------------
 
 A regular expression consists of ordinary characters and special characters.
 An ordinary character matches itself exactly (e.g. the expression ``abc``
@@ -216,11 +135,120 @@ A description of the available special characters follows.
 
 |
 
+Installation
+^^^^^^^^^^^^
+
+**Dependencies:**
+
+#. GNU Make
+#. GNU Autotools
+#. A C compiler (GCC, Clang)
+
+To install, do the usual stuff:
+::
+
+    ./autogen.sh
+    ./configure
+    make
+    sudo make install
+
+Usage
+^^^^^
+
+See sample code in the ``examples`` directory. The examples are simple, and
+compile into easy-to-use command-line programs. They are automatically built by
+the top-level Makefile when you run ``make`` to build ``librxvm``.
+
+|
+
+
+Example applications
+--------------------
+
+``rxvm_match``
+^^^^^^^^^^^^^^
+Accepts two arguments, a regular expression and an input
+string. Prints a message indicating whether the input string matches the
+expression or not.
+
+::
+
+   $> rxvm_match
+
+     Usage: rxvm_match <regex> <input>
+
+   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxvm"
+
+     No match.
+
+   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxVMvmVM"
+
+     Match!
+
+``rxvm_search``
+^^^^^^^^^^^^^^^
+Accepts two arguments, a regular expression and an input
+string. Prints any instances of the regular expression that occur inside the
+input string.
+
+::
+
+   $> rxvm_search
+
+     Usage: rxvm_search <regex> <input>
+
+   $> rxvm_search "rx(vm)*" "------------rx---------"
+
+     Found match: rx
+
+   $> rxvm_search "rx(vm)*" "------rxvm-------rxvmvm----"
+
+     Found match: rxvm
+     Found match: rxvmvm
+
+``rxvm_fsearch``
+^^^^^^^^^^^^^^^^
+Accepts two arguments, a regular expression and a filename.
+Prints any instances of the regular expression that occur inside the file.
+
+::
+
+   $> rxvm_fsearch
+
+     Usage: rxvm_fsearch <regex> <filename>
+
+   $> echo "------rxvm-------rxvmvm----" > file.txt
+   $> rxvm_fsearch "rx(vm)*" file.txt
+
+     Found match: rxvm
+     Found match: rxvmvm
+
+``rxvm_gen``
+^^^^^^^^^^^^
+Accepts one argument, a regular expression. Generates a
+pseudo-random string which matches the expression.
+
+::
+
+   $> rxvm_gen
+
+     Usage: rxvm_gen <regex>
+
+   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+
+     rRrrRrrxvmm rxvmm rrRrrrRXVm Rrxvm rrRRrXVmm RXVmm
+
+   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+
+     Rxvm rrrxvmm RXVm RRxvmm
+
+|
+
 Reference
 ---------
 
 ``rxvm_compile``
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -241,7 +269,7 @@ instructions into the ``rxvm_t`` type pointed to by ``compiled``.
 |
 
 ``rxvm_match``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -263,7 +291,7 @@ exactly.
 |
 
 ``rxvm_search``
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -289,7 +317,7 @@ last characters of the matching substring. If no match is found, then both
 |
 
 ``rxvm_free``
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -325,7 +353,7 @@ final library to be a bit smaller, you can exlude them by passing the
 |
 
 ``rxvm_fsearch``
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -350,7 +378,7 @@ size (number of characters). If no match is found, then ``match_end`` is set to
 |
 
 ``rxvm_gen``
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 .. code:: c
 
@@ -403,7 +431,7 @@ matching string. If memory allocation fails, a null pointer is returned.
 
 
 ``rxvm_print``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 .. code:: c
 
@@ -427,13 +455,13 @@ functions (combine multiple flags by bitwise OR-ing them together):
 |
 
 ``RXVM_ICASE``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 case insensitive: ignore case when matching alphabet characters. Matching is
 case-sensitive by default.
 
 ``RXVM_NONGREEDY``
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 non-greedy matching: by default, the operators ``+``, ``*``, and ``?`` will
 match as many characters as possible, e.g. running ``rxvm_search`` with
@@ -441,7 +469,7 @@ the expression ``<.*>`` against the input string ``<tag>name<tag>`` will match
 the entire string. With this flag set, it will match only ``<tag>``.
 
 ``RXVM_MULTILINE``
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 Multiline: By default, ``^`` matches immediately following the start of input,
 and ``$`` matches immediately preceding the end of input or the newline before
