@@ -173,15 +173,15 @@ expression or not.
 
 ::
 
-   $> rxvm_match
+   $> examples/rxvm_match
 
      Usage: rxvm_match <regex> <input>
 
-   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxvm"
+   $> examples/rxvm_match "[Rr]x(vm|VM){3,6}" "rxvm"
 
      No match.
 
-   $> rxvm_match "[Rr]x(vm|VM){3,6}" "rxVMvmVM"
+   $> examples/rxvm_match "[Rr]x(vm|VM){3,6}" "rxVMvmVM"
 
      Match!
 
@@ -193,15 +193,15 @@ input string.
 
 ::
 
-   $> rxvm_search
+   $> examples/rxvm_search
 
      Usage: rxvm_search <regex> <input>
 
-   $> rxvm_search "rx(vm)*" "------------rx---------"
+   $> examples/rxvm_search "rx(vm)*" "------------rx---------"
 
      Found match: rx
 
-   $> rxvm_search "rx(vm)*" "------rxvm-------rxvmvm----"
+   $> examples/rxvm_search "rx(vm)*" "------rxvm-------rxvmvm----"
 
      Found match: rxvm
      Found match: rxvmvm
@@ -213,12 +213,12 @@ Prints any instances of the regular expression that occur inside the file.
 
 ::
 
-   $> rxvm_fsearch
+   $> examples/rxvm_fsearch
 
      Usage: rxvm_fsearch <regex> <filename>
 
    $> echo "------rxvm-------rxvmvm----" > file.txt
-   $> rxvm_fsearch "rx(vm)*" file.txt
+   $> examples/rxvm_fsearch "rx(vm)*" file.txt
 
      Found match: rxvm
      Found match: rxvmvm
@@ -230,15 +230,15 @@ pseudo-random string which matches the expression.
 
 ::
 
-   $> rxvm_gen
+   $> examples/rxvm_gen
 
      Usage: rxvm_gen <regex>
 
-   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+   $> examples/rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
 
      rRrrRrrxvmm rxvmm rrRrrrRXVm Rrxvm rrRRrXVmm RXVmm
 
-   $> rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
+   $> examples/rxvm_gen "([Rr]+(xv|XV)mm? ){2,}"
 
      Rxvm rrrxvmm RXVm RRxvmm
 
