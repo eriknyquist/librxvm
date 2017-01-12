@@ -143,6 +143,8 @@ Installation
 #. GNU Make
 #. GNU Autotools
 #. A C compiler (GCC, Clang)
+#. Some kind of libc (requires ``stdio.h``, ``stdlib.h``, ``stdint.h`` and
+   ``string.h``)
 
 To install, do the usual stuff:
 ::
