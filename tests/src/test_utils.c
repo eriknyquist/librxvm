@@ -48,34 +48,30 @@ void test_err (char *regex, char *input, const char *test, char *msg, int ret)
     fprintf(logfp, "        input text : %s\n\n", input);
 }
 
-char *hrsize (uint64_t size)
+void hrsize (uint64_t size, char *buf, unsigned int bufsize)
 {
     static const char *names[NUMNAMES] =
     {
         "EB", "PB", "TB", "GB", "MB", "KB", "B"
     };
-    char *ret;
+
     uint64_t mult;
-    size_t retsize;
     int i;
 
-    retsize = sizeof(char) * 20;
     mult = EXABYTES;
-    ret = malloc(retsize);
 
     for (i = 0; i < NUMNAMES; ++i, mult /= 1024) {
         if (size < mult)
             continue;
 
         if ((size % mult) == 0) {
-            snprintf(ret, retsize, "%"PRIu64" %s", size / mult, names[i]);
+            snprintf(buf, bufsize, "%"PRIu64" %s", size / mult, names[i]);
         } else {
-            snprintf(ret, retsize, "%.2f %s", (float) size / mult, names[i]);
+            snprintf(buf, bufsize, "%.2f %s", (float) size / mult, names[i]);
         }
 
-        return ret;
+        return;
     }
 
-    strcpy(ret, "0");
-    return ret;
+    strcpy(buf, "0");
 }

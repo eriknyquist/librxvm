@@ -14,7 +14,7 @@ int test_fuzz_full_rxvm_match (int *count)
     const char *msg;
     char *gen;
     char *exp;
-    char *sizestr;
+    char sizestr[20];
     rxvm_gencfg_t icfg;
     randexp_cfg_t ecfg;
 
@@ -92,15 +92,13 @@ int test_fuzz_full_rxvm_match (int *count)
 iter_end:
         total_size += itersize;
         ret += failed;
-        sizestr = hrsize(itersize);
+        hrsize(itersize, sizestr, sizeof(sizestr));
         printf("%s %d %s: %d failed, %d passed (out of %d) %s\n", msg, *count,
                 __func__, failed, passed, NUM_ITER, sizestr);
-        free(sizestr);
         ++(*count);
     }
 
-    sizestr = hrsize(total_size);
+    hrsize(total_size, sizestr, sizeof(sizestr));
     printf("Total input data used for fuzzing: %s\n", sizestr);
-    free(sizestr);
     return ret;
 }
