@@ -118,6 +118,11 @@ char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
         "*", "^", "^^", "BB**BB**^^", "*^B*^BBB^^BB^"}
 };
 
+static void log_trs (char *msg, const char *func, int i)
+{
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, i);
+}
+
 int test_rxvm_match (int *count)
 {
     rxvm_t compiled;
@@ -132,6 +137,7 @@ int test_rxvm_match (int *count)
     for (i = 0; i < NUM_TESTS_MATCH; ++i) {
         test_err = 0;
         if ((ret = compile_testexp(&compiled, tests[i][0])) < 0) {
+            log_trs("FAIL", __func__, *count);
             fprintf(logfp, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
             return ret;
@@ -167,7 +173,7 @@ int test_rxvm_match (int *count)
             msg = "PASS";
         }
 
-        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        log_trs(msg, __func__, *count);
         ++(*count);
     }
 
