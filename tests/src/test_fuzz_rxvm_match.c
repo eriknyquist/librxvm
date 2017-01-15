@@ -71,6 +71,11 @@ void log_trs (char *msg, const char *func, int i, int j)
     fprintf(trsfp, ":test-result: %s %s #%d.%d\n", msg, func, i, j);
 }
 
+void report_iter_size (FILE *fp, const char *func, int i, char *size)
+{
+    fprintf(fp, "%s #%d, %s of test data generated\n", func, i, size);
+}
+
 int test_fuzz_rxvm_match (int *count)
 {
     char *msg;
@@ -140,7 +145,8 @@ end_iter:
         total_size += itersize;
         ret += failed;
         hrsize(itersize, sizestr, sizeof(sizestr));
-        fprintf(logfp, "%s #%d, %s of test data generated\n", __func__, i, sizestr);
+        report_iter_size(logfp, __func__, i, sizestr);
+        report_iter_size(stdout, __func__, i, sizestr);
         ++(*count);
     }
 
