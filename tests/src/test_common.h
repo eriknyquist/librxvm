@@ -7,15 +7,13 @@
 #define TEST_LOG                   "rxvm_test.log"
 #define NUM_TESTS_COMPILE          21
 #define NUM_TESTS_ERR              31
-#define NUM_TESTS_ITER             19
+#define NUM_TESTS_SEARCH           20
+#define NUM_TESTS_SEARCH_MULTI     20
 #define NUM_TESTS_MATCH            25
 #define NUM_TESTS_NOMATCH          5
-#define NUM_TESTS_FUZZ_MATCH       25
+#define NUM_TESTS_FUZZ_MATCH       29
 #define NUM_TESTS_FUZZ_FULL_MATCH  10
 
-#define NUM_TESTS              (NUM_TESTS_COMPILE + NUM_TESTS_MATCH + \
-                                NUM_TESTS_NOMATCH + NUM_TESTS_ITER + \
-                                NUM_TESTS_ERR + NUM_TESTS_FUZZ_MATCH)
 #define EXABYTES                (1024ULL * 1024ULL * 1024ULL * 1024ULL * \
                                 1024ULL * 1024ULL)
 

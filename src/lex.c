@@ -30,6 +30,7 @@
 const unsigned int printable_diff = PRINTABLE_HIGH - PRINTABLE_LOW;
 const unsigned int ws_diff = WS_HIGH - WS_LOW;
 
+char newline_seen;
 char *lp1;
 char *lpn;
 
@@ -61,6 +62,7 @@ static int trans (int literal, char **input, int tok, int state, int *ret)
 void lex_init (void)
 {
     literal = 0;
+    newline_seen = 0;
 }
 
 int lex (char **input)
@@ -122,6 +124,10 @@ int lex (char **input)
 
             break;
             case STATE_LITERAL:
+                if (**input == '\n') {
+                     newline_seen = 1;
+                }
+
                 if (**input == RANGE_SEP_SYM && literal) {
                     return RXVM_EINVAL;
                 } else if (*(*input + 1) == RANGE_SEP_SYM && literal) {

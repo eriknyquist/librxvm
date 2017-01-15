@@ -51,7 +51,7 @@ static unsigned int pendix;
 
 static void fill (unsigned int backup)
 {
-    unsigned int i, rsize;
+    unsigned int rsize;
 
     memmove(bmhbuf, bmhbuf + (end - backup), backup);
 

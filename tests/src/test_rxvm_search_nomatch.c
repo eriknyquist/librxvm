@@ -48,6 +48,7 @@ int test_rxvm_search_nomatch (int *count)
 
         msg = (ret) ? "FAIL" : "PASS";
         fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

@@ -3,9 +3,10 @@
 #include "rxvm.h"
 #include "test_common.h"
 
-char *iter_tests[NUM_TESTS_ITER][3] =
+static char *iter_tests[NUM_TESTS_SEARCH][3] =
 {
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxxxxokKIIjJoiOKjImIOKmOIOuyyRKj", "xxxx"},
+    {"erik+", "erierierierierierierierierikkkkerierieri", "erikkkk"},
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxokKIIjJoiOKjImIOKmbggbggOIOuyyRKj", "x"},
     {"aa*b+c?", "09t5ol55llll5taaaaabbb0pppo0yiy5yi0pyi459tim5om", "aaaaabbb"},
     {"aa*b+c?", "09taaa5aoaaal55laaal5tabc0pppo0yiy5yi0pyi459tim5om", "abc"},
@@ -49,7 +50,7 @@ int test_rxvm_search (int *count)
     int err;
     int i;
 
-    for (i = 0; i < NUM_TESTS_ITER; ++i) {
+    for (i = 0; i < NUM_TESTS_SEARCH; ++i) {
         ret = 0;
         if ((err = compile_testexp(&compiled, iter_tests[i][0])) < 0) {
             fprintf(logfp, "Error compiling regex %s\n", iter_tests[i][0]);
@@ -80,6 +81,7 @@ int test_rxvm_search (int *count)
 
         msg = (ret) ? "FAIL" : "PASS";
         fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

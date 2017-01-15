@@ -21,47 +21,84 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef RXVM_H_
-#define RXVM_H_
+static unsigned int ltemp0;
+static unsigned int ltempn;
+static unsigned int lfix0;
+static unsigned int lfixn;
+static unsigned int lfixs;
 
-#include "rxvm_common.h"
+void lfix_zero (void)
+{
+    ltemp0 = ltempn = lfix0 = lfixn = 0;
+}
 
-/* Config. flags */
-#define RXVM_ICASE           0x1
-#define RXVM_NONGREEDY       0x2
-#define RXVM_MULTILINE       0x4
-#define RXVM_SEARCH          0x8
+void lfix_start (char *orig, char *lp1)
+{
+    lfixs = 1;
+    ltemp0 = ltempn = lp1 - orig;
+}
 
-typedef struct rxvm_gencfg rxvm_gencfg_t;
-typedef struct rxvm rxvm_t;
+void lfix_continue (char *orig, char *lp1)
+{
+    if (lfixs) ++ltempn;
+    else lfix_start(orig, lp1);
+}
 
-struct rxvm {
-    inst_t *exe;
-    char *simple;
-    unsigned int lfix0;
-    unsigned int lfixn;
-    unsigned int size;
-};
+unsigned int lfix_longest (void)
+{
+    return lfixn - lfix0;
+}
 
-struct rxvm_gencfg {
-    uint8_t generosity;
-    uint8_t whitespace;
+unsigned int lfix_current (void)
+{
+    return ltempn - ltemp0;
+}
 
-    uint64_t len;
-    uint64_t limit;
-};
+void lfix_set_longest (void)
+{
+    lfix0 = ltemp0;
+    lfixn = ltempn;
+}
 
-int rxvm_compile (rxvm_t *compiled, char *exp);
-int rxvm_match   (rxvm_t *compiled, char *input, int flags);
-int rxvm_search  (rxvm_t *compiled, char *input, char **start, char **end,
-                  int flags);
-void rxvm_free   (rxvm_t *compiled);
+void lfix_update_longest (void)
+{
+    if (lfix_current() > lfix_longest()) {
+        lfix_set_longest();
+    }
+}
 
-#ifndef NOEXTRAS
-void rxvm_print_err (int err);
-void rxvm_print  (rxvm_t *compiled);
-char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);
-int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size, int flags);
-#endif /* NOEXTRAS */
+void lfix_stop (void)
+{
+    lfix_update_longest();
+    lfixs = ltemp0 = ltempn = 0;
+}
 
-#endif
+void lfix_dec (void)
+{
+    if (ltempn > ltemp0) --ltempn;
+}
+
+unsigned int get_lfix0 (void)
+{
+    return lfix0;
+}
+
+unsigned int get_lfixn (void)
+{
+    return lfixn;
+}
+
+void set_lfixn (unsigned int val)
+{
+    lfixn = val;
+}
+
+void set_ltempn (unsigned int val)
+{
+    ltempn = val;
+}
+
+unsigned int get_ltempn (void)
+{
+    return ltempn;
+}

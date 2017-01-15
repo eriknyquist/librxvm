@@ -45,8 +45,8 @@ int rxvm_compile (rxvm_t *compiled, char *exp)
     int ret;
     size_t size;
 
-    if (!compiled || !exp)              return RXVM_EPARAM;
-    if ((ret = stage1(exp, &ir)) < 0)   return ret;
+    if (!compiled || !exp) return RXVM_EPARAM;
+    if ((ret = stage1(compiled, exp, &ir)) < 0) return ret;
 
     if (ir == NULL) {
         size = sizeof(char) * (strlen(exp) + 1);
@@ -222,8 +222,6 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     threads_t tm;
     int ret;
     uint64_t msize;
-    uint64_t start;
-    uint64_t seek_size;
     char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
@@ -241,7 +239,6 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
     tm.multiline = (flags & RXVM_MULTILINE);
     tm.search = 1;
     charcp = &tm.chars;
-    start = fpos;
 
     ret = 0;
     if (compiled->simple) {

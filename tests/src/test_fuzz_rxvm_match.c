@@ -8,10 +8,18 @@
 char *rgx;
 char *input;
 
-#define RANDINPUT_LIMIT   4095
-#define NUM_ITER          1000
+#define RANDINPUT_LIMIT   100
+#define NUM_ITER          100
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
+
+    "a*b*c*d",
+
+    "a+|b?|c*|d{2,}|e+|f?|g*",
+
+    "(a+|b?|c*|d{2,}|e+|f?|g*)+",
+
+    "(a+|b?|c*|d{2,}|e+|f?|g*){56,97}",
 
     "([\\.]+|\\**)*a?d*;+",
 
@@ -66,14 +74,14 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "bb(cc(dd(EE.{3,4}){6,}){2,}){8,9}"
 };
 
-void log_trs (char *msg, const char *func, int i, int j)
+static void log_trs (char *msg, const char *func, int i)
 {
-    fprintf(trsfp, ":test-result: %s %s #%d.%d\n", msg, func, i, j);
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, i);
 }
 
-void report_iter_size (FILE *fp, const char *func, int i, char *size)
+static void report_iter_size (const char *func, int i, char *size)
 {
-    fprintf(fp, "%s #%d, %s of test data generated\n", func, i, size);
+    fprintf(logfp, "%s #%d, %s of test data generated\n", func, i, size);
 }
 
 int test_fuzz_rxvm_match (int *count)
@@ -92,6 +100,7 @@ int test_fuzz_rxvm_match (int *count)
     int i;
     int j;
 
+    msg = "PASS";
     j = 0;
     ret = 0;
     total_size = 0;
@@ -109,7 +118,7 @@ int test_fuzz_rxvm_match (int *count)
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
             printf("compile failed\n");
             test_err(testexp[i], "", __func__, "Compilation failed", ret);
-            log_trs("FAIL", __func__, i, j);
+            msg = "FAIL";
             ++failed;
             goto end_iter;
         }
@@ -118,13 +127,11 @@ int test_fuzz_rxvm_match (int *count)
             if ((gen = rxvm_gen(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
-                log_trs("FAIL", __func__, i, j);
                 ++failed;
                 rxvm_free(&compiled);
                 goto end_iter;
             } else {
                 if (rxvm_match(&compiled, gen, 0)) {
-                    msg = "PASS";
                     ++passed;
                 } else {
                     msg = "FAIL";
@@ -133,7 +140,6 @@ int test_fuzz_rxvm_match (int *count)
                     ++failed;
                 }
 
-                log_trs(msg, __func__, i, j);
                 itersize += strlen(gen);
                 fflush(stdout);
                 free(gen);
@@ -142,11 +148,13 @@ int test_fuzz_rxvm_match (int *count)
         rxvm_free(&compiled);
 
 end_iter:
+        log_trs(msg, __func__, i + 1);
         total_size += itersize;
         ret += failed;
         hrsize(itersize, sizestr, sizeof(sizestr));
-        report_iter_size(logfp, __func__, i, sizestr);
-        report_iter_size(stdout, __func__, i, sizestr);
+        report_iter_size(__func__, i + 1, sizestr);
+
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

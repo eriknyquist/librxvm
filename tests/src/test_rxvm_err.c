@@ -203,6 +203,7 @@ int test_rxvm_err (int *count)
                 rxvm_free(&compiled);
 
         fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

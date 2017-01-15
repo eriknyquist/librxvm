@@ -120,6 +120,10 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
             case OP_ANY:
                 if (choice(whitespace)) {
                     rand = (char) rand_range(WS_LOW, WS_HIGH);
+                    if (rand == '\n') {
+                        rand = ' ';
+                    }
+
                     if (strb_addc(&strb, rand) < 0) return NULL;
                     ++ip;
                 } else {

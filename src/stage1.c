@@ -30,19 +30,25 @@
 #include "rxvm_common.h"
 #include "stack.h"
 #include "vmcode.h"
+#include "rxvm.h"
 #include "stage1.h"
 #include "setop.h"
+#include "lfix.h"
 
 #define REP_NO_FIELD        -1
 #define REP_FIELD_EMPTY     -2
 
-#define ISOP(x) \
-((x == ONE || x == ZERO || x == ONEZERO || x == ALT || x == REP) ? 1 : 0)
-
 /* pointers for the start & end of text in
  * input string for the current token */
+
+extern char newline_seen;
 extern char *lp1;
 extern char *lpn;
+
+unsigned int alt_seen;
+
+#define ISOP(x) \
+((x == ONE || x == ZERO || x == ONEZERO || x == ALT || x == REP) ? 1 : 0)
 
 enum {STATE_START, STATE_CHARC};
 
@@ -98,6 +104,8 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
             return err;
         }
 
+    lfix_dec();
+
     /* {n} */
     } else if (rep_m == REP_NO_FIELD) {
         if ((err = code_rep_n(cp, rep_n, i)) < 0) {
@@ -109,6 +117,8 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
         if ((err = code_zero(cp, size, i)) < 0) {
             return err;
         }
+
+        lfix_dec();
     }
 
     return 0;
@@ -191,19 +201,26 @@ static int process_op (context_t *cp)
             if ((err = code_zero(cp, size, i)) < 0) {
                 return err;
             }
+
+            lfix_dec();
         break;
         case ONEZERO:
             if ((err = code_onezero(cp, size, i)) < 0) {
                 return err;
             }
+
+            lfix_dec();
         break;
         case ALT:
             if ((err = code_alt(cp, i)) < 0) {
                 return err;
             }
+
+            if (!cp->depth) alt_seen = 1;
         break;
     }
 
+    lfix_stop();
     stack_reset(cp->buf);
     if (cp->lasttok == RPAREN) {
         free(cp->buf);
@@ -211,7 +228,6 @@ static int process_op (context_t *cp)
     }
 
     cp->buf = (stack_t *) cp->parens->tail->data;
-
     return 0;
 }
 
@@ -242,11 +258,18 @@ static int stage1_main_state (context_t *cp, int *state)
 
     base = (stack_t *) cp->parens->tail->data;
 
+    if (cp->tok == LITERAL) {
+        if (!newline_seen && !cp->depth) {
+            lfix_continue(cp->orig, lp1);
+        }
+
+        set_op_char(&inst, *lp1);
+        goto single;
+    }
+
+    lfix_stop();
+
     switch (cp->tok) {
-        case LITERAL:
-            set_op_char(&inst, *lp1);
-            goto single;
-        break;
         case ANY:
             set_op_any(&inst);
             goto single;
@@ -274,6 +297,7 @@ static int stage1_main_state (context_t *cp, int *state)
 
             stack_add_head(cp->parens, (void *) new);
             cp->target = new;
+            ++cp->depth;
         break;
         case RPAREN:
             if (cp->parens->head == cp->parens->tail) {
@@ -291,6 +315,8 @@ static int stage1_main_state (context_t *cp, int *state)
                 cp->target = (cp->parens->head->next == cp->parens->tail) ?
                     cp->prog : (stack_t *) cp->parens->head->next->data;
             }
+
+            --cp->depth;
         break;
         case CHARC_CLOSE:
             return RXVM_BADCLASS;
@@ -396,6 +422,10 @@ static int stage1_init (context_t *cp, stack_t **ret)
         return RXVM_EMEM;
     }
 
+    lfix_zero();
+    alt_seen = 0;
+    cp->depth = 0;
+    cp->chained = 0;
     cp->simple = NULL;
     cp->prog = *ret;
     stack_add_head(cp->parens, (void *) base);
@@ -404,13 +434,24 @@ static int stage1_init (context_t *cp, stack_t **ret)
     return 0;
 }
 
-static int compile_simple_backlog (context_t *cp, char *orig)
+static int compile_simple_backlog (context_t *cp)
 {
     inst_t inst;
+    int fixtemp;
+    int delimit;
+    char *orig;
+
+    fixtemp = delimit = 0;
+    orig = cp->orig;
 
     while (orig != cp->simple) {
         if (*orig == '\\') {
+            ++delimit;
             ++orig;
+        }
+
+        if (!fixtemp && *orig == '\n') {
+            fixtemp = orig - cp->orig - 1 - delimit;
         }
 
         set_op_char(&inst, *orig);
@@ -420,107 +461,131 @@ static int compile_simple_backlog (context_t *cp, char *orig)
         ++orig;
     }
 
+    set_ltempn((fixtemp) ? fixtemp : orig - cp->orig - 1 - delimit);
     cp->operand = cp->buf->head;
     return 0;
 }
 
+void check_simple_for_newlines (rxvm_t *compiled, char *orig)
+{
+    unsigned int i;
+    unsigned int delimit;
+
+    delimit = 0;
+    for (i = 0; orig[i]; ++i) {
+        if (orig[i] == '\\') {
+            ++delimit;
+        } else if (orig[i] == '\n') {
+            compiled->lfix0 = 0;
+            compiled->lfixn = i - 1 - delimit;
+            return;
+        }
+    }
+}
+
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates an IR for stage 2. */
-int stage1 (char *input, stack_t **ret)
+int stage1 (rxvm_t *compiled, char *input, stack_t **ret)
 {
-    char *orig;
     int state;
     int err;
+    context_t ctx;
 
-    context_t *cp;
-    context_t context;
-
-    orig = input;
-    cp = &context;
-
-    if ((err = stage1_init(cp, ret)) < 0)
+    if ((err = stage1_init(&ctx, ret)) < 0)
         return err;
 
-    cp->chained = 0;
+    compiled->lfix0 = compiled->lfixn = 0;
+    ctx.orig = input;
     state = STATE_START;
     lex_init();
 
-    while ((cp->tok = lex(&input)) == LITERAL) {
-        cp->simple = input;
+    while ((ctx.tok = lex(&input)) == LITERAL) {
+        ctx.simple = input;
     }
 
     /* String contains only literal characters;
      * no compilation necessary. */
-    if (cp->tok == END) {
-        cp->simple = orig;
-        stage1_cleanup(cp);
-        stack_free(cp->prog, inst_stack_cleanup);
+    if (ctx.tok == END) {
+        check_simple_for_newlines(compiled, ctx.orig);
+        ctx.simple = ctx.orig;
+        stage1_cleanup(&ctx);
+        stack_free(ctx.prog, inst_stack_cleanup);
         *ret = NULL;
         return 0;
-    } else if (cp->simple) {
-        if (compile_simple_backlog(cp, orig) < 0) {
+    } else if (ctx.simple) {
+        if (compile_simple_backlog(&ctx) < 0) {
             return RXVM_EMEM;
         }
-        cp->simple = NULL;
+
+        ctx.simple = NULL;
     }
 
     do {
-        if (cp->tok < 0) {
-            stage1_err_cleanup(cp);
-            return cp->tok;
+        if (ctx.tok < 0) {
+            stage1_err_cleanup(&ctx);
+            return ctx.tok;
         }
 
         switch (state) {
             case STATE_START:
                 /* if it's not a character class, then all the
                  * metacharacters apply-- run the main state. */
-                if ((err = stage1_main_state(cp, &state)) < 0) {
-                    stage1_err_cleanup(cp);
+                if ((err = stage1_main_state(&ctx, &state)) < 0) {
+                    stage1_err_cleanup(&ctx);
                     return err;
                 }
 
             break;
             case STATE_CHARC:
                 /* inside character class-- run character class state */
-                if ((err = stage1_charc_state(cp, &state)) < 0) {
-                    stage1_err_cleanup(cp);
+                if ((err = stage1_charc_state(&ctx, &state)) < 0) {
+                    stage1_err_cleanup(&ctx);
                     return err;
                 }
 
             break;
         }
-        cp->lasttok = cp->tok;
-    } while ((cp->tok = lex(&input)) != END);
 
-    if (cp->lasttok == RPAREN && cp->buf->size > 0) {
-        stack_cat(cp->prog, cp->buf);
-        free(cp->buf);
-        stack_free_head(cp->parens);
+        ctx.lasttok = ctx.tok;
+    } while ((ctx.tok = lex(&input)) != END);
+
+    if (ctx.lasttok == RPAREN && ctx.buf->size > 0) {
+        stack_cat(ctx.prog, ctx.buf);
+        free(ctx.buf);
+        stack_free_head(ctx.parens);
     }
 
     if (state == STATE_CHARC) {
-        stage1_err_cleanup(cp);
-        free(cp->strb.buf);
+        stage1_err_cleanup(&ctx);
+        free(ctx.strb.buf);
         return RXVM_ECLASS;
-    } else if (cp->parens->head != cp->parens->tail) {
-        stage1_err_cleanup(cp);
+    } else if (ctx.parens->head != ctx.parens->tail) {
+        stage1_err_cleanup(&ctx);
         return RXVM_EPAREN;
     }
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
-    stack_cat(cp->prog, (stack_t *) cp->parens->tail->data);
-    attach_dangling_alt(cp);
+    lfix_stop();
+    stack_cat(ctx.prog, (stack_t *) ctx.parens->tail->data);
+    attach_dangling_alt(&ctx);
 
     /* Add the match instruction */
-    if ((err = code_match(cp)) < 0) {
+    if ((err = code_match(&ctx)) < 0) {
         return err;
+    }
+
+    if (alt_seen) {
+        compiled->lfix0 = 0;
+        compiled->lfixn = 0;
+    } else {
+        compiled->lfix0 = get_lfix0();
+        compiled->lfixn = get_lfixn();
     }
 
     /* Re-use dsize member to indicate to stage2 whether
      * jmp chain optimisation is needed */
-    cp->prog->dsize = cp->chained;
-
-    stage1_cleanup(cp);
+    ctx.prog->dsize = ctx.chained;
+    stage1_cleanup(&ctx);
     return 0;
 }

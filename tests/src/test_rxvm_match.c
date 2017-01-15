@@ -174,6 +174,7 @@ int test_rxvm_match (int *count)
         }
 
         log_trs(msg, __func__, *count);
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

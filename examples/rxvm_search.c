@@ -37,7 +37,7 @@ int main (int argc, char *argv[])
     }
 
     /* Look for occurrences of expression in the input string */
-    while (rxvm_search(&compiled, input, &start, &end, 0)) {
+    while (rxvm_search(&compiled, input, &start, &end, RXVM_MULTILINE)) {
         printf("Found match: ");
         print_substring(start, end);
 
@@ -45,6 +45,7 @@ int main (int argc, char *argv[])
         input = end;
     }
 
+    printf("Done.\n");
     rxvm_free(&compiled);
     return 0;
 }

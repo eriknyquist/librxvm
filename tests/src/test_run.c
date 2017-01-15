@@ -4,16 +4,16 @@
 #include "test_common.h"
 #include "test_modules.h"
 
-//#define NUM_MODS          7
-#define NUM_MODS          6
+//#define NUM_MODS          9
+#define NUM_MODS          8
 
 FILE *logfp;
 FILE *trsfp;
 
 const testmod_t mods[NUM_MODS] = {
-    test_rxvm_err, test_rxvm_match, test_rxvm_search,
-    test_rxvm_search_nomatch, test_rxvm_compile, test_fuzz_rxvm_match,
-    //test_fuzz_full_rxvm_match
+    test_rxvm_compile, test_rxvm_lfix_heuristic, test_rxvm_err, test_rxvm_match,
+    test_rxvm_search, test_rxvm_search_multi, test_rxvm_search_nomatch,
+    test_fuzz_rxvm_match, //test_fuzz_full_rxvm_match
 };
 
 int main (void)
@@ -36,7 +36,6 @@ int main (void)
         return 1;
     }
 
-    fprintf(logfp, "librxvm test suite\n%d tests in total\n", NUM_TESTS);
     /* Run all test modules */
     for (i = 0; i < NUM_MODS; ++i) {
         module = mods[i];

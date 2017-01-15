@@ -116,7 +116,10 @@ skip_readchar:
 
                 break;
                 case OP_ANY:
-                    add_thread_next(tm, ii + 1);
+                    if (C != '\n') {
+                        add_thread_next(tm, ii + 1);
+                    }
+
                 break;
                 case OP_SOL:
                     if (is_sol(tm)) {

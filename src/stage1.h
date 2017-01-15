@@ -25,18 +25,21 @@
 #define STAGE1_H_
 
 struct context {
+    strb_t strb;
     stack_t *target;
     stack_t *buf;
     stack_t *prog;
     stackitem_t *operand;
     stack_t *parens;
-    strb_t strb;
     char *simple;
+    char *orig;
+
     int tok;
     int lasttok;
+    unsigned int depth;
     uint8_t chained;
 };
 
-int stage1 (char *input, stack_t **ret);
+int stage1 (rxvm_t *compiled, char *input, stack_t **ret);
 
 #endif

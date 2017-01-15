@@ -446,6 +446,7 @@ int test_rxvm_compile (int *count)
         }
 
         fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        printf("%s: %s #%i\n", msg, __func__, i + 1);
         ++(*count);
     }
 

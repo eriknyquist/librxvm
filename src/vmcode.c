@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rxvm_err.h"
@@ -28,6 +29,7 @@
 #include "string_builder.h"
 #include "stack.h"
 #include "vmcode.h"
+#include "rxvm.h"
 #include "stage1.h"
 #include "setop.h"
 
