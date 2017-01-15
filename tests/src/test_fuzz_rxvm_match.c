@@ -8,7 +8,7 @@
 char *rgx;
 char *input;
 
-#define RANDINPUT_LIMIT   500
+#define RANDINPUT_LIMIT   4095
 #define NUM_ITER          1000
 
 char *testexp[NUM_TESTS_FUZZ_MATCH] = {
@@ -93,7 +93,7 @@ int test_fuzz_rxvm_match (int *count)
     srand(time(NULL));
 
     cfg.limit = RANDINPUT_LIMIT;
-    cfg.generosity = 50;
+    cfg.generosity = 90;
     cfg.whitespace = 10;
 
     for (i = 0; i < NUM_TESTS_FUZZ_MATCH; ++i) {
