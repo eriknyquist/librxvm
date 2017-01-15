@@ -19,7 +19,7 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
     "abc*(cd[0-9]+)*",
 
-    ".[^^v0-9]+)*",
+    ".([^^v0-9]+)*",
 
     "abc*(cd[0-9]+|[^A-F])*",
 
@@ -27,11 +27,11 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
 
     "a+(r*e+ (y*o+u)* d+r)*u+n*k+\\?*",
 
-    "<.*>.*^string$.*otherstring",
+    "<.*>.*string.*otherstring",
 
-    "<.*>.*^\\(.*\\)$.*^[A-F].+$.*",
+    "<.*>.*\\(.*\\).*[A-F].+.*",
 
-    "(.*\\)$.*[^A-F].+[0-9a-f]+",
+    "(.*\\\\).*[^A-F].+[0-9a-f]+",
 
     "\\[[0-9]+(\\.[0-9]{17,18})*\\]",
 
@@ -44,7 +44,7 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "kf?[0Oo3]r*(ty*(d+|ok(.ok)|yg*yu|uy.+guy|uyg|r(plpl(lpl|p(p|l(lp(u?y|"
     "gu(iu+h(yt*ft(gh|fvuyg(fff)*)*)*j+[a-z])*)tdrf+y)*)*)*)x.*fxfxfct)*)",
 
-    "(^aa(BB|77|&&|0|f+|(ddx)*)+$.*(cc(dd(EE(FF(gg(hh(II(jj(kk)*)*)*)*)*)*)*"
+    "(aa(BB|77|&&|0|f+|(ddx)*)+.*(cc(dd(EE(FF(gg(hh(II(jj(kk)*)*)*)*)*)*)*"
     ")*)*.*)*",
 
     "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p)*)+)*)+)*)+)*)+)*)+)*)+)*)+)*",
@@ -66,9 +66,14 @@ char *testexp[NUM_TESTS_FUZZ_MATCH] = {
     "bb(cc(dd(EE.{3,4}){6,}){2,}){8,9}"
 };
 
+void log_trs (char *msg, const char *func, int i, int j)
+{
+    fprintf(trsfp, ":test-result: %s %s #%d.%d\n", msg, func, i, j);
+}
+
 int test_fuzz_rxvm_match (int *count)
 {
-    const char *msg;
+    char *msg;
     char *gen;
     char *sizestr;
     rxvm_gencfg_t cfg;
@@ -82,6 +87,7 @@ int test_fuzz_rxvm_match (int *count)
     int i;
     int j;
 
+    j = 0;
     ret = 0;
     total_size = 0;
     srand(time(NULL));
@@ -96,7 +102,9 @@ int test_fuzz_rxvm_match (int *count)
         failed = 0;
 
         if ((ret = compile_testexp(&compiled, testexp[i])) < 0) {
+            printf("compile failed\n");
             test_err(testexp[i], "", __func__, "Compilation failed", ret);
+            log_trs("FAIL", __func__, i, j);
             ++failed;
             goto end_iter;
         }
@@ -105,6 +113,7 @@ int test_fuzz_rxvm_match (int *count)
             if ((gen = rxvm_gen(&compiled, &cfg)) == NULL) {
                 test_err(testexp[i], "", __func__,
                         "Memory allocation failed during input generation", 0);
+                log_trs("FAIL", __func__, i, j);
                 ++failed;
                 rxvm_free(&compiled);
                 goto end_iter;
@@ -119,7 +128,7 @@ int test_fuzz_rxvm_match (int *count)
                     ++failed;
                 }
 
-                fprintf(trsfp, ":test-result: %s %s #%d.%d\n", msg, __func__, i, j);
+                log_trs(msg, __func__, i, j);
                 itersize += strlen(gen);
                 fflush(stdout);
                 free(gen);
