@@ -134,8 +134,15 @@ int code_rep_range (context_t *cp, int rep_n, int rep_m, unsigned int size,
     int j;
     int temp;
 
+    /* Special case- {n,n}: treat as {n} */
     if (rep_n == rep_m) {
         return code_rep_n(cp, rep_n, i);
+
+     /* Special case- {0,1}/{1,0}: treat as ? */
+    } else if ((rep_n == 0 && rep_m == 1) || (rep_n == 1 && rep_m == 0)) {
+        return code_onezero(cp, size, i);
+
+    /* {m,n}, i.e. {high/low} instead of {low/high}: swap values */
     } else if (rep_n > rep_m) {
         temp = rep_n;
         rep_n = rep_m;
@@ -195,6 +202,9 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
     int end;
     int j;
 
+    if (rep_m == 0)
+        return RXVM_BADOP;
+
     for (j = 0; j < rep_m; ++j) {
         end = (size + 1) * (rep_m - j);
         set_op_branch(&inst, 1, end);
@@ -217,6 +227,9 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
 int code_rep_n (context_t *cp, int rep_n, stackitem_t *i)
 {
     int j;
+
+    if (rep_n == 0)
+        return RXVM_BADOP;
 
     for (j = 0; j < (rep_n - 1); ++j) {
         if (stack_dupe_from_item(cp->target, cp->buf->head, i) < 0) {

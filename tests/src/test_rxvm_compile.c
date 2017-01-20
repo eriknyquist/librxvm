@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "rxvm.h"
 #include "test_common.h"
 
@@ -10,49 +11,160 @@ struct compv {
     char *cmp;
 };
 
-static const compv_t test_1_basic_1 = {
+static const compv_t test_basic_1 = {
     .rgx = "x*",
     .cmp = "b1,3:lx:b1,3:m"
 };
 
-static const compv_t test_2_basic_2 = {
+static const compv_t test_basic_2 = {
     .rgx = "aab*",
     .cmp = "la:la:b3,5:lb:b3,5:m"
 };
 
-static const compv_t test_3_basic_3 = {
+static const compv_t test_basic_3 = {
     .rgx = "ab+|d*(xx)?",
     .cmp = "b1,5:la:lb:b2,4:j11:b6,8:ld:b6,8:b9,11:lx:lx:m"
 };
 
-static const compv_t test_4_basic_4 = {
+static const compv_t test_basic_4 = {
     .rgx = "aa|bb|cc|dd",
     .cmp = "b1,12:b2,9:b3,6:la:la:j14:lb:lb:j14:lc:lc:j14:ld:ld:m"
 };
 
-static const compv_t test_5_basic_5 = {
+static const compv_t test_basic_5 = {
     .rgx = "(aa)bb(cc)",
     .cmp = "la:la:lb:lb:lc:lc:m"
 };
 
-static const compv_t test_6_basic_6 = {
+static const compv_t test_basic_6 = {
     .rgx = "(aa)bb(cc(dd(ee(ff))))",
     .cmp = "la:la:lb:lb:lc:lc:ld:ld:le:le:lf:lf:m"
 };
 
-static const compv_t test_7_basic_7 = {
+static const compv_t test_basic_7 = {
     .rgx = "\\**\\++\\??\\.\\\\[*+?.\\\\]",
     .cmp = "b1,3:l*:b1,3:l+:b3,5:b6,7:l?:l.:l\\:c*+?.\\:m"
 };
 
-static const compv_t test_8_nest_1 = {
+static const compv_t test_basic_8 = {
+    .rgx = "q+",
+    .cmp = "lq:b0,2:m"
+};
+
+static const compv_t test_basic_9 = {
+    .rgx = "xq+",
+    .cmp = "lx:lq:b1,3:m"
+};
+
+static const compv_t test_basic_10 = {
+    .rgx = "a+b+c+d+",
+    .cmp = "la:b0,2:lb:b2,4:lc:b4,6:ld:b6,8:m"
+};
+
+static const compv_t test_basic_11 = {
+    .rgx = "f?",
+    .cmp = "b1,2:lf:m"
+};
+
+static const compv_t test_basic_12 = {
+    .rgx = "faq?",
+    .cmp = "lf:la:b3,4:lq:m"
+};
+
+static const compv_t test_basic_13 = {
+    .rgx = "f?a?q?x?",
+    .cmp = "b1,2:lf:b3,4:la:b5,6:lq:b7,8:lx:m"
+};
+
+static const compv_t test_basic_14 = {
+    .rgx = "fa|df",
+    .cmp = "b1,4:lf:la:j6:ld:lf:m"
+};
+
+static const compv_t test_basic_15 = {
+    .rgx = "a|b|c|d|e",
+    .cmp = "b1,12:b2,10:b3,8:b4,6:la:j13:lb:j13:lc:j13:ld:j13:le:m"
+};
+
+static const compv_t test_basic_16 = {
+    .rgx = "aa+|b?|bbc*|q",
+    .cmp = "b1,16:b2,10:b3,7:la:la:b4,6:j17:b8,9:lb:j17:lb:lb:b13,15:lc:b13,15:"
+           "j17:lq:m"
+};
+
+static const compv_t test_basic_17 = {
+    .rgx = "a",
+    .cmp = "pa"
+};
+
+static const compv_t test_basic_18 = {
+    .rgx = "xyz",
+    .cmp = "pxyz"
+};
+
+static const compv_t test_basic_19 = {
+    .rgx = "xyz*\\*",
+    .cmp = "lx:ly:b3,5:lz:b3,5:l*:m"
+};
+
+static const compv_t test_basic_20 = {
+    .rgx = "xyz\\*",
+    .cmp = "pxyz\\*"
+};
+
+static const compv_t test_basic_21 = {
+    .rgx = "\\\\",
+    .cmp = "p\\\\"
+};
+
+static const compv_t test_basic_22 = {
+    .rgx = "\\*\\)\\{\\]\\+\\?",
+    .cmp = "p\\*\\)\\{\\]\\+\\?"
+};
+
+static const compv_t test_basic_23 = {
+    .rgx = "xyz*",
+    .cmp = "lx:ly:b3,5:lz:b3,5:m"
+};
+
+static const compv_t test_basic_24 = {
+    .rgx = "xyz{0,}",
+    .cmp = "lx:ly:b3,5:lz:b3,5:m"
+};
+
+static const compv_t test_basic_25 = {
+    .rgx = "xyz+",
+    .cmp = "lx:ly:lz:b2,4:m"
+};
+
+static const compv_t test_basic_26 = {
+    .rgx = "xyz{1,}",
+    .cmp = "lx:ly:lz:b2,4:m"
+};
+
+static const compv_t test_basic_27 = {
+    .rgx = "xyz?",
+    .cmp = "lx:ly:b3,4:lz:m"
+};
+
+static const compv_t test_basic_28 = {
+    .rgx = "xyz{1,0}",
+    .cmp = "lx:ly:b3,4:lz:m"
+};
+
+static const compv_t test_basic_29 = {
+    .rgx = "xyz{0,1}",
+    .cmp = "lx:ly:b3,4:lz:m"
+};
+
+static const compv_t test_nest_1 = {
     .rgx = "(a|b|c+)*b(x+|y(zs?(dd[A-F0-9]|bb)*)+)?",
     .cmp = "b1,10:b2,7:b3,5:la:j9:lb:j9:lc:b7,9:b1,10:lb:b12,30:b13,16:lx"
            ":b13,15:j30:ly:lz:b19,20:ls:b21,29:b22,26:ld:ld:cABCDEF0123456789"
            ":j28:lb:lb:b21,29:b17,30:m"
 };
 
-static const compv_t test_9_nest_2 = {
+static const compv_t test_nest_2 = {
     .rgx = "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p(q)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*",
     .cmp = "la:b2,49:lb:b4,48:lc:b6,47:ld:b8,46:le:b10,45:lf:b12,44:lg:b14,43"
            ":lh:b16,42:li:b18,41:lj:b20,40:lk:b22,39:ll:b24,38:lm:b26,37:ln"
@@ -61,14 +173,14 @@ static const compv_t test_9_nest_2 = {
            ":b4,48:b2,49:m"
 };
 
-static const compv_t test_10_nest_3 = {
+static const compv_t test_nest_3 = {
     .rgx = "a*a+(bb|c?d(ddd(ee|(ff)*)[a-f@.]g.*g*)+ss(ss[abc])*)xyz",
     .cmp = "b1,3:la:b1,3:la:b3,5:b6,9:lb:lb:j39:b10,11:lc:ld:ld:ld:ld:b16,19"
            ":le:le:j23:b20,23:lf:lf:b20,23:cabcdef@.:lg:b26,28:a:b26,28:b29,31"
            ":lg:b29,31:b12,32:ls:ls:b35,39:ls:ls:cabc:b35,39:lx:ly:lz:m"
 };
 
-static const compv_t test_11_nest_4 = {
+static const compv_t test_nest_4 = {
     .rgx = "w(e(r(t(y(u(i(p(o(i(u(y(q(q(w(e(r(tt(f(d(f(xx(g(g(ft(y(u(j(j(j(j("
            "j(j(sd(sd(d(sdds(sefjy(hfdsd(s(s(d(d(f(g(h(j(;(l(k(j(h(h(g(f(d(s("
            "a)*)*)+)*)*)?)?)?)*)+)+)+)+)*)*)*)+)?)?)?)?)?)?)?)?)*)+)+)+)*)?)+"
@@ -89,32 +201,37 @@ static const compv_t test_11_nest_4 = {
            ":b9,148:b8,149:b6,150:b3,151:m"
 };
 
-static const compv_t test_12_rep_1 = {
+static const compv_t test_nest_5 = {
+    .rgx = "a(b)c",
+    .cmp = "la:lb:lc:m"
+};
+
+static const compv_t test_rep_1 = {
     .rgx = "abc{3}",
     .cmp = "la:lb:lc:lc:lc:m"
 };
 
-static const compv_t test_13_rep_2 = {
+static const compv_t test_rep_2 = {
     .rgx = "xyz{,4}",
     .cmp = "lx:ly:b3,10:lz:b5,10:lz:b7,10:lz:b9,10:lz:m"
 };
 
-static const compv_t test_14_rep_3 = {
+static const compv_t test_rep_3 = {
     .rgx = "yyd{7,}",
     .cmp = "ly:ly:ld:ld:ld:ld:ld:ld:ld:b8,10:m"
 };
 
-static const compv_t test_15_rep_4 = {
+static const compv_t test_rep_4 = {
     .rgx = "yyd{5,6}",
     .cmp = "ly:ly:ld:ld:ld:ld:ld:b8,9:ld:m"
 };
 
-static const compv_t test_16_rep_5 = {
+static const compv_t test_rep_5 = {
     .rgx = "efx{0,}",
     .cmp = "le:lf:b3,5:lx:b3,5:m"
 };
 
-static const compv_t test_17_rep_6 = {
+static const compv_t test_rep_6 = {
     .rgx = "abc*(de+f{4,5}|xxyy){,3}",
     .cmp = "la:lb:b3,5:lc:b3,5:b6,53:b7,17:ld:le:b8,10:lf:lf:lf:lf:b15,16:lf:"
            "j21:lx:lx:ly:ly:b22,53:b23,33:ld:le:b24,26:lf:lf:lf:lf:b31,32:lf:"
@@ -122,7 +239,7 @@ static const compv_t test_17_rep_6 = {
            "j53:lx:lx:ly:ly:m"
 };
 
-static const compv_t test_18_rep_7 = {
+static const compv_t test_rep_7 = {
     .rgx = "a*(b{2,3}p+(ffl?p){4}(hh(ee(yuy){5,}){,8}){5}){1,2}",
     .cmp = "b1,3:la:b1,3:lb:lb:b6,7:lb:lp:b7,9:lf:lf:b12,13:ll:lp:lf:lf:b17,18"
           ":ll:lp:lf:lf:b22,23:ll:lp:lf:lf:b27,28:ll:lp:lh:lh:b32,183:le:le:ly"
@@ -215,28 +332,53 @@ static const compv_t test_18_rep_7 = {
           ":lu:ly:ly:lu:ly:ly:lu:ly:b1592,1596:m"
 };
 
-static const compv_t test_19_nclass_1 = {
+static const compv_t test_nclass_1 = {
     .rgx = "[^abc]",
     .cmp = "nabc:m"
 };
 
-static const compv_t test_20_nclass_2 = {
+static const compv_t test_nclass_2 = {
+    .rgx = "[^a\\bc]",
+    .cmp = "nabc:m"
+};
+
+static const compv_t test_nclass_3 = {
     .rgx = "[^^abc]",
     .cmp = "n^abc:m"
 };
 
-static const compv_t test_21_nclass_3 = {
+static const compv_t test_nclass_4 = {
+    .rgx = "[^\\^abc]",
+    .cmp = "n^abc:m"
+};
+
+static const compv_t test_nclass_5 = {
+    .rgx = "[^0-9A-Z]",
+    .cmp = "n0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:m"
+};
+
+static const compv_t test_nclass_6 = {
+    .rgx = "[^a-f*?+]",
+    .cmp = "nabcdef*?+:m"
+};
+
+static const compv_t test_nclass_7 = {
     .rgx = "([^a-fA-F]+|[^txf])+[^IYGHBGKJ]",
     .cmp = "b1,4:nabcdefABCDEF:b1,3:j5:ntxf:b0,6:nIYGHBGKJ:m"
 };
 
 static const compv_t *cmp_tests[NUM_TESTS_COMPILE] = {
-    &test_1_basic_1, &test_2_basic_2, &test_3_basic_3, &test_4_basic_4,
-    &test_5_basic_5, &test_6_basic_6, &test_7_basic_7, &test_8_nest_1,
-    &test_9_nest_2, &test_10_nest_3, &test_11_nest_4, &test_12_rep_1,
-    &test_13_rep_2, &test_14_rep_3, &test_15_rep_4, &test_16_rep_5,
-    &test_17_rep_6, &test_18_rep_7, &test_19_nclass_1, &test_20_nclass_2,
-    &test_21_nclass_3
+    &test_basic_1, &test_basic_2, &test_basic_3, &test_basic_4, &test_basic_5,
+    &test_basic_6, &test_basic_7, &test_basic_8, &test_basic_9, &test_basic_10,
+    &test_basic_11, &test_basic_12, &test_basic_13, &test_basic_14,
+    &test_basic_15, &test_basic_16, &test_basic_17, &test_basic_18,
+    &test_basic_19, &test_basic_20, &test_basic_21, &test_basic_22,
+    &test_basic_23, &test_basic_24, &test_basic_25, &test_basic_26,
+    &test_basic_27, &test_basic_28, &test_basic_29, &test_nest_1, &test_nest_2,
+    &test_nest_3, &test_nest_4, &test_nest_5, &test_rep_1, &test_rep_2,
+    &test_rep_3, &test_rep_4, &test_rep_5, &test_rep_6, &test_rep_7,
+    &test_nclass_1, &test_nclass_2, &test_nclass_3, &test_nclass_4,
+    &test_nclass_5, &test_nclass_6, &test_nclass_7
 };
 
 unsigned int parse_int (char **str)
@@ -275,6 +417,10 @@ int cmpexe (char *str, rxvm_t *prog)
 {
     int i;
     inst_t *inst;
+
+    if (prog->simple) {
+        return !(*str == 'p' && !strcmp(prog->simple, str + 1));
+    }
 
     for (i = 0; i < prog->size; i++) {
         inst = &prog->exe[i];
@@ -370,6 +516,11 @@ void print_prog_cmp (FILE *fp,  rxvm_t *compiled, int err)
 {
     int i;
     inst_t *inst;
+
+    if (compiled->simple){
+        fprintf(fp, "0\tp%s\n", compiled->simple);
+        return;
+    }
 
     for (i = 0; i < compiled->size; i++) {
         inst = &compiled->exe[i];

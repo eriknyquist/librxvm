@@ -9,6 +9,12 @@ void rxvm_print_oneline (rxvm_t *compiled)
     unsigned int i;
     inst_t *inst;
 
+    if (compiled->simple) {
+        printf("p");
+        printf("%s\n", compiled->simple);
+        return;
+    }
+
     for (i = 0; i < compiled->size; i++) {
         inst = &compiled->exe[i];
 

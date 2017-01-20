@@ -83,6 +83,7 @@ int test_rxvm_lfix_heuristic (int *count)
 
     verify_rxvm_lfix("ab\\*\nefghi", 0, 2, count, __func__);
     verify_rxvm_lfix("ab\\*\n(e|fg)hi", 0, 2, count, __func__);
+    verify_rxvm_lfix("ab\\*\\+\\?\nefghi", 0, 4, count, __func__);
     verify_rxvm_lfix("abc(def)*ghi\\+", 9, 12, count, __func__);
 
     return totalerrs;

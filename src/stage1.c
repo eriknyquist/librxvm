@@ -67,10 +67,12 @@ static void inst_stack_cleanup (void *data)
 
     inst = (inst_t *) data;
 
-    if (inst->ccs != NULL)
-        free(inst->ccs);
+    if (inst != NULL) {
+        if (inst->ccs != NULL)
+            free(inst->ccs);
 
-    free(inst);
+        free(inst);
+    }
 }
 
 static void stack_stack_cleanup (void *data)
@@ -99,7 +101,7 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
         }
 
     /* {,m} */
-    } else if (rep_n == REP_FIELD_EMPTY && rep_m > 0) {
+    } else if (rep_n == REP_FIELD_EMPTY && rep_m >= 0) {
         if ((err = code_rep_less(cp, rep_m, size, i)) < 0) {
             return err;
         }
@@ -107,12 +109,12 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
     lfix_dec();
 
     /* {n} */
-    } else if (rep_m == REP_NO_FIELD) {
+    } else if (rep_n >= 0 && rep_m == REP_NO_FIELD) {
         if ((err = code_rep_n(cp, rep_n, i)) < 0) {
             return err;
         }
 
-    /* Special case; treat as '*' operator */
+    /* Special case {0,}; treat as '*' operator */
     } else if (rep_n == 0 && rep_m == REP_FIELD_EMPTY) {
         if ((err = code_zero(cp, size, i)) < 0) {
             return err;
