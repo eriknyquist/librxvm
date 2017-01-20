@@ -136,7 +136,7 @@ A description of the available special characters follows.
 |
 
 Installation
-^^^^^^^^^^^^
+------------
 
 **Dependencies:**
 
@@ -155,7 +155,7 @@ To install, do the usual stuff:
     sudo make install
 
 Usage
-^^^^^
+-----
 
 See sample code in the ``examples`` directory. The examples are simple, and
 compile into easy-to-use command-line programs. They are automatically built by
