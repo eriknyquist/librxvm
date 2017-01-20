@@ -5,8 +5,6 @@
 
 #define TEST_TRS                   "rxvm_test.trs"
 #define TEST_LOG                   "rxvm_test.log"
-#define NUM_TESTS_COMPILE          48
-#define NUM_TESTS_ERR              35
 #define NUM_TESTS_SEARCH           20
 #define NUM_TESTS_SEARCH_MULTI     20
 #define NUM_TESTS_MATCH            25
