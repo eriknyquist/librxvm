@@ -34,8 +34,8 @@ char newline_seen;
 char *lp1;
 char *lpn;
 
-enum {STATE_START, STATE_LITERAL, STATE_RANGE, STATE_CLASS, STATE_DEREF,
-      STATE_REP, STATE_END};
+enum {STATE_START, STATE_LITERAL, STATE_RANGE, STATE_CLASS, STATE_REP,
+      STATE_END};
 
 static unsigned int literal;
 
@@ -57,6 +57,24 @@ static int trans (int literal, char **input, int tok, int state, int *ret)
     }
 
     return endstate;
+}
+
+static int lex_end(int *ret, int retval, char **input, int advance)
+{
+    *ret = retval;
+    *input += advance;
+    return STATE_END;
+}
+
+static int deref(char **input)
+{
+    *input += 1;
+
+    if (!**input) {
+        return 1;
+    }
+
+    return 0;
 }
 
 void lex_init (void)
@@ -82,17 +100,19 @@ int lex (char **input)
         switch (state) {
             case STATE_START:
                 if (**input == DEREF_SYM) {
-                    state = STATE_DEREF;
-                    *input += 1;
+                    if (deref(input)) {
+                        return RXVM_ETRAIL;
+                    }
+
+                    lp1 += 1;
+                    state = STATE_LITERAL;
 
                 } else if (**input == CHARC_OPEN_SYM) {
                     state = trans(literal, input, CHARC_OPEN, STATE_END, &ret);
                     if (!literal) literal = 1;
                 } else if (**input == CHARC_CLOSE_SYM) {
-                    state = STATE_END;
-                    ret = CHARC_CLOSE;
+                    state = lex_end(&ret, CHARC_CLOSE, input, 1);
                     literal = 0;
-                    *input += 1;
 
                 } else if (**input == REP_OPEN_SYM) {
                     state = trans(literal, input, 0, STATE_REP, NULL);
@@ -134,29 +154,21 @@ int lex (char **input)
                     state = STATE_RANGE;
                     *input += 2;
                 } else {
-                    state = STATE_END;
-                    ret = LITERAL;
-                    *input += 1;
+                    state = lex_end(&ret, LITERAL, input, 1);
                 }
 
-            break;
-            case STATE_DEREF:
-                if (!**input) {
-                    return RXVM_EINVAL;
-                } else {
-                    ret = LITERAL;
-                    lp1 += 1;
-                }
-
-                *input += 1;
-                state = STATE_END;
             break;
             case STATE_RANGE:
-                if (isprintable(**input) &&
-                        !isreserved(**input)) {
-                    state = STATE_END;
-                    ret = CHAR_RANGE;
-                    *input += 1;
+                if (**input == DEREF_SYM) {
+                    if (deref(input)) {
+                        return RXVM_ETRAIL;
+                    }
+
+                    if (isprintable(**input)) {
+                        state = lex_end(&ret, CHAR_RANGE, input, 1);
+                    }
+                } else if (isprintable(**input) && !isreserved(**input)) {
+                    state = lex_end(&ret, CHAR_RANGE, input, 1);
                 } else {
                     return RXVM_EINVAL;
                 }
@@ -185,9 +197,7 @@ int lex (char **input)
         }
     }
 
-    if (state == STATE_DEREF) {
-        ret = RXVM_ETRAIL;
-    } else if (state == STATE_REP) {
+    if (state == STATE_REP) {
         ret = RXVM_EREP;
     }
 

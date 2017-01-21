@@ -338,16 +338,24 @@ static int expand_char_range (context_t *cp)
 {
     char rhi;
     char rlo;
+    char tempn;
     int err;
 
+     if (*(lp1 + 2) == DEREF_SYM) {
+        tempn = *(lp1 + 3);
+     } else {
+        tempn = *(lp1 + 2);
+     }
+
     /* Figure out which character is highest */
-    if (*lp1 > *(lp1 + 2)) {
+    if (*lp1 > tempn) {
         rhi = *lp1;
-        rlo = *(lp1 + 2);
+        rlo = tempn;
     } else {
-        rhi = *(lp1 + 2);
+        rhi = tempn;
         rlo = *lp1;
     }
+
 
     /* Expand range */
     while (rlo <= rhi) {

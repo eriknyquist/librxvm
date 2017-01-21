@@ -214,6 +214,7 @@ void verify_cmp (char *regex, char *expected, const char *func, int *count)
 int test_rxvm_compile (int *count)
 {
     tests = 0;
+
     verify_cmp("x*", "b1,3:lx:b1,3:m", __func__, count);
     verify_cmp("aab*", "la:la:b3,5:lb:b3,5:m", __func__, count);
     verify_cmp("ab+|d*(xx)?", "b1,5:la:lb:b2,4:j11:b6,8:ld:b6,8:b9,11:lx:lx:m",
@@ -222,6 +223,12 @@ int test_rxvm_compile (int *count)
     verify_cmp("aa|bb|cc|dd",
         "b1,12:b2,9:b3,6:la:la:j14:lb:lb:j14:lc:lc:j14:ld:ld:m", __func__,
         count);
+
+    verify_cmp("[[]*", "b1,3:c[:b1,3:m", __func__, count);
+    verify_cmp("[\\]]*", "b1,3:c]:b1,3:m", __func__, count);
+    verify_cmp("[[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__, count);
+    verify_cmp("[\\[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__, count);
+    verify_cmp("[A-Z\\]]", "cABCDEFGHIJKLMNOPQRSTUVWXYZ]:m", __func__, count);
 
     verify_cmp("(aa)bb(cc)", "la:la:lb:lb:lc:lc:m", __func__, count);
     verify_cmp("(aa)bb(cc(dd(ee(ff))))",
