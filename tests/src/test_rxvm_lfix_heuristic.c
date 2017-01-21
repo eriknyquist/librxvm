@@ -54,6 +54,8 @@ void test_rxvm_lfix_heuristic (void)
     verify_rxvm_lfix("abcd{,5}c", 0, 2, __func__);
     verify_rxvm_lfix("abcd{0,}c", 0, 2, __func__);
     verify_rxvm_lfix("abcd{1,}c", 0, 3, __func__);
+    verify_rxvm_lfix("ab{123,}", 0, 1, __func__);
+    verify_rxvm_lfix("ab{1234,}123", 9, 11, __func__);
 
     verify_rxvm_lfix("abc(defg)", 0, 2, __func__);
     verify_rxvm_lfix("abc(defg)hijk", 9, 12, __func__);
