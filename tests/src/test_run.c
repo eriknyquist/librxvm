@@ -20,7 +20,6 @@ int main (void)
     }
 
     test_rxvm_compile();
-    test_rxvm_lfix_heuristic();
     test_rxvm_err();
     test_rxvm_match();
     test_rxvm_search();
@@ -28,6 +27,8 @@ int main (void)
     test_rxvm_search_nomatch();
     test_fuzz_rxvm_match();
     //test_fuzz_full_rxvm_match();
+    test_rxvm_lfix_heuristic();
+    test_rxvm_lfix_to_str();
 
     fclose(logfp);
     fclose(trsfp);

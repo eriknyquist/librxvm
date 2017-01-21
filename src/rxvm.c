@@ -30,7 +30,10 @@
 #include "stage2.h"
 #include "stack.h"
 #include "vm.h"
+
+#ifndef NOEXTRAS
 #include "bmh.h"
+#endif
 
 #define FBUF_SIZE  256
 

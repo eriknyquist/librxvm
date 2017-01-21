@@ -9,7 +9,8 @@ LOG_DRIVER = ./$(check_PROGRAMS)
 rxvm_test_SOURCES = test_run.c test_rxvm_compile.c test_rxvm_err.c \
 test_rxvm_search.c test_rxvm_match.c test_fuzz_rxvm_match.c \
 test_fuzz_full_rxvm_match.c test_rxvm_search_nomatch.c \
-test_rxvm_lfix_heuristic.c test_rxvm_search_multi.c test_utils.c randexp.c
+test_rxvm_lfix_heuristic.c test_rxvm_lfix_to_str.c test_rxvm_search_multi.c \
+test_utils.c randexp.c
 
 LDADD = -lrxvm -L../../src
 AM_CFLAGS = -I../../src -Wall -Wno-trigraphs
