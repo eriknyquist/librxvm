@@ -64,8 +64,9 @@ void test_rxvm_lfix_heuristic (void)
     verify_rxvm_lfix("abc(de)hij|k", 0, 0, __func__);
     verify_rxvm_lfix("aaaaa|bbbbb", 0, 0, __func__);
     verify_rxvm_lfix("aaa|bbb|ccc|ddd", 0, 0, __func__);
-    verify_rxvm_lfix("aaa", 0, 0, __func__);
-    verify_rxvm_lfix("aaa\\*", 0, 0, __func__);
+    verify_rxvm_lfix("aaa", 0, 2, __func__);
+    verify_rxvm_lfix("aa\\*", 0, 2, __func__);
+    verify_rxvm_lfix("aaa\\*b\\?b", 0, 6, __func__);
 
     verify_rxvm_lfix("abc(def)+ijkl", 9, 12, __func__);
     verify_rxvm_lfix("abc(def)+ijkl*", 0, 2, __func__);
@@ -82,6 +83,8 @@ void test_rxvm_lfix_heuristic (void)
     verify_rxvm_lfix("abcd[ \t\n]efghi", 0, 3, __func__);
     verify_rxvm_lfix("abcd[ \t]efghi", 8, 12, __func__);
     verify_rxvm_lfix("abcd(ef\n)?efghi", 0, 3, __func__);
+    verify_rxvm_lfix("abcc(d|(e?|f|g+)|h)ijklm", 19, 23, __func__);
+    verify_rxvm_lfix("abcc(d|(e?|f\n|g+)|h)ijklm", 0, 3, __func__);
 
     verify_rxvm_lfix("ab\\*\nefghi", 0, 2, __func__);
     verify_rxvm_lfix("ab\\*\n(e|fg)hi", 0, 2, __func__);

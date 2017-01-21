@@ -476,21 +476,24 @@ static int compile_simple_backlog (context_t *cp)
     return 0;
 }
 
-void check_simple_for_newlines (rxvm_t *compiled, char *orig)
+void check_simple_for_lfix (rxvm_t *compiled, char *orig)
 {
     unsigned int i;
     unsigned int delimit;
 
     delimit = 0;
+    compiled->lfix0 = 0;
+
     for (i = 0; orig[i]; ++i) {
         if (orig[i] == '\\') {
             ++delimit;
         } else if (orig[i] == '\n') {
-            compiled->lfix0 = 0;
             compiled->lfixn = i - 1 - delimit;
             return;
         }
     }
+
+    compiled->lfixn = i - 1 - delimit;
 }
 
 /* Stage 1 compiler: takes the input expression string,
@@ -516,7 +519,7 @@ int stage1 (rxvm_t *compiled, char *input, stack_t **ret)
     /* String contains only literal characters;
      * no compilation necessary. */
     if (ctx.tok == END) {
-        check_simple_for_newlines(compiled, ctx.orig);
+        check_simple_for_lfix(compiled, ctx.orig);
         ctx.simple = ctx.orig;
         stage1_cleanup(&ctx);
         stack_free(ctx.prog, inst_stack_cleanup);
