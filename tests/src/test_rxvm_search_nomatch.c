@@ -3,6 +3,8 @@
 #include "rxvm.h"
 #include "test_common.h"
 
+static int tests;
+
 char *nomatch_tests[NUM_TESTS_NOMATCH][2] =
 {
     {"xy", ",czy7*%^&0-(spo()6(%^&nowirgbi"},
@@ -12,7 +14,7 @@ char *nomatch_tests[NUM_TESTS_NOMATCH][2] =
     {"aa|bb|cc|dd", "ababacadacabdcadcbdcdabcdbdca"}
 };
 
-int test_rxvm_search_nomatch (int *count)
+void test_rxvm_search_nomatch (void)
 {
     rxvm_t compiled;
     const char *msg;
@@ -21,8 +23,12 @@ int test_rxvm_search_nomatch (int *count)
     int err;
     int i;
 
+    tests = 0;
+
     for (i = 0; i < NUM_TESTS_NOMATCH; ++i) {
         ret = 0;
+        ++tests;
+
         regex = nomatch_tests[i][0];
         input = nomatch_tests[i][1];
 
@@ -47,10 +53,7 @@ int test_rxvm_search_nomatch (int *count)
         }
 
         msg = (ret) ? "FAIL" : "PASS";
-        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, tests);
         printf("%s: %s #%i\n", msg, __func__, i + 1);
-        ++(*count);
     }
-
-    return ret;
 }

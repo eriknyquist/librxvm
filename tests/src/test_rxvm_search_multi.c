@@ -3,6 +3,8 @@
 #include "rxvm.h"
 #include "test_common.h"
 
+static int tests;
+
 static char *multi_tests[NUM_TESTS_SEARCH_MULTI][4] =
 {
     {"x+", "oki9u08y72389)**IOxxxxokKIIjJoixxImIOKmOIOuyyRKj", "xxxx", "xx"},
@@ -61,7 +63,7 @@ static int substring_match (char *string, char *start, char *end)
     return ((start - 1) == end) ? 1 : 0;
 }
 
-int test_rxvm_search_multi (int *count)
+void test_rxvm_search_multi (void)
 {
     rxvm_t compiled;
     const char *msg;
@@ -71,8 +73,12 @@ int test_rxvm_search_multi (int *count)
     int err;
     int i;
 
+    tests = 0;
+
     for (i = 0; i < NUM_TESTS_SEARCH_MULTI; ++i) {
         ret = 0;
+        ++tests;
+
         if ((err = compile_testexp(&compiled, multi_tests[i][0])) < 0) {
             fprintf(logfp, "Error compiling regex %s\n", multi_tests[i][0]);
             ++ret;
@@ -122,10 +128,7 @@ int test_rxvm_search_multi (int *count)
         }
 
         msg = (ret) ? "FAIL" : "PASS";
-        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, tests);
         printf("%s: %s #%i\n", msg, __func__, i + 1);
-        ++(*count);
     }
-
-    return ret;
 }

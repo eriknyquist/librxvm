@@ -3,6 +3,8 @@
 #include "rxvm.h"
 #include "test_common.h"
 
+static int tests;
+
 static char *iter_tests[NUM_TESTS_SEARCH][3] =
 {
     {"x+", "oki9u08y72389)*Y9*YO(U*IOxxxxokKIIjJoiOKjImIOKmOIOuyyRKj", "xxxx"},
@@ -40,7 +42,7 @@ static int substring_match (char *string, char *start, char *end)
     return ((start - 1) == end) ? 1 : 0;
 }
 
-int test_rxvm_search (int *count)
+void test_rxvm_search (void)
 {
     rxvm_t compiled;
     const char *msg;
@@ -50,8 +52,12 @@ int test_rxvm_search (int *count)
     int err;
     int i;
 
+    tests = 0;
+
     for (i = 0; i < NUM_TESTS_SEARCH; ++i) {
         ret = 0;
+        ++tests;
+
         if ((err = compile_testexp(&compiled, iter_tests[i][0])) < 0) {
             fprintf(logfp, "Error compiling regex %s\n", iter_tests[i][0]);
             ++ret;
@@ -59,9 +65,12 @@ int test_rxvm_search (int *count)
             if (rxvm_search(&compiled, iter_tests[i][1], &start, &end, 0)) {
                 if (substring_match(iter_tests[i][2], start, end)) {
                 } else {
-                    fprintf(logfp, "Error matching regex %s\n", iter_tests[i][0]);
-                    fprintf(logfp, "Expecting \"%s\", but substring pointers show \"",
-                           iter_tests[i][2]);
+                    fprintf(logfp, "Error matching regex %s\n",
+                            iter_tests[i][0]);
+
+                    fprintf(logfp,
+                            "Expecting \"%s\", but substring pointers show \"",
+                            iter_tests[i][2]);
                     while (start != end) {
                         fprintf(logfp, "%c", *start);
                         ++start;
@@ -71,8 +80,9 @@ int test_rxvm_search (int *count)
                 }
             } else {
                 fprintf(logfp, "Error matching regex %s\n", iter_tests[i][0]);
-                fprintf(logfp, "Matching input %s falsely reported non-matching\n",
-                       iter_tests[i][1]);
+                fprintf(logfp,
+                        "Matching input %s falsely reported non-matching\n",
+                        iter_tests[i][1]);
                 ++ret;
             }
 
@@ -80,10 +90,7 @@ int test_rxvm_search (int *count)
         }
 
         msg = (ret) ? "FAIL" : "PASS";
-        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, *count);
+        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, tests);
         printf("%s: %s #%i\n", msg, __func__, i + 1);
-        ++(*count);
     }
-
-    return ret;
 }

@@ -4,15 +4,14 @@
 #include "test_common.h"
 
 static int tests;
-static int totalerrs;
 
-static void log_trs (char *msg, const char *func, int count)
+static void log_trs (char *msg, const char *func)
 {
-    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, count);
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, tests);
 }
 
 void verify_rxvm_lfix (char *regex, unsigned int lfix0,
-                      unsigned int lfixn, int *count, const char *modname)
+                      unsigned int lfixn, const char *modname)
 {
     char *msg;
     int ret;
@@ -20,7 +19,7 @@ void verify_rxvm_lfix (char *regex, unsigned int lfix0,
 
     if ((ret = rxvm_compile(&compiled, regex)) < 0) {
         fprintf(logfp, "Failed to compile expression %s\n", regex);
-        log_trs("FAIL", modname, *count);
+        log_trs("FAIL", modname);
         return;
     }
 
@@ -34,57 +33,61 @@ void verify_rxvm_lfix (char *regex, unsigned int lfix0,
                        compiled.lfix0, regex[compiled.lfix0], compiled.lfixn,
                        regex[compiled.lfixn]);
         msg = "FAIL";
-        ++totalerrs;
     } else {
         msg = "PASS";
     }
 
     rxvm_free(&compiled);
-    log_trs(msg, modname, *count);
+    log_trs(msg, modname);
     printf("%s: %s #%i\n", msg, modname, ++tests);
-    ++(*count);
 }
 
-int test_rxvm_lfix_heuristic (int *count)
+void test_rxvm_lfix_heuristic (void)
 {
     tests = 0;
-    verify_rxvm_lfix("AaBb+", 0, 3, count, __func__);
-    verify_rxvm_lfix("ab+c", 0, 1, count, __func__);
-    verify_rxvm_lfix("abc?d", 0, 1, count, __func__);
-    verify_rxvm_lfix("ab*c", 0, 0, count, __func__);
 
-    verify_rxvm_lfix("abcd{,5}c", 0, 2, count, __func__);
-    verify_rxvm_lfix("abcd{0,}c", 0, 2, count, __func__);
-    verify_rxvm_lfix("abcd{1,}c", 0, 3, count, __func__);
+    verify_rxvm_lfix("AaBb+", 0, 3, __func__);
+    verify_rxvm_lfix("ab+c", 0, 1, __func__);
+    verify_rxvm_lfix("abc?d", 0, 1, __func__);
+    verify_rxvm_lfix("ab*c", 0, 0, __func__);
 
-    verify_rxvm_lfix("abc(defg)", 0, 2, count, __func__);
-    verify_rxvm_lfix("abc(defg)hijk", 9, 12, count, __func__);
+    verify_rxvm_lfix("abcd{,5}c", 0, 2, __func__);
+    verify_rxvm_lfix("abcd{0,}c", 0, 2, __func__);
+    verify_rxvm_lfix("abcd{1,}c", 0, 3, __func__);
 
-    verify_rxvm_lfix("abc(d|e)fghi", 8, 11, count, __func__);
-    verify_rxvm_lfix("abc(de)hij|k", 0, 0, count, __func__);
-    verify_rxvm_lfix("aaaaa|bbbbb", 0, 0, count, __func__);
-    verify_rxvm_lfix("aaa|bbb|ccc|ddd", 0, 0, count, __func__);
+    verify_rxvm_lfix("abc(defg)", 0, 2, __func__);
+    verify_rxvm_lfix("abc(defg)hijk", 9, 12, __func__);
 
-    verify_rxvm_lfix("abc(def)+ijkl", 9, 12, count, __func__);
-    verify_rxvm_lfix("abc(def)+ijkl*", 0, 2, count, __func__);
-    verify_rxvm_lfix("abc(def)+ijklm*", 9, 12, count, __func__);
-    verify_rxvm_lfix("abcc(def)+ijkl", 0, 3, count, __func__);
+    verify_rxvm_lfix("abc(d|e)fghi", 8, 11, __func__);
+    verify_rxvm_lfix("abc(de)hij|k", 0, 0, __func__);
+    verify_rxvm_lfix("aaaaa|bbbbb", 0, 0, __func__);
+    verify_rxvm_lfix("aaa|bbb|ccc|ddd", 0, 0, __func__);
+    verify_rxvm_lfix("aaa", 0, 0, __func__);
+    verify_rxvm_lfix("aaa\\*", 0, 0, __func__);
 
-    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijkl", 18, 21, count, __func__);
-    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijkl*", 0, 2, count, __func__);
-    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijklm*", 18, 21, count, __func__);
-    verify_rxvm_lfix("abcc(d|(e?|f|g+)|h)ijkl", 0, 3, count, __func__);
+    verify_rxvm_lfix("abc(def)+ijkl", 9, 12, __func__);
+    verify_rxvm_lfix("abc(def)+ijkl*", 0, 2, __func__);
+    verify_rxvm_lfix("abc(def)+ijklm*", 9, 12, __func__);
+    verify_rxvm_lfix("abcc(def)+ijkl", 0, 3, __func__);
 
-    verify_rxvm_lfix("abcd*efghi", 5, 9, count, __func__);
-    verify_rxvm_lfix("abcd\nefghi", 0, 3, count, __func__);
-    verify_rxvm_lfix("abcd[ \t\n]efghi", 0, 3, count, __func__);
-    verify_rxvm_lfix("abcd[ \t]efghi", 8, 12, count, __func__);
-    verify_rxvm_lfix("abcd(ef\n)?efghi", 0, 3, count, __func__);
+    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijkl", 18, 21, __func__);
+    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijkl*", 0, 2, __func__);
+    verify_rxvm_lfix("abc(d|(e?|f|g+)|h)ijklm*", 18, 21, __func__);
+    verify_rxvm_lfix("abcc(d|(e?|f|g+)|h)ijkl", 0, 3, __func__);
 
-    verify_rxvm_lfix("ab\\*\nefghi", 0, 2, count, __func__);
-    verify_rxvm_lfix("ab\\*\n(e|fg)hi", 0, 2, count, __func__);
-    verify_rxvm_lfix("ab\\*\\+\\?\nefghi", 0, 4, count, __func__);
-    verify_rxvm_lfix("abc(def)*ghi\\+", 9, 12, count, __func__);
+    verify_rxvm_lfix("abcd*efghi", 5, 9, __func__);
+    verify_rxvm_lfix("abcd\nefghi", 0, 3, __func__);
+    verify_rxvm_lfix("abcd[ \t\n]efghi", 0, 3, __func__);
+    verify_rxvm_lfix("abcd[ \t]efghi", 8, 12, __func__);
+    verify_rxvm_lfix("abcd(ef\n)?efghi", 0, 3, __func__);
 
-    return totalerrs;
+    verify_rxvm_lfix("ab\\*\nefghi", 0, 2, __func__);
+    verify_rxvm_lfix("ab\\*\n(e|fg)hi", 0, 2, __func__);
+    verify_rxvm_lfix("ab\\*\\+\\?\nefghi", 0, 4, __func__);
+    verify_rxvm_lfix("abc(def)*ghi\\+", 9, 12, __func__);
+
+    verify_rxvm_lfix("abc[defgh]", 0, 2, __func__);
+    verify_rxvm_lfix("abc[defgh]ijkl", 10, 13, __func__);
+    verify_rxvm_lfix("abc[d\\]fgh]ijkl", 11, 14, __func__);
+    verify_rxvm_lfix("abc[d\\]fgh]ij\\kl", 11, 14, __func__);
 }

@@ -6,7 +6,6 @@
 
 static int tests;
 
-
 unsigned int parse_int (char **str)
 {
     unsigned int ret;
@@ -182,17 +181,18 @@ void print_prog_cmp (FILE *fp,  rxvm_t *compiled, int err)
     fprintf(fp, "\n");
 }
 
-void verify_cmp (char *regex, char *expected, const char *func, int *count)
+void verify_cmp (char *regex, char *expected, const char *func)
 {
     char *msg;
     int err;
     rxvm_t compiled;
 
     msg = "PASS";
+    ++tests;
 
     if ((err = compile_testexp(&compiled, regex)) < 0) {
         fprintf(logfp, "\nFail: can't compile '%s' (errcode=%d)\n", regex, err);
-        fprintf(trsfp, ":test-result: FAIL %s #%d\n", func, *count);
+        fprintf(trsfp, ":test-result: FAIL %s #%d\n", func, tests);
         return;
     }
 
@@ -206,80 +206,71 @@ void verify_cmp (char *regex, char *expected, const char *func, int *count)
     }
 
     rxvm_free(&compiled);
-    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, *count);
-    printf("%s: %s #%i\n", msg, func, ++tests);
-    ++(*count);
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, tests);
+    printf("%s: %s #%i\n", msg, func, tests);
 }
 
-int test_rxvm_compile (int *count)
+void test_rxvm_compile (void)
 {
     tests = 0;
 
-    verify_cmp("x*", "b1,3:lx:b1,3:m", __func__, count);
-    verify_cmp("aab*", "la:la:b3,5:lb:b3,5:m", __func__, count);
+    verify_cmp("x*", "b1,3:lx:b1,3:m", __func__);
+    verify_cmp("aab*", "la:la:b3,5:lb:b3,5:m", __func__);
     verify_cmp("ab+|d*(xx)?", "b1,5:la:lb:b2,4:j11:b6,8:ld:b6,8:b9,11:lx:lx:m",
-        __func__, count);
+        __func__);
 
     verify_cmp("aa|bb|cc|dd",
-        "b1,12:b2,9:b3,6:la:la:j14:lb:lb:j14:lc:lc:j14:ld:ld:m", __func__,
-        count);
+        "b1,12:b2,9:b3,6:la:la:j14:lb:lb:j14:lc:lc:j14:ld:ld:m", __func__);
 
-    verify_cmp("[[]*", "b1,3:c[:b1,3:m", __func__, count);
-    verify_cmp("[\\]]*", "b1,3:c]:b1,3:m", __func__, count);
-    verify_cmp("[[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__, count);
-    verify_cmp("[\\[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__, count);
-    verify_cmp("[A-Z\\]]", "cABCDEFGHIJKLMNOPQRSTUVWXYZ]:m", __func__, count);
+    verify_cmp("[[]*", "b1,3:c[:b1,3:m", __func__);
+    verify_cmp("[\\]]*", "b1,3:c]:b1,3:m", __func__);
+    verify_cmp("[[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__);
+    verify_cmp("[\\[-\\]]*", "b1,3:c[\\]:b1,3:m", __func__);
+    verify_cmp("[A-Z\\]]", "cABCDEFGHIJKLMNOPQRSTUVWXYZ]:m", __func__);
+    verify_cmp("(aa)bb(cc)", "la:la:lb:lb:lc:lc:m", __func__);
 
-    verify_cmp("(aa)bb(cc)", "la:la:lb:lb:lc:lc:m", __func__, count);
     verify_cmp("(aa)bb(cc(dd(ee(ff))))",
-        "la:la:lb:lb:lc:lc:ld:ld:le:le:lf:lf:m", __func__, count);
+        "la:la:lb:lb:lc:lc:ld:ld:le:le:lf:lf:m", __func__);
 
     verify_cmp("\\**\\++\\??\\.\\\\[*+?.\\\\]",
-        "b1,3:l*:b1,3:l+:b3,5:b6,7:l?:l.:l\\:c*+?.\\:m", __func__, count);
+        "b1,3:l*:b1,3:l+:b3,5:b6,7:l?:l.:l\\:c*+?.\\:m", __func__);
 
-    verify_cmp("q+", "lq:b0,2:m", __func__, count);
-    verify_cmp("xq+", "lx:lq:b1,3:m", __func__, count);
-    verify_cmp("a+b+c+d+", "la:b0,2:lb:b2,4:lc:b4,6:ld:b6,8:m", __func__,
-        count);
-
-    verify_cmp("f?", "b1,2:lf:m", __func__, count);
-    verify_cmp("faq?", "lf:la:b3,4:lq:m", __func__, count);
-
-    verify_cmp("f?a?q?x?", "b1,2:lf:b3,4:la:b5,6:lq:b7,8:lx:m", __func__,
-        count);
-
-    verify_cmp("fa|df", "b1,4:lf:la:j6:ld:lf:m", __func__, count);
+    verify_cmp("q+", "lq:b0,2:m", __func__);
+    verify_cmp("xq+", "lx:lq:b1,3:m", __func__);
+    verify_cmp("a+b+c+d+", "la:b0,2:lb:b2,4:lc:b4,6:ld:b6,8:m", __func__);
+    verify_cmp("f?", "b1,2:lf:m", __func__);
+    verify_cmp("faq?", "lf:la:b3,4:lq:m", __func__);
+    verify_cmp("f?a?q?x?", "b1,2:lf:b3,4:la:b5,6:lq:b7,8:lx:m", __func__);
+    verify_cmp("fa|df", "b1,4:lf:la:j6:ld:lf:m", __func__);
 
     verify_cmp("a|b|c|d|e",
-        "b1,12:b2,10:b3,8:b4,6:la:j13:lb:j13:lc:j13:ld:j13:le:m", __func__,
-        count);
+        "b1,12:b2,10:b3,8:b4,6:la:j13:lb:j13:lc:j13:ld:j13:le:m", __func__);
 
     verify_cmp("aa+|b?|bbc*|q",
         "b1,16:b2,10:b3,7:la:la:b4,6:j17:b8,9:lb:j17:lb:lb:b13,15:lc:b13,15:"
-        "j17:lq:m", __func__, count);
+        "j17:lq:m", __func__);
 
-    verify_cmp("a", "pa", __func__, count);
-    verify_cmp("xyz", "pxyz", __func__, count);
+    verify_cmp("a", "pa", __func__);
+    verify_cmp("xyz", "pxyz", __func__);
+    verify_cmp("xyz*\\*", "lx:ly:b3,5:lz:b3,5:l*:m", __func__);
+    verify_cmp("xyz\\*", "pxyz\\*", __func__);
+    verify_cmp("\\\\", "p\\\\", __func__);
+    verify_cmp("\\*\\)\\{\\]\\+\\?", "p\\*\\)\\{\\]\\+\\?", __func__);
 
-    verify_cmp("xyz*\\*", "lx:ly:b3,5:lz:b3,5:l*:m", __func__, count);
-    verify_cmp("xyz\\*", "pxyz\\*", __func__, count);
-    verify_cmp("\\\\", "p\\\\", __func__, count);
-    verify_cmp("\\*\\)\\{\\]\\+\\?", "p\\*\\)\\{\\]\\+\\?", __func__, count);
+    verify_cmp("xyz*", "lx:ly:b3,5:lz:b3,5:m", __func__);
+    verify_cmp("xyz{0,}", "lx:ly:b3,5:lz:b3,5:m", __func__);
 
-    verify_cmp("xyz*", "lx:ly:b3,5:lz:b3,5:m", __func__, count);
-    verify_cmp("xyz{0,}", "lx:ly:b3,5:lz:b3,5:m", __func__, count);
+    verify_cmp("xyz+", "lx:ly:lz:b2,4:m", __func__);
+    verify_cmp("xyz{1,}", "lx:ly:lz:b2,4:m", __func__);
 
-    verify_cmp("xyz+", "lx:ly:lz:b2,4:m", __func__, count);
-    verify_cmp("xyz{1,}", "lx:ly:lz:b2,4:m", __func__, count);
-
-    verify_cmp("xyz?", "lx:ly:b3,4:lz:m", __func__, count);
-    verify_cmp("xyz{1,0}", "lx:ly:b3,4:lz:m", __func__, count);
-    verify_cmp("xyz{0,1}", "lx:ly:b3,4:lz:m", __func__, count);
+    verify_cmp("xyz?", "lx:ly:b3,4:lz:m", __func__);
+    verify_cmp("xyz{1,0}", "lx:ly:b3,4:lz:m", __func__);
+    verify_cmp("xyz{0,1}", "lx:ly:b3,4:lz:m", __func__);
 
     verify_cmp("(a|b|c+)*b(x+|y(zs?(dd[A-F0-9]|bb)*)+)?",
         "b1,10:b2,7:b3,5:la:j9:lb:j9:lc:b7,9:b1,10:lb:b12,30:b13,16:lx"
         ":b13,15:j30:ly:lz:b19,20:ls:b21,29:b22,26:ld:ld:cABCDEF0123456789"
-        ":j28:lb:lb:b21,29:b17,30:m", __func__, count);
+        ":j28:lb:lb:b21,29:b17,30:m", __func__);
 
     verify_cmp(
         "a(b(c(d(e(f(g(h(i(j(k(l(m(n(o(p(q)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*)*",
@@ -287,13 +278,13 @@ int test_rxvm_compile (int *count)
         ":lh:b16,42:li:b18,41:lj:b20,40:lk:b22,39:ll:b24,38:lm:b26,37:ln"
         ":b28,36:lo:b30,35:lp:b32,34:lq:b32,34:b30,35:b28,36:b26,37:b24,38"
         ":b22,39:b20,40:b18,41:b16,42:b14,43:b12,44:b10,45:b8,46:b6,47"
-        ":b4,48:b2,49:m", __func__, count);
+        ":b4,48:b2,49:m", __func__);
 
     verify_cmp("a*a+(bb|c?d(ddd(ee|(ff)*)[a-f@.]g.*g*)+ss(ss[abc])*)xyz",
         "b1,3:la:b1,3:la:b3,5:b6,9:lb:lb:j39:b10,11:lc:ld:ld:ld:ld:b16,19"
         ":le:le:j23:b20,23:lf:lf:b20,23:cabcdef@.:lg:b26,28:a:b26,28:b29,31"
         ":lg:b29,31:b12,32:ls:ls:b35,39:ls:ls:cabc:b35,39:lx:ly:lz:m",
-        __func__, count);
+        __func__);
 
     verify_cmp(
         "w(e(r(t(y(u(i(p(o(i(u(y(q(q(w(e(r(tt(f(d(f(xx(g(g(ft(y(u(j(j(j(j("
@@ -314,25 +305,23 @@ int test_rxvm_compile (int *count)
          ":b43,132:b40,133:b36,134:b34,135:b32,136:b30,137:b26,138:b24,139"
          ":b20,140:b19,141:b18,142:b17,143:b16,144:b15,145:b13,146:b11,147"
          ":b9,148:b8,149:b6,150:b3,151:m",
-         __func__, count);
+         __func__);
 
-    verify_cmp("a(b)c", "la:lb:lc:m", __func__, count);
-    verify_cmp("abc{3}", "la:lb:lc:lc:lc:m", __func__, count);
+    verify_cmp("a(b)c", "la:lb:lc:m", __func__);
+    verify_cmp("abc{3}", "la:lb:lc:lc:lc:m", __func__);
     verify_cmp("xyz{,4}", "lx:ly:b3,10:lz:b5,10:lz:b7,10:lz:b9,10:lz:m",
-               __func__, count);
+               __func__);
 
-    verify_cmp("yyd{7,}", "ly:ly:ld:ld:ld:ld:ld:ld:ld:b8,10:m", __func__,
-               count);
-
-    verify_cmp("yyd{5,6}", "ly:ly:ld:ld:ld:ld:ld:b8,9:ld:m", __func__, count);
-    verify_cmp("efx{0,}", "le:lf:b3,5:lx:b3,5:m", __func__, count);
+    verify_cmp("yyd{7,}", "ly:ly:ld:ld:ld:ld:ld:ld:ld:b8,10:m", __func__);
+    verify_cmp("yyd{5,6}", "ly:ly:ld:ld:ld:ld:ld:b8,9:ld:m", __func__);
+    verify_cmp("efx{0,}", "le:lf:b3,5:lx:b3,5:m", __func__);
 
     verify_cmp("abc*(de+f{4,5}|xxyy){,3}",
         "la:lb:b3,5:lc:b3,5:b6,53:b7,17:ld:le:b8,10:lf:lf:lf:lf:b15,16:lf:"
         "j21:lx:lx:ly:ly:b22,53:b23,33:ld:le:b24,26:lf:lf:lf:lf:b31,32:lf:"
         "j37:lx:lx:ly:ly:b38,53:b39,49:ld:le:b40,42:lf:lf:lf:lf:b47,48:lf:"
         "j53:lx:lx:ly:ly:m",
-        __func__, count);
+        __func__);
 
     verify_cmp("a*(b{2,3}p+(ffl?p){4}(hh(ee(yuy){5,}){,8}){5}){1,2}",
         "b1,3:la:b1,3:lb:lb:b6,7:lb:lp:b7,9:lf:lf:b12,13:ll:lp:lf:lf:b17,18"
@@ -424,18 +413,16 @@ int test_rxvm_compile (int *count)
         ":ly:ly:lu:ly:b1554,1558:b1559,1596:le:le:ly:lu:ly:ly:lu:ly:ly:lu:ly"
         ":ly:lu:ly:ly:lu:ly:b1573,1577:b1578,1596:le:le:ly:lu:ly:ly:lu:ly:ly"
         ":lu:ly:ly:lu:ly:ly:lu:ly:b1592,1596:m",
-        __func__, count);
+        __func__);
 
-    verify_cmp("[^abc]", "nabc:m", __func__, count);
-    verify_cmp("[^a\\bc]", "nabc:m", __func__, count);
-    verify_cmp("[^^abc]", "n^abc:m", __func__, count);
-    verify_cmp("[^\\^abc]", "n^abc:m", __func__, count);
+    verify_cmp("[^abc]", "nabc:m", __func__);
+    verify_cmp("[^a\\bc]", "nabc:m", __func__);
+    verify_cmp("[^^abc]", "n^abc:m", __func__);
+    verify_cmp("[^\\^abc]", "n^abc:m", __func__);
     verify_cmp("[^0-9A-Z]", "n0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:m",
-               __func__, count);
-    verify_cmp("[^a-f*?+]", "nabcdef*?+:m", __func__, count);
+               __func__);
+    verify_cmp("[^a-f*?+]", "nabcdef*?+:m", __func__);
     verify_cmp("([^a-fA-F]+|[^txf])+[^IYGHBGKJ]",
                "b1,4:nabcdefABCDEF:b1,3:j5:ntxf:b0,6:nIYGHBGKJ:m",
-               __func__, count);
-
-    return 0;
+               __func__);
 }

@@ -9,7 +9,9 @@
 #define RANDINPUT_LIMIT   500
 #define NUM_ITER          1000
 
-int test_fuzz_full_rxvm_match (int *count)
+static int tests;
+
+void test_fuzz_full_rxvm_match (void)
 {
     const char *msg;
     char *gen;
@@ -44,10 +46,13 @@ int test_fuzz_full_rxvm_match (int *count)
     icfg.whitespace = 10;
     icfg.len = 0;
 
+    tests = 0;
+
     for (i = 0; i < NUM_TESTS_FUZZ_FULL_MATCH; ++i) {
         passed = 0;
         failed = 0;
         itersize = 0;
+        ++tests;
 
         if ((exp = gen_randexp(&ecfg, NULL)) == NULL) {
             test_err("", "", __func__,
@@ -93,12 +98,10 @@ iter_end:
         total_size += itersize;
         ret += failed;
         hrsize(itersize, sizestr, sizeof(sizestr));
-        printf("%s %d %s: %d failed, %d passed (out of %d) %s\n", msg, *count,
+        printf("%s %d %s: %d failed, %d passed (out of %d) %s\n", msg, tests,
                 __func__, failed, passed, NUM_ITER, sizestr);
-        ++(*count);
     }
 
     hrsize(total_size, sizestr, sizeof(sizestr));
     printf("Total input data used for fuzzing: %s\n", sizestr);
-    return ret;
 }

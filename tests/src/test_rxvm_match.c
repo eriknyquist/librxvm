@@ -5,6 +5,8 @@
 
 #define NUMVARIATIONS        5
 
+static int count;
+
 char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
 {
     {"abc",
@@ -118,12 +120,12 @@ char *tests[NUM_TESTS_MATCH][(NUMVARIATIONS * 2) + 1] =
         "*", "^", "^^", "BB**BB**^^", "*^B*^BBB^^BB^"}
 };
 
-static void log_trs (char *msg, const char *func, int i)
+static void log_trs (char *msg, const char *func)
 {
-    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, i);
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, count);
 }
 
-int test_rxvm_match (int *count)
+void test_rxvm_match (void)
 {
     rxvm_t compiled;
     char *msg;
@@ -134,13 +136,17 @@ int test_rxvm_match (int *count)
     int j;
 
     total_err = 0;
+    count = 0;
+
     for (i = 0; i < NUM_TESTS_MATCH; ++i) {
         test_err = 0;
+        ++count;
+
         if ((ret = compile_testexp(&compiled, tests[i][0])) < 0) {
-            log_trs("FAIL", __func__, *count);
+            log_trs("FAIL", __func__);
             fprintf(logfp, "Error: compilation failed (%d): %s\n",
                     ret, tests[i][0]);
-            return ret;
+            return;
         }
 
         /* matching input */
@@ -173,10 +179,7 @@ int test_rxvm_match (int *count)
             msg = "PASS";
         }
 
-        log_trs(msg, __func__, *count);
+        log_trs(msg, __func__);
         printf("%s: %s #%i\n", msg, __func__, i + 1);
-        ++(*count);
     }
-
-    return total_err;
 }
