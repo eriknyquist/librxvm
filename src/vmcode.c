@@ -204,6 +204,8 @@ int code_rep_less (context_t *cp, int rep_m, unsigned int size, stackitem_t *i)
 
     if (rep_m == 0)
         return RXVM_BADOP;
+    else if (rep_m == 1)
+        return code_onezero(cp, size, i);
 
     for (j = 0; j < rep_m; ++j) {
         end = (size + 1) * (rep_m - j);

@@ -266,6 +266,7 @@ void test_rxvm_compile (void)
     verify_cmp("xyz?", "lx:ly:b3,4:lz:m", __func__);
     verify_cmp("xyz{1,0}", "lx:ly:b3,4:lz:m", __func__);
     verify_cmp("xyz{0,1}", "lx:ly:b3,4:lz:m", __func__);
+    verify_cmp("xyz{,1}", "lx:ly:b3,4:lz:m", __func__);
 
     verify_cmp("(a|b|c+)*b(x+|y(zs?(dd[A-F0-9]|bb)*)+)?",
         "b1,10:b2,7:b3,5:la:j9:lb:j9:lc:b7,9:b1,10:lb:b12,30:b13,16:lx"
