@@ -1,11 +1,11 @@
 TESTS := rxvm_test
 
-RXVM_C_SRCS := $(wildcard src/*.c)
+RXVM_C_SRCS := $(wildcard librxvm/*.c)
 TEST_SRCS := $(wildcard tests/src/test_*.c) tests/src/randexp.c
 RXVM_OBJS := ${RXVM_C_SRCS:.c=.o}
 TEST_OBJS := ${TEST_SRCS:.c=.o}
 
-RXVM_INC := src
+RXVM_INC := librxvm
 TEST_INC := tests/src
 MEMCHECK := tests/scripts/memcheck.sh
 

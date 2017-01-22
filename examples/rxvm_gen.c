@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "rxvm.h"
+#include "librxvm/rxvm.h"
 
 char *rgx;
 char *input;

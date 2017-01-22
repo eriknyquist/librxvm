@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "rxvm.h"
+#include "librxvm/rxvm.h"
 
 void print_substring (char *start, char *end)
 {

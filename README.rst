@@ -154,6 +154,16 @@ To install, do the usual stuff:
     make
     sudo make install
 
+Building your own code with librxvm
+--------------------------------------
+
+Once librxvm is installed, you can use it by adding
+``#include <librxvm/rxvm.h>`` to your program, and then passing ``-lrxvm`` when
+linking. For example:
+::
+
+    gcc my_rxvm_program.c -lrxvm
+
 Usage
 -----
 
@@ -483,23 +493,3 @@ requires a matching string to be anchored at both the start and end of input,
 then ``^`` and ``$`` are only useful if they can also act as line anchors.
 
 |
-
-Building your own code with librxvm
---------------------------------------
-
-To link your own code with librxvm, compile with
-::
-
-    -I/usr/local/include/librxvm
-
-and link with
-::
-
-    -lrxvm
-
-for example, to build the example applications manually, you would do
-::
-
-    cd examples
-    gcc rxvm_search.c -o rxvm_search -I/usr/local/include/librxvm -lrxvm
-    gcc rxvm_match.c -o rxvm_match -I/usr/local/include/librxvm -lrxvm

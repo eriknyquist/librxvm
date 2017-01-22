@@ -12,6 +12,6 @@ test_fuzz_full_rxvm_match.c test_rxvm_search_nomatch.c \
 test_rxvm_lfix_heuristic.c test_rxvm_lfix_to_str.c test_rxvm_search_multi.c \
 test_utils.c randexp.c
 
-LDADD = -lrxvm -L../../src
-AM_CFLAGS = -I../../src -Wall -Wno-trigraphs
+LDADD = -lrxvm -L../../librxvm
+AM_CFLAGS = -I../../librxvm -Wall -Wno-trigraphs
 AM_DEFAULT_SOURCE_EXT = .c

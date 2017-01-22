@@ -6,7 +6,7 @@
 #include "test_common.h"
 
 #define RANDINPUT_LIMIT   100
-#define NUM_ITER          1000
+#define NUM_ITER          10
 
 char *rgx;
 char *input;
