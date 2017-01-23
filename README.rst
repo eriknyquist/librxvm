@@ -1,25 +1,27 @@
-librxvm: small and fast C library for regular expressions
-============================================================
+librxvm: non-backtracking NFA/DFA-based C library for regular expressions
+=========================================================================
 
-This implementation is inspired by
-`Russ Cox's article <https://swtch.com/~rsc/regexp/regexp2.html>`_ on the
-*virtual machine* approach to implementing regular expressions.
+.. contents:: Table of Contents
 
-Some benefits to this approach:
+Introduction
+------------
 
-#. No backtracking over the input string.
-#. Matches complete in **O(n * m)** worst-case time, where **n** is the
-   input string size and **m** is the expression size
-#. The amount of dynamic memory used depends only on the expression size. It is
-   independent of the input string size.
+``librxvm`` is a **R**\ egular e\ **X**\ pression **V**\ irtual **M**\ achine.
+It converts a regular expression into an NFA representation consisting of a
+sequence of primitive "opcodes" for a `virtual machine <https://swtch.com/~rsc/regexp/regexp2.html>`_.
+The virtual machine can then execute the NFA representation, or "program"
+against some input text to determine whether the input text matches the regular
+expression.
 
 In addition to the usual string matching & searching functions, librxvm also
-provides a fast file-searching function that is ... really fast. You can try it
-out with the `rxvm_fsearch` example application below, in the
-*Example applications* section.
+provides a function (``rxvm_fsearch``) that takes a FILE pointer for large sets
+of input data. ``rxvm_fsearch`` uses the Boyer-Moore-Horspool algorithm to
+achieve **extremely high** throughput for regular expression searches on any
+data that can be accessed through a standard ``FILE`` pointer. You can try it
+out with the `rxvm_fsearch` example application.
 
 ``rxvm_fsearch`` quick test, 1GB plain-text file (using ``grep`` as a benchmark)
---------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -36,7 +38,7 @@ out with the `rxvm_fsearch` example application below, in the
    real 0m0.358s
 
 What's missing from ``librxvm``
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Currently, ``librxvm`` only works with plain ol' ASCII.
 * It's not POSIX compliant, or anything compliant as far as I know.
@@ -138,6 +140,9 @@ A description of the available special characters follows.
 Installation
 ------------
 
+Installing librxvm
+^^^^^^^^^^^^^^^^^^
+
 **Dependencies:**
 
 #. GNU Make
@@ -154,8 +159,8 @@ To install, do the usual stuff:
     make
     sudo make install
 
-Building your own code with librxvm
---------------------------------------
+Building with librxvm
+^^^^^^^^^^^^^^^^^^^^^
 
 Once librxvm is installed, you can use it by adding
 ``#include <librxvm/rxvm.h>`` to your program, and then passing ``-lrxvm`` when
@@ -164,18 +169,13 @@ linking. For example:
 
     gcc my_rxvm_program.c -lrxvm
 
-Usage
------
+
+Example applications
+--------------------
 
 See sample code in the ``examples`` directory. The examples are simple, and
 compile into easy-to-use command-line programs. They are automatically built by
 the top-level Makefile when you run ``make`` to build ``librxvm``.
-
-|
-
-
-Example applications
---------------------
 
 ``rxvm_match``
 ^^^^^^^^^^^^^^
@@ -220,6 +220,7 @@ input string.
 
 ``rxvm_fsearch``
 ^^^^^^^^^^^^^^^^
+
 Accepts two arguments, a regular expression and a filename.
 Prints any instances of the regular expression that occur inside the file.
 
@@ -256,8 +257,8 @@ pseudo-random string which matches the expression.
 
 |
 
-Reference
----------
+Reference: core features
+------------------------
 
 ``rxvm_compile``
 ^^^^^^^^^^^^^^^^
@@ -346,8 +347,8 @@ call this function, before exiting, on any compiled ``rxvm_t`` types.
 
 |
 
-Non-essential features
-----------------------
+Reference: optional features
+----------------------------
 
 The following functions ``rxvm_fsearch``, ``rxvm_gen`` and ``rxvm_print``
 are compiled in by default. However, if you don't need them and you want the
@@ -378,6 +379,19 @@ the file pointer ``fp`` is re-positioned to the first character of the match,
 and ``match_size`` is populated with a positive integer representing the match
 size (number of characters). If no match is found, then ``match_end`` is set to
 0, and ``fp`` remains positioned at EOF.
+
+This function uses an implementation of the Boyer-Moore-Horspool (BMH) algorithm
+to search the file for a pattern, and can be extremely fast. Because the
+BMH algorithm only works with fixed strings, this function uses a special
+heuristic to identify subtrings of fixed literal characters in your expression,
+and uses the fast BMH algorithm to search for these smaller substrings. If one
+is found, the virtual machine is invoked (needed to match a regular expression,
+but slower).
+
+This means the type of expression you write can significantly affect the speed
+of the ``rxvm_search`` function. Specifically, **longer** strings means
+**faster** matching.
+
 
 **Return value**
 
