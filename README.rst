@@ -506,4 +506,20 @@ enabled when ``rxvm_match`` is used; since ``rxvm_match`` effectively
 requires a matching string to be anchored at both the start and end of input,
 then ``^`` and ``$`` are only useful if they can also act as line anchors.
 
-|
+Test Suite
+----------
+
+To run the tests, use the ``check`` target in the main Makefile
+::
+
+    make check
+
+You can also run the tests through Valgrind (if installed) to check for memory
+leaks or other issues in ``librxvm``, using the separate Makefile provided
+specifically for this purpose, ``memcheck.mk``
+
+NOTE: Running the tests through Valgrind can take a very long time to complete
+
+::
+
+    make -f memcheck.mk
