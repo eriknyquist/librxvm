@@ -124,8 +124,12 @@ A description of the available special characters follows.
     |         |                       | immediately preceding each newline    |
     |         |                       | character                             |
     +---------+-----------------------+---------------------------------------+
-    | **( )** | parenthesis group     | can contain any arbitrary expression, |
-    |         |                       | and can be nested                     |
+    | **( )** | parenthesis group     | Groups together individual characters |
+    |         |                       | or subexpressions, e.g. ``a(bc)+``    |
+    |         |                       | matches ``abcbc`` or ``abcbcbcbc``,   |
+    |         |                       | but not ``a``. Parenthesis groups can |
+    |         |                       | contain any expression, and can be    |
+    |         |                       | nested.                               |
     +---------+-----------------------+---------------------------------------+
     | **[ ]** | character class       | matches a single character inside     |
     |         |                       | the brackets. Characters can be       |
