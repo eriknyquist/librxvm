@@ -6,12 +6,22 @@ librxvm: non-backtracking NFA/DFA-based C library for regular expressions
 Introduction
 ------------
 
+Short one
+^^^^^^^^^
+
+``librxvm`` is a C library for matching regular expressions on large sets of
+data.
+
+Long one
+^^^^^^^^
+
 ``librxvm`` is a **R**\ egular e\ **X**\ pression **V**\ irtual **M**\ achine.
-It converts a regular expression into an NFA representation consisting of a
-sequence of primitive "opcodes" for a `virtual machine <https://swtch.com/~rsc/regexp/regexp2.html>`_.
-The virtual machine can then execute the NFA representation, or "program"
-against some input text to determine whether the input text matches the regular
-expression.
+It compiles a regular expression into an NFA representation consisting of a
+sequence of primitive opcodes for a "`virtual machine <https://swtch.com/~rsc/regexp/regexp2.html>`_"
+(the "machine" here is theoretical, rather than physical hardware, and is
+implemented as  a simple bytecode interpreter). The virtual machine can then
+execute the NFA representation, or "program" against some input text to
+determine whether the input text matches the regular expression.
 
 In addition to the usual string matching & searching functions, librxvm also
 provides a function (``rxvm_fsearch``) that takes a FILE pointer for large sets
