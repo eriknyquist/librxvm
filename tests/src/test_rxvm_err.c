@@ -73,4 +73,21 @@ void test_rxvm_err (void)
 
     verify_errcode("frr{}", RXVM_MREP, __func__);
     verify_errcode("fw(uu){,}", RXVM_MREP, __func__);
+
+    verify_errcode("ab{a}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{5,y}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{,y}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{5.2}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{4,5.6}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{{5}", RXVM_EDIGIT, __func__);
+    verify_errcode("ab{{", RXVM_EDIGIT, __func__);
+
+    verify_errcode("ab{5,,}", RXVM_ECOMMA, __func__);
+    verify_errcode("ab{,,7}", RXVM_ECOMMA, __func__);
+    verify_errcode("ab{5,6,}", RXVM_ECOMMA, __func__);
+    verify_errcode("ab{5,6,7}", RXVM_ECOMMA, __func__);
+
+    verify_errcode("[-]", RXVM_ERANGE, __func__);
+    verify_errcode("[a-]", RXVM_ERANGE, __func__);
+    verify_errcode("[-Z]", RXVM_ERANGE, __func__);
 }

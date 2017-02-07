@@ -149,7 +149,7 @@ int lex (char **input)
                 }
 
                 if (**input == RANGE_SEP_SYM && literal) {
-                    return RXVM_EINVAL;
+                    return RXVM_ERANGE;
                 } else if (*(*input + 1) == RANGE_SEP_SYM && literal) {
                     state = STATE_RANGE;
                     *input += 2;
@@ -170,7 +170,7 @@ int lex (char **input)
                 } else if (isprintable(**input) && !isreserved(**input)) {
                     state = lex_end(&ret, CHAR_RANGE, input, 1);
                 } else {
-                    return RXVM_EINVAL;
+                    return RXVM_ERANGE;
                 }
 
             break;
@@ -185,11 +185,11 @@ int lex (char **input)
                     ret = REP;
                 } else if (**input == ',') {
                     if (comma)
-                        return RXVM_EINVAL;
+                        return RXVM_ECOMMA;
 
                     comma = 1;
                 } else if (!isdigit(**input)) {
-                    return RXVM_EINVAL;
+                    return RXVM_EDIGIT;
                 }
 
                 *input += 1;

@@ -1,5 +1,5 @@
-librxvm: non-backtracking NFA/DFA-based C library for regular expressions
-=========================================================================
+librxvm: non-backtracking NFA-based C library for regular expressions
+=====================================================================
 
 .. contents:: Table of Contents
 
@@ -289,7 +289,7 @@ instructions into the ``rxvm_t`` type pointed to by ``compiled``.
 **Return value**
 
 * 0 if compilation succeeded
-* negative number if an error occured (error codes defined in src/lex.h)
+* negative number if an error occured (See `Error codes`_)
 
 |
 
@@ -311,7 +311,7 @@ exactly.
 
 * 1 if the input matches the expression
 * 0 if the input doesn't match the compiled expression
-* RXVM_EMEM if memory allocation fails
+* negative number if an error occured (See `Error codes`_)
 
 |
 
@@ -337,7 +337,7 @@ last characters of the matching substring. If no match is found, then both
 
 * 1 if a match is found
 * 0 if no match is found
-* negative number if an error occured (error codes defined in src/lex.h)
+* negative number if an error occured (See `Error codes`_)
 
 |
 
@@ -411,7 +411,7 @@ of the ``rxvm_search`` function. Specifically, **longer** strings means
 
 * 1 if a match is found
 * 0 if no match is found
-* negative number if an error occured (error codes defined in src/lex.h)
+* negative number if an error occured (See `Error codes`_)
 
 |
 
@@ -485,8 +485,11 @@ Prints a compiled expression in a human-readable format.
 
 |
 
+Constants
+---------
+
 Flags
------
+^^^^^
 
 ``rxvm_match`` and ``rxvm_search`` take a ``flags`` parameter. You can use
 the masks below to set bit-flags which will change the behaviour of these
@@ -495,13 +498,13 @@ functions (combine multiple flags by bitwise OR-ing them together):
 |
 
 ``RXVM_ICASE``
-^^^^^^^^^^^^^^
+##############
 
 case insensitive: ignore case when matching alphabet characters. Matching is
 case-sensitive by default.
 
 ``RXVM_NONGREEDY``
-^^^^^^^^^^^^^^^^^^
+##################
 
 non-greedy matching: by default, the operators ``+``, ``*``, and ``?`` will
 match as many characters as possible, e.g. running ``rxvm_search`` with
@@ -509,7 +512,7 @@ the expression ``<.*>`` against the input string ``<tag>name<tag>`` will match
 the entire string. With this flag set, it will match only ``<tag>``.
 
 ``RXVM_MULTILINE``
-^^^^^^^^^^^^^^^^^^
+##################
 
 Multiline: By default, ``^`` matches immediately following the start of input,
 and ``$`` matches immediately preceding the end of input or the newline before
@@ -519,6 +522,186 @@ preceding each newline character. This flag is ignored and automatically
 enabled when ``rxvm_match`` is used; since ``rxvm_match`` effectively
 requires a matching string to be anchored at both the start and end of input,
 then ``^`` and ``$`` are only useful if they can also act as line anchors.
+
+Error codes
+^^^^^^^^^^^
+
+**Compilation errors (``rxvm_compile`` only)**
+
+|
+
+``RXVM_BADOP``
+##############
+
+Indicates that an operator (``*``, ``+``, ``?``, ``{}``) was used incorrectly
+in the input expression, i.e. without a preceding literal character.
+
+|
+
+Example expressions: ``ab++``, ``{5}``.
+
+|
+
+``RXVM_BADCLASS``
+#################
+
+Indicates that an unexpected (and unescaped) character class closing character
+(``]``) was encountered in the input expression.
+
+|
+
+Example expressions: ``xy]``, ``[a-f]]``
+
+|
+
+``RXVM_BADREP``
+###############
+
+Indicates that an unexpected (and unescaped) repetition closing character
+(``}``) was encountered in the input expression.
+
+|
+
+Example expressions: ``a}``, ``bb{4,}}``
+
+|
+
+``RXVM_BADPAREN``
+#################
+
+Indicates that an unexpected (and unescaped) closing parenthesis character
+(``)``) was encountered in the input expression.
+
+|
+
+Example expressions: ``qy)``, ``q*(ab))``
+
+|
+
+``RXVM_EPAREN``
+###############
+
+Indicates that an unterminated parenthesis group (``()``) was encountered in
+the input expression.
+
+|
+
+Example expressions: ``d+(ab``, ``((ab)``
+
+|
+
+``RXVM_ECLASS``
+###############
+
+Indicates that an unterminated character class (``[]``) was encountered in
+the input expression.
+
+|
+
+Example expressions: ``[A-Z``, ``[[A-Z]``
+
+|
+
+``RXVM_EREP``
+#############
+
+Indicates that an unterminated repetition (``{}``) was encountered in
+the input expression.
+
+|
+
+Example expressions: ``ab{5``, ``((ab)``
+
+|
+
+``RXVM_ERANGE``
+###############
+
+Indicates that an incomplete character range inside a character class was
+encountered in the input expression.
+
+|
+
+Example expressions: ``[A-]``, ``[-z]``
+
+|
+
+``RXVM_ECOMMA``
+###############
+
+Indicates that an invalid extra comma inside a repetition was encountered in
+the input expression.
+
+|
+
+Example expressions: ``ab{5,,}``, ``x{6,7,8}``
+
+|
+
+``RXVM_EDIGIT``
+###############
+
+Indicates that an invalid character (i.e. not a digit or a comma) inside a
+repetition was encountered in the input expression.
+
+|
+
+Example expressions: ``ab{3,y}``, ``b{8.9}``
+
+|
+
+``RXVM_MREP``
+#############
+
+Indicates that an empty repetition (``{}``) was encountered in
+the input expression.
+
+|
+
+Example expressions: ``ab{}``, ``ab{,}``
+
+|
+
+``RXVM_ETRAIL``
+###############
+
+Indicates that a trailing escape character (``\\``) was encountered in
+the input expression.
+
+|
+
+Example expressions: ``ab\\``, ``\\*\\``
+
+|
+
+``RXVM_EINVAL``
+###############
+
+Indicates that an invalid symbol (any character outside the supported
+character set) was encountered in the input expression.
+
+|
+
+**Miscellaneous errors**
+
+|
+
+``RXVM_EMEM``
+#############
+
+Indicates that memory allocation failed.
+
+``RXVM_EPARAM``
+###############
+
+Indicates that an invalid parameter (e.g. a ``NULL`` pointer) was passed to a
+``librxvm`` library function.
+
+``RXVM_IOERR``
+##############
+
+(Only returned by ``rxvm_fsearch``) Indicates that an error occured while
+attempting to read from the passed ``FILE`` pointer
 
 Test Suite
 ----------
