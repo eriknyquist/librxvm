@@ -13,7 +13,6 @@ void verify_search_nomatch (char *regex, char *input)
     char *start, *end;
     int ret;
     int err;
-    int i;
 
     ret = 0;
     ++tests;
@@ -40,7 +39,7 @@ void verify_search_nomatch (char *regex, char *input)
 
     msg = (ret) ? "FAIL" : "PASS";
     fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, tests);
-    printf("%s: %s #%i\n", msg, func, i + 1);
+    printf("%s: %s #%i\n", msg, func, tests);
 }
 
 void test_rxvm_search_nomatch (void)
