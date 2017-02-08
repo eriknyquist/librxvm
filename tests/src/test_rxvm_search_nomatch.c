@@ -4,56 +4,59 @@
 #include "test_common.h"
 
 static int tests;
+static const char *func;
 
-char *nomatch_tests[NUM_TESTS_NOMATCH][2] =
-{
-    {"xy", ",czy7*%^&0-(spo()6(%^&nowirgbi"},
-    {"abc*", "897654788888898888888888886"},
-    {"joiu{2,6}", "@@@#@##@IUOYTRYEYUIOPUYTRUIOP{UY^++TR%$%"},
-    {"a(bb|kl{6,76}(88)*){99}", "aaaabbbbccccddddeeeeffff"},
-    {"aa|bb|cc|dd", "ababacadacabdcadcbdcdabcdbdca"}
-};
-
-void test_rxvm_search_nomatch (void)
+void verify_search_nomatch (char *regex, char *input)
 {
     rxvm_t compiled;
     const char *msg;
-    char *start, *end, *regex, *input;
+    char *start, *end;
     int ret;
     int err;
     int i;
 
-    tests = 0;
+    ret = 0;
+    ++tests;
 
-    for (i = 0; i < NUM_TESTS_NOMATCH; ++i) {
-        ret = 0;
-        ++tests;
-
-        regex = nomatch_tests[i][0];
-        input = nomatch_tests[i][1];
-
-        if ((err = compile_testexp(&compiled, regex)) < 0) {
-            fprintf(logfp, "Error compiling regex %s\n", regex);
+    if ((err = compile_testexp(&compiled, regex)) < 0) {
+        fprintf(logfp, "Error compiling regex %s\n", regex);
+        ++ret;
+    } else {
+        if (rxvm_search(&compiled, input, &start, &end, 0)) {
+            fprintf(logfp, "Error- input %s wrongly reported as containing match "
+                   "to expression %s\n", input, regex);
             ++ret;
         } else {
-            if (rxvm_search(&compiled, input, &start, &end, 0)) {
-                fprintf(logfp, "Error- input %s wrongly reported as containing match "
-                       "to expression %s\n", input, regex);
+            if (start != NULL || end != NULL) {
+                fprintf(logfp, "Error- start and end pointers are not NULL after "
+                       "no match for expression %s was found in input "
+                       "%s.\n", regex, input);
                 ++ret;
-            } else {
-                if (start != NULL || end != NULL) {
-                    fprintf(logfp, "Error- start and end pointers are not NULL after "
-                           "no match for expression %s was found in input "
-                           "%s.\n", regex, input);
-                    ++ret;
-                }
             }
-
-            rxvm_free(&compiled);
         }
 
-        msg = (ret) ? "FAIL" : "PASS";
-        fprintf(trsfp, ":test-result: %s %s #%d\n", msg, __func__, tests);
-        printf("%s: %s #%i\n", msg, __func__, i + 1);
+        rxvm_free(&compiled);
     }
+
+    msg = (ret) ? "FAIL" : "PASS";
+    fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, tests);
+    printf("%s: %s #%i\n", msg, func, i + 1);
+}
+
+void test_rxvm_search_nomatch (void)
+{
+
+    tests = 0;
+    func = __func__;
+
+    verify_search_nomatch("xy", ",czy7*%^&0-(spo()6(%^&nowirgbi");
+    verify_search_nomatch("xy", ",czy7*%^&0-(xpo(x6(%^&xowirxYbi");
+    verify_search_nomatch("abc*", "897654788888898888888888886");
+    verify_search_nomatch("abcc*", "897ab654788ab88988888888888ab");
+    verify_search_nomatch("abc+", "897ab654788ab88988888888888ab");
+    verify_search_nomatch("joiu{2,6}", "@@@#@##@IUOYTRYEUYTRUIOP{UY^++TR%$%");
+    verify_search_nomatch("joiu{2,6}", "@joiuIUOYTRYEUYTRUIOP{UY^++TR%$%");
+    verify_search_nomatch("joiu{5,6}", "@joiuuuuIUOYTRYEUYTRUIOP{UY^++TR%$%");
+    verify_search_nomatch("a(bb|kl{6,76}(88)*){99}", "aaaabbbbccccddddeeeeffff");
+    verify_search_nomatch("aa|bb|cc|dd", "ababacadacabdcadcbdcdabcdbdca");
 }
