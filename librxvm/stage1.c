@@ -410,6 +410,7 @@ static void stage1_err_cleanup (context_t *cp)
 {
     stack_free(cp->parens, stack_stack_cleanup);
     stack_free(cp->prog, inst_stack_cleanup);
+    if (cp->strb.buf) free(cp->strb.buf);
 }
 
 static int stage1_init (context_t *cp, stack_t **ret)
@@ -434,9 +435,6 @@ static int stage1_init (context_t *cp, stack_t **ret)
 
     lfix_zero();
     alt_seen = 0;
-    cp->depth = 0;
-    cp->chained = 0;
-    cp->simple = NULL;
     cp->prog = *ret;
     stack_add_head(cp->parens, (void *) base);
     cp->buf = base;
@@ -570,7 +568,6 @@ int stage1 (rxvm_t *compiled, char *input, stack_t **ret)
 
     if (state == STATE_CHARC) {
         stage1_err_cleanup(&ctx);
-        free(ctx.strb.buf);
         return RXVM_ECLASS;
     } else if (ctx.parens->head != ctx.parens->tail) {
         stage1_err_cleanup(&ctx);

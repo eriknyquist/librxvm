@@ -342,6 +342,7 @@ int code_ccs (context_t *cp, uint8_t is_nchar)
 
     topmost = (stack_t *)cp->parens->tail->data;
     cp->operand = stack_add_inst_head(topmost, &inst);
+    cp->strb.buf = NULL;
 
     if (cp->operand == NULL) {
         return RXVM_EMEM;
