@@ -21,6 +21,7 @@ int main (void)
 
     test_rxvm_compile();
     test_rxvm_err();
+    test_rxvm_api();
     test_rxvm_match();
     test_rxvm_search();
     test_rxvm_search_multi();

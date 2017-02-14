@@ -5,7 +5,7 @@
 #include "rxvm.h"
 #include "test_common.h"
 
-#define RANDINPUT_LIMIT   100
+#define RANDINPUT_LIMIT   200
 #define NUM_ITER          100
 
 char *rgx;
