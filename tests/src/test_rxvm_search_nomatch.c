@@ -48,6 +48,10 @@ void test_rxvm_search_nomatch (void)
     tests = 0;
     func = __func__;
 
+    verify_search_nomatch("a", "b");
+    verify_search_nomatch("B", "b");
+    verify_search_nomatch("ab{3}", "abbabbabbabbabbabbabbabbabb");
+    verify_search_nomatch("abbb+", "abbabbabbabbabbabbabbabbabb");
     verify_search_nomatch("xy", ",czy7*%^&0-(spo()6(%^&nowirgbi");
     verify_search_nomatch("xy", ",czy7*%^&0-(xpo(x6(%^&xowirxYbi");
     verify_search_nomatch("abc*", "897654788888898888888888886");

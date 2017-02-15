@@ -32,16 +32,6 @@ static char *iter_tests[NUM_TESTS_SEARCH][3] =
         "xyregexVMregexregexstuff"}
 };
 
-static int substring_match (char *string, char *start, char *end)
-{
-    while (*string) {
-        if (*(string++) != *(start++))
-            return 0;
-    }
-
-    return ((start - 1) == end) ? 1 : 0;
-}
-
 void test_rxvm_search (void)
 {
     rxvm_t compiled;

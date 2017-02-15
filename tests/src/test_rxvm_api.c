@@ -11,6 +11,50 @@ static void log_trs (char *msg, const char *func)
     fprintf(trsfp, ":test-result: %s %s #%d\n", msg, func, count);
 }
 
+static void verify_search_flags (char *regex, char *input, char *output,
+        int flags)
+{
+    rxvm_t *cp;
+    rxvm_t compiled;
+    char *msg, *start, *end;
+    int err;
+
+    cp = NULL;
+    msg = "PASS";
+
+    if (regex) {
+        if ((err = compile_testexp(&compiled, regex)) < 0) {
+            log_trs("FAIL", func);
+            fprintf(logfp, "Error: compilation failed (%d): %s\n",
+                    err, regex);
+            return;
+        }
+
+        cp = &compiled;
+    }
+
+    if ((err = rxvm_search(cp, input, &start, &end, flags)) != 1) {
+        fprintf(logfp, "verify_search_flags: regex=%s, input=%s (flags=%d): "
+                "\nExpecting 1, got %d\n", regex, input, flags, err);
+        msg = "FAIL";
+    } else if (!substring_match(output, start, end)) {
+        fprintf(logfp, "verify_search_flags: regex=%s, input=%s (flags=%d): "
+                "\nExpecting substring \"%s\", got \"", regex, input,
+                flags, output);
+
+        while (start <= end) {
+            fputc(*(start++), logfp);
+        }
+        fprintf(logfp, "\"\n");
+        msg = "FAIL";
+    }
+
+    if (cp) rxvm_free(cp);
+
+    log_trs(msg, func);
+    printf("%s: %s #%d\n", msg, func, ++count);
+}
+
 static void verify_search_api (char *regex, char *input, char **start,
         char **end, int flags, int ret)
 {
@@ -156,6 +200,27 @@ void test_rxvm_api (void)
     verify_fsearch_api("a+", NULL, NULL, 0, RXVM_EPARAM);
     verify_fsearch_api(NULL, NULL, NULL, 0, RXVM_EPARAM);
     verify_fsearch_api(NULL, NULL, &msize, 0, RXVM_EPARAM);
+
+    verify_search_flags("ab+", "abbb", "abbb", 0);
+    verify_search_flags("ab*", "abbb", "abbb", 0);
+    verify_search_flags("ab{,3}", "abbb", "abbb", 0);
+    verify_search_flags("<.*>", "<a<b>c>", "<a<b>c>", 0);
+    verify_search_flags("ab+", "xxxxabbby", "abbb", 0);
+    verify_search_flags("ab*", "xxxxabbbyy", "abbb", 0);
+    verify_search_flags("ab{,3}", "xxxxabbby", "abbb", 0);
+    verify_search_flags("<.*>", "xxxx<a<b>c>yy", "<a<b>c>", 0);
+    verify_search_flags("ab+", "abbb", "ab", RXVM_NONGREEDY);
+    verify_search_flags("ab*", "abbb", "a", RXVM_NONGREEDY);
+    verify_search_flags("ab{,3}", "abbb", "a", RXVM_NONGREEDY);
+    verify_search_flags("ab{1,3}", "abbb", "ab", RXVM_NONGREEDY);
+    verify_search_flags("ab{2,3}", "abbb", "abb", RXVM_NONGREEDY);
+    verify_search_flags("<.*>", "<a<b>c>", "<a<b>", RXVM_NONGREEDY);
+    verify_search_flags("ab+", "xxxxabbby", "ab", RXVM_NONGREEDY);
+    verify_search_flags("ab*", "xxxxabbbyy", "a", RXVM_NONGREEDY);
+    verify_search_flags("ab{,3}", "xxxxabbbyy", "a", RXVM_NONGREEDY);
+    verify_search_flags("ab{1,3}", "xxxxabbby", "ab", RXVM_NONGREEDY);
+    verify_search_flags("ab{2,3}", "xxxxabbbyy", "abb", RXVM_NONGREEDY);
+    verify_search_flags("<.*>", "xxxx<a<b>c>yyy", "<a<b>", RXVM_NONGREEDY);
 
     fclose(fp);
 }

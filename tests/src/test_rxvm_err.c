@@ -36,6 +36,11 @@ void test_rxvm_err (void)
     verify_errcode("ab++", RXVM_BADOP);
     verify_errcode("ab**", RXVM_BADOP);
     verify_errcode("ab??", RXVM_BADOP);
+    verify_errcode("ab?{3}", RXVM_BADOP);
+    verify_errcode("+ab", RXVM_BADOP);
+    verify_errcode("*ab", RXVM_BADOP);
+    verify_errcode("?ab", RXVM_BADOP);
+    verify_errcode("{3}ab", RXVM_BADOP);
     verify_errcode("+", RXVM_BADOP);
     verify_errcode("*", RXVM_BADOP);
     verify_errcode("?", RXVM_BADOP);
@@ -46,21 +51,29 @@ void test_rxvm_err (void)
     verify_errcode("{3}", RXVM_BADOP);
 
     verify_errcode("]", RXVM_BADCLASS);
+    verify_errcode("][A-Z]", RXVM_BADCLASS);
     verify_errcode("[A-Z]]", RXVM_BADCLASS);
+    verify_errcode("abc[a-f]]", RXVM_BADCLASS);
     verify_errcode("q(abc[a-f]])*", RXVM_BADCLASS);
     verify_errcode("(a+(bb*([cde]])*)*)*", RXVM_BADCLASS);
     verify_errcode("dd(r+(fdf(])*)?)+", RXVM_BADCLASS);
 
     verify_errcode("abc}", RXVM_BADREP);
+    verify_errcode("def{2,6}}", RXVM_BADREP);
+    verify_errcode("def}{2,6}", RXVM_BADREP);
     verify_errcode("abc(def){2,6}}", RXVM_BADREP);
     verify_errcode("}", RXVM_BADREP);
 
     verify_errcode(")", RXVM_BADPAREN);
     verify_errcode("ab)", RXVM_BADPAREN);
     verify_errcode("(a+b?(d)*))", RXVM_BADPAREN);
+    verify_errcode("(a+b?)(d)*)", RXVM_BADPAREN);
+    verify_errcode(")(a+b?)(d)*", RXVM_BADPAREN);
     verify_errcode("(a?(wde)*dd)+dsdssd)f", RXVM_BADPAREN);
 
     verify_errcode("(a", RXVM_EPAREN);
+    verify_errcode("x(a", RXVM_EPAREN);
+    verify_errcode("x(a+(f|g", RXVM_EPAREN);
     verify_errcode("(a*(bb+(eiof)*dsds)alpalp", RXVM_EPAREN);
     verify_errcode("((aa(bb)*)?", RXVM_EPAREN);
 
@@ -84,6 +97,7 @@ void test_rxvm_err (void)
     verify_errcode("ab{5,6,7}", RXVM_ECOMMA);
 
     verify_errcode("ab{a}", RXVM_EDIGIT);
+    verify_errcode("ab{5\\}", RXVM_EDIGIT);
     verify_errcode("ab{5,y}", RXVM_EDIGIT);
     verify_errcode("ab{,y}", RXVM_EDIGIT);
     verify_errcode("ab{5.2}", RXVM_EDIGIT);

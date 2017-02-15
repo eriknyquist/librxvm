@@ -53,16 +53,6 @@ static char *multi_tests[NUM_TESTS_SEARCH_MULTI][4] =
         "xy", "xyregexVMregexregexstuff"}
 };
 
-static int substring_match (char *string, char *start, char *end)
-{
-    while (*string) {
-        if (*(string++) != *(start++))
-            return 0;
-    }
-
-    return ((start - 1) == end) ? 1 : 0;
-}
-
 void test_rxvm_search_multi (void)
 {
     rxvm_t compiled;

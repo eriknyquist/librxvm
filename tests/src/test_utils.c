@@ -75,3 +75,13 @@ void hrsize (uint64_t size, char *buf, unsigned int bufsize)
 
     strcpy(buf, "0");
 }
+
+int substring_match (char *string, char *start, char *end)
+{
+    while (*string) {
+        if (*(string++) != *(start++))
+            return 0;
+    }
+
+    return ((start - 1) == end) ? 1 : 0;
+}

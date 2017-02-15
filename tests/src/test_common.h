@@ -37,6 +37,7 @@ char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len);
 void test_err (char *regex, char *input, const char *test, char *msg, int ret);
 void rxvm_print_oneline (rxvm_t *compiled);
 void hrsize (uint64_t size, char *buf, unsigned int bufsize);
+int substring_match (char *string, char *start, char *end);
 
 extern FILE *logfp;
 extern FILE *trsfp;
