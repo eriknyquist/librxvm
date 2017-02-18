@@ -24,6 +24,7 @@ int main (void)
     test_rxvm_api();
     test_rxvm_match();
     test_rxvm_search();
+    test_rxvm_fsearch();
     test_rxvm_search_multi();
     test_rxvm_search_nomatch();
     test_fuzz_rxvm_match();
