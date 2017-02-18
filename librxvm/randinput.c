@@ -96,6 +96,7 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
             return NULL;
         }
 
+        cfg->len = size;
         memcpy(ret, compiled->simple, size);
         return ret;
     }
