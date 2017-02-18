@@ -148,7 +148,8 @@ int lex (char **input)
                      newline_seen = 1;
                 }
 
-                if (**input == RANGE_SEP_SYM && literal) {
+                if (**input == RANGE_SEP_SYM && literal &&
+                    *(*input - 1) != DEREF_SYM) {
                     return RXVM_ERANGE;
                 } else if (*(*input + 1) == RANGE_SEP_SYM && literal) {
                     state = STATE_RANGE;
