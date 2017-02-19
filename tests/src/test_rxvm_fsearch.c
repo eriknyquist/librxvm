@@ -89,10 +89,15 @@ int generate_test_file (FILE *fp, char *gen, char *pad, int position)
     padlen = strlen(pad);
     genlen = cfg.len - 1;
 
+    /* Make sure the whole file is big enough for the
+     * the generated matching text */
     fsize = MIN_FSIZE;
     while (fsize <= genlen)
         fsize *= 2;
 
+    /* Make sure the 2nd half of the file is big enough
+     * for the the generated matching text-- in case
+     * MIDDLE or LAST is used */
     while (1) {
         midpoint = (fsize / 2) - (genlen / 2);
         firsthalf = midpoint;
@@ -238,6 +243,12 @@ void test_rxvm_fsearch (void)
     verify_fsearch("abcdef", "abcde", 0, FIRST);
     verify_fsearch("abcdef", "abcde", 0, LAST);
     verify_fsearch("abcdef", "abcde", 0, MIDDLE);
+    verify_fsearch(".+", "\n", 0, FIRST );
+    verify_fsearch(".+", "\n", 0, LAST );
+    verify_fsearch(".+", "\n", 0, MIDDLE );
+    verify_fsearch("<[^\n<>]+>", "<\n>", 0, FIRST );
+    verify_fsearch("<[^\n<>]+>", "<\n>", 0, LAST );
+    verify_fsearch("<[^\n<>]+>", "<\n>", 0, MIDDLE );
     verify_fsearch("[^A-Za-z]+", "abc", 0, FIRST);
     verify_fsearch("[^A-Za-z]+", "abc", 0, LAST);
     verify_fsearch("[^A-Za-z]+", "abc", 0, MIDDLE);

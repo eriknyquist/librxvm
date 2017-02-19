@@ -49,6 +49,14 @@ void test_rxvm_err (void)
     verify_errcode("a{,0}", RXVM_BADOP);
     verify_errcode("ab(d*){,0}", RXVM_BADOP);
     verify_errcode("{3}", RXVM_BADOP);
+    verify_errcode("asregsgri+kfeog+keor+f+g+fef+b++", RXVM_BADOP);
+    verify_errcode("abbbbbbb*b*bbbbbbb*Bbbbbbb*Bbb**", RXVM_BADOP);
+    verify_errcode("aiiiiii?i?i?i*i++i*i*i+b??", RXVM_BADOP);
+    verify_errcode("abcdbc{5}G{7}HGHGfhgOP{6}b{3}{3}", RXVM_BADOP);
+    verify_errcode("+atttttttttttttttttttttttttttttb", RXVM_BADOP);
+    verify_errcode("*ab590876{{{{[[[[((((97857857856", RXVM_BADOP);
+    verify_errcode("?avvvvvvvpvpvpvpvvpvvvvvvvvvvvvb", RXVM_BADOP);
+    verify_errcode("{3}a8766*&&%^*^**(&*&^*(*^&**&^b", RXVM_BADOP);
 
     verify_errcode("]", RXVM_BADCLASS);
     verify_errcode("][A-Z]", RXVM_BADCLASS);
@@ -57,11 +65,17 @@ void test_rxvm_err (void)
     verify_errcode("q(abc[a-f]])*", RXVM_BADCLASS);
     verify_errcode("(a+(bb*([cde]])*)*)*", RXVM_BADCLASS);
     verify_errcode("dd(r+(fdf(])*)?)+", RXVM_BADCLASS);
+    verify_errcode("f+g*[r-z][a-F][f-*]*]", RXVM_BADCLASS);
+    verify_errcode("aaaaaa[a-f][4-%]][A-Z]", RXVM_BADCLASS);
+    verify_errcode("[3-#][5-)][A-Z]]", RXVM_BADCLASS);
 
     verify_errcode("abc}", RXVM_BADREP);
     verify_errcode("def{2,6}}", RXVM_BADREP);
     verify_errcode("def}{2,6}", RXVM_BADREP);
     verify_errcode("abc(def){2,6}}", RXVM_BADREP);
+    verify_errcode("d{4}(gy){4,5}fdfdfdfd{4,}abc}", RXVM_BADREP);
+    verify_errcode("de{,6}hjiogjhghjg99htf{2,6}}", RXVM_BADREP);
+    verify_errcode("d&*&^ef}{{{{{2,6}", RXVM_BADREP);
     verify_errcode("}", RXVM_BADREP);
 
     verify_errcode(")", RXVM_BADPAREN);
@@ -78,11 +92,18 @@ void test_rxvm_err (void)
     verify_errcode("((aa(bb)*)?", RXVM_EPAREN);
 
     verify_errcode("[A-Z", RXVM_ECLASS);
+    verify_errcode("[a-f][A-Z", RXVM_ECLASS);
+    verify_errcode("[a-f][6-^][A-Z", RXVM_ECLASS);
+    verify_errcode("fighoisdrgoig[A-Z", RXVM_ECLASS);
+    verify_errcode("dgdrggdrg[a-f][A-Z", RXVM_ECLASS);
+    verify_errcode("drgdrgdrd[a-f][6-^][A-Z", RXVM_ECLASS);
     verify_errcode("aa(bb(c[def\\*)*)+ss", RXVM_ECLASS);
 
     verify_errcode("e+(kn){3", RXVM_EREP);
     verify_errcode("a{3,}{", RXVM_EREP);
     verify_errcode("a{", RXVM_EREP);
+    verify_errcode("f{4}ff{6,}l{,6}e+(kn){3", RXVM_EREP);
+    verify_errcode("f{4}ff{6,}l{,6}{", RXVM_EREP);
 
     verify_errcode("[-]", RXVM_ERANGE);
     verify_errcode("[a-]", RXVM_ERANGE);
@@ -95,6 +116,14 @@ void test_rxvm_err (void)
     verify_errcode("ab{,,7}", RXVM_ECOMMA);
     verify_errcode("ab{5,6,}", RXVM_ECOMMA);
     verify_errcode("ab{5,6,7}", RXVM_ECOMMA);
+    verify_errcode("ab{5,,})){{", RXVM_ECOMMA);
+    verify_errcode("ab{,,7}****", RXVM_ECOMMA);
+    verify_errcode("ab{5,6,}???", RXVM_ECOMMA);
+    verify_errcode("ab{5,6,7}+++", RXVM_ECOMMA);
+    verify_errcode("q{,3}uu{4}a{3,4}b{5,,}", RXVM_ECOMMA);
+    verify_errcode("ia{4}g{5,}oo{,7}ab{,,7}", RXVM_ECOMMA);
+    verify_errcode("abi{4}d{,6};;{0,}'{5,6,}", RXVM_ECOMMA);
+    verify_errcode("a{4}6{,3}##{5,}b{5,6,7}", RXVM_ECOMMA);
 
     verify_errcode("ab{a}", RXVM_EDIGIT);
     verify_errcode("ab{5\\}", RXVM_EDIGIT);
@@ -113,6 +142,10 @@ void test_rxvm_err (void)
 
     verify_errcode("frr{}", RXVM_MREP);
     verify_errcode("fw(uu){,}", RXVM_MREP);
+    verify_errcode("frr{}}}}", RXVM_MREP);
+    verify_errcode("fw(uu){,}***", RXVM_MREP);
+    verify_errcode("f{3}r{3,5}r{}{{{}}", RXVM_MREP);
+    verify_errcode("fw{3}(u{4,5}u){,})))))))))", RXVM_MREP);
 
     verify_errcode("☆", RXVM_EINVAL);
     verify_errcode("ਈ", RXVM_EINVAL);
