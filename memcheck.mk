@@ -1,5 +1,6 @@
 TESTS := rxvm_test
 
+FUZZ_FULL_NUM := 100
 RXVM_C_SRCS := $(wildcard librxvm/*.c)
 TEST_SRCS := $(wildcard tests/src/test_*.c) tests/src/randexp.c
 RXVM_OBJS := ${RXVM_C_SRCS:.c=.o}
@@ -11,7 +12,7 @@ MEMCHECK := tests/scripts/memcheck.sh
 
 CFLAGS := -Wall -Wno-trigraphs -I$(RXVM_INC)
 
-testobjs: CFLAGS += -I$(TEST_INC)
+testobjs: CFLAGS += -I$(TEST_INC) -DNUM_TESTS_FUZZ_FULL_MATCH=$(FUZZ_FULL_NUM)
 testobjs: $(TEST_OBJS)
 
 $(TESTS): $(RXVM_OBJS) testobjs

@@ -10,7 +10,6 @@
 #define NUM_TESTS_MATCH            25
 #define NUM_TESTS_NOMATCH          5
 #define NUM_TESTS_FUZZ_MATCH       29
-#define NUM_TESTS_FUZZ_FULL_MATCH  10
 
 #define EXABYTES                (1024ULL * 1024ULL * 1024ULL * 1024ULL * \
                                 1024ULL * 1024ULL)

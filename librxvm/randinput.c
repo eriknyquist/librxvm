@@ -85,19 +85,32 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     unsigned int val;
     unsigned int ip;
     unsigned int ix;
+    unsigned int i, j;
     strb_t strb;
     uint8_t generosity;
     uint8_t whitespace;
     uint64_t limit;
 
     if (compiled->simple) {
-        size = sizeof(char) * (strlen(compiled->simple) + 1);
+        size = strlen(compiled->simple) + 1;
         if ((ret = malloc(size)) == NULL) {
             return NULL;
         }
 
-        cfg->len = size;
-        memcpy(ret, compiled->simple, size);
+        j = 0;
+
+        for (i = 0; compiled->simple[i]; ++i) {
+            if (compiled->simple[i] == DEREF_SYM) {
+                ret[j] = compiled->simple[++i];
+                --size;
+            } else {
+                ret[j] = compiled->simple[i];
+            }
+            ++j;
+        }
+
+        if (cfg) cfg->len = size;
+        ret[j] = 0;
         return ret;
     }
 

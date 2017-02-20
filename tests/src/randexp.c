@@ -20,37 +20,38 @@
 
 #define LITERALS            (((PRINTABLE_HIGH - PRINTABLE_LOW) + \
                             (WS_HIGH - WS_LOW)) - NUM_META)
-
+static strb_t strb;
+static randexp_cfg_t *cfg;
 static const char *meta = "()*+-.?[]{|}^$\\";
 static char charmap[LITERALS + NUM_META];
 
-static void nonterm_re       (randexp_cfg_t *cfg);
-static void nonterm_union    (randexp_cfg_t *cfg);
-static void nonterm_simple   (randexp_cfg_t *cfg);
-static void nonterm_concat   (randexp_cfg_t *cfg);
-static void nonterm_basic    (randexp_cfg_t *cfg);
-static void nonterm_zero     (randexp_cfg_t *cfg);
-static void nonterm_one      (randexp_cfg_t *cfg);
-static void nonterm_onezero  (randexp_cfg_t *cfg);
-static void nonterm_rep      (randexp_cfg_t *cfg);
-static void nonterm_reps     (randexp_cfg_t *cfg);
-static void nonterm_repn     (randexp_cfg_t *cfg);
-static void nonterm_reprange (randexp_cfg_t *cfg);
-static void nonterm_repmore  (randexp_cfg_t *cfg);
-static void nonterm_repless  (randexp_cfg_t *cfg);
-static void nonterm_elem     (randexp_cfg_t *cfg);
-static void nonterm_group    (randexp_cfg_t *cfg);
-static void nonterm_any      (randexp_cfg_t *cfg);
-/*static void nonterm_sol      (randexp_cfg_t *cfg);*/
-/*static void nonterm_eol      (randexp_cfg_t *cfg);*/
-static void nonterm_char     (randexp_cfg_t *cfg);
-static void nonterm_char_ccs (randexp_cfg_t *cfg);
-static void nonterm_set      (randexp_cfg_t *cfg);
-static void nonterm_setitems (randexp_cfg_t *cfg);
-static void nonterm_setitem  (randexp_cfg_t *cfg);
-static void nonterm_range    (randexp_cfg_t *cfg);
+static void nonterm_re       (void);
+static void nonterm_union    (void);
+static void nonterm_simple   (void);
+static void nonterm_concat   (void);
+static void nonterm_basic    (void);
+static void nonterm_zero     (void);
+static void nonterm_one      (void);
+static void nonterm_onezero  (void);
+static void nonterm_rep      (void);
+static void nonterm_reps     (void);
+static void nonterm_repn     (void);
+static void nonterm_reprange (void);
+static void nonterm_repmore  (void);
+static void nonterm_repless  (void);
+static void nonterm_elem     (void);
+static void nonterm_group    (void);
+static void nonterm_any      (void);
+/*static void nonterm_sol      (void);*/
+/*static void nonterm_eol      (void);*/
+static void nonterm_char     (void);
+static void nonterm_char_ccs (void);
+static void nonterm_set      (void);
+static void nonterm_setitems (void);
+static void nonterm_setitem  (void);
+static void nonterm_range    (void);
 
-typedef void (*nonterm_t)(randexp_cfg_t*);
+typedef void (*nonterm_t)(void);
 
 nonterm_t simple_choices[SIMPLE_CHOICES] = {nonterm_concat, nonterm_basic};
 nonterm_t basic_choices[BASIC_CHOICES] =
@@ -84,10 +85,10 @@ void init_charmap ()
     int i;
     char c;
 
-    i = 0;
-    do {
+    /* charmap starts with whitespace...*/
+    for (i = 0; (i + WS_LOW) <= WS_HIGH; ++i) {
         charmap[i] = i + WS_LOW;
-    } while ((i++ + WS_LOW) < WS_HIGH);
+    }
 
     c = PRINTABLE_LOW;
     while (i < LITERALS) {
@@ -107,7 +108,7 @@ static char get_rand_literal (uint8_t meta)
     unsigned int hi;
 
     hi = (meta) ? LITERALS + NUM_META : LITERALS;
-    return charmap[rand_range(WS_LOW, hi)];
+    return charmap[rand_range(0, hi - 1)];
 }
 
 static int choice (int prob)
@@ -115,199 +116,209 @@ static int choice (int prob)
     return (rand_range(0, 100) < prob);
 }
 
-void nonterm_range (randexp_cfg_t *cfg)
+void nonterm_range (void)
 {
-    strb_addc(cfg->strb, get_rand_literal(0));
-    strb_addc(cfg->strb, '-');
-    strb_addc(cfg->strb, get_rand_literal(0));
+    strb_addc(&strb, get_rand_literal(0));
+    strb_addc(&strb, '-');
+    strb_addc(&strb, get_rand_literal(0));
 }
 
-void nonterm_setitem (randexp_cfg_t *cfg)
+void nonterm_setitem (void)
 {
     nonterm_t nonterm;
 
-    nonterm = setitem_choices[rand_range(0, (SETITEM_CHOICES -1))];
-    nonterm(cfg);
+    if (choice(cfg->literals))
+        nonterm = nonterm_char_ccs;
+    else
+        nonterm = setitem_choices[rand_range(0, (SETITEM_CHOICES -1))];
+
+    nonterm();
 }
 
-void nonterm_setitems (randexp_cfg_t *cfg)
+void nonterm_setitems (void)
 {
     uint8_t val;
 
-    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
-    nonterm_setitem(cfg);
-    if (choice(val)) nonterm_setitems(cfg);
+    val = (strb.size >= cfg->limit) ? 0 : cfg->tokens;
+    nonterm_setitem();
+    if (choice(val)) nonterm_setitems();
 }
 
-void nonterm_set (randexp_cfg_t *cfg)
+void nonterm_set (void)
 {
-    strb_addc(cfg->strb, '[');
-    nonterm_setitems(cfg);
-    strb_addc(cfg->strb, ']');
+    strb_addc(&strb, '[');
+    nonterm_setitems();
+    strb_addc(&strb, ']');
 }
 
-void nonterm_char_ccs (randexp_cfg_t *cfg)
+void nonterm_char_ccs (void)
 {
     char c;
 
     c = get_rand_literal(1);
-    if (c == ']' || c == '-') ++c;
-    strb_addc(cfg->strb, c);
+    if (c == ']' || c == '-' || c == '\\') c = '*';
+    strb_addc(&strb, c);
 }
 
-void nonterm_char (randexp_cfg_t *cfg)
+void nonterm_char (void)
 {
     if (choice(cfg->escapes)) {
-        strb_addc(cfg->strb, '\\');
-        strb_addc(cfg->strb, meta[rand_range(0, NUM_META - 1)]);
+        strb_addc(&strb, '\\');
+        strb_addc(&strb, meta[rand_range(0, NUM_META - 1)]);
     } else {
-        strb_addc(cfg->strb, get_rand_literal(0));
+        strb_addc(&strb, get_rand_literal(0));
     }
 }
 /*
-void nonterm_eol (randexp_cfg_t *cfg)
+void nonterm_eol (void)
 {
-    strb_addc(cfg->strb, '$');
+    strb_addc(&strb, '$');
 }
 
-void nonterm_sol (randexp_cfg_t *cfg)
+void nonterm_sol (void)
 {
-    strb_addc(cfg->strb, '^');
+    strb_addc(&strb, '^');
 }
 */
-void nonterm_any (randexp_cfg_t *cfg)
+void nonterm_any (void)
 {
-    strb_addc(cfg->strb, '.');
+    strb_addc(&strb, '.');
 }
 
-void nonterm_group (randexp_cfg_t *cfg)
+void nonterm_group (void)
 {
-    strb_addc(cfg->strb, '(');
-    nonterm_re(cfg);
-    strb_addc(cfg->strb, ')');
+    strb_addc(&strb, '(');
+    nonterm_re();
+    strb_addc(&strb, ')');
 }
 
-void nonterm_elem (randexp_cfg_t *cfg)
+void nonterm_elem (void)
 {
     nonterm_t nonterm;
 
-    nonterm = elem_choices[rand_range(0, (ELEM_CHOICES - 1))];
-    nonterm(cfg);
+    if (choice(cfg->literals))
+        nonterm = nonterm_char;
+    else
+        nonterm = elem_choices[rand_range(0, (ELEM_CHOICES - 1))];
+
+    nonterm();
 }
 
-void nonterm_repless (randexp_cfg_t *cfg)
+void nonterm_repless (void)
 {
-    strb_addc(cfg->strb, ',');
-    strb_addu(cfg->strb, rand_range(1, MAX_REP));
+    strb_addc(&strb, ',');
+    strb_addu(&strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_repmore (randexp_cfg_t *cfg)
+void nonterm_repmore (void)
 {
-    strb_addu(cfg->strb, rand_range(1, MAX_REP));
-    strb_addc(cfg->strb, ',');
+    strb_addu(&strb, rand_range(1, MAX_REP));
+    strb_addc(&strb, ',');
 }
 
-void nonterm_reprange (randexp_cfg_t *cfg)
+void nonterm_reprange (void)
 {
-    strb_addu(cfg->strb, rand_range(1, MAX_REP));
-    strb_addc(cfg->strb, ',');
-    strb_addu(cfg->strb, rand_range(1, MAX_REP));
+    strb_addu(&strb, rand_range(1, MAX_REP));
+    strb_addc(&strb, ',');
+    strb_addu(&strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_repn (randexp_cfg_t *cfg)
+void nonterm_repn (void)
 {
-    strb_addu(cfg->strb, rand_range(1, MAX_REP));
+    strb_addu(&strb, rand_range(1, MAX_REP));
 }
 
-void nonterm_reps (randexp_cfg_t *cfg)
+void nonterm_reps (void)
 {
     nonterm_t nonterm;
 
     nonterm = reps_choices[rand_range(0, (REPS_CHOICES - 1))];
-    nonterm(cfg);
+    nonterm();
 }
 
-void nonterm_rep (randexp_cfg_t *cfg)
+void nonterm_rep (void)
 {
-    nonterm_elem(cfg);
-    strb_addc(cfg->strb, '{');
-    nonterm_reps(cfg);
-    strb_addc(cfg->strb, '}');
+    nonterm_elem();
+    strb_addc(&strb, '{');
+    nonterm_reps();
+    strb_addc(&strb, '}');
 }
 
-void nonterm_onezero (randexp_cfg_t *cfg)
+void nonterm_onezero (void)
 {
-    nonterm_elem(cfg);
-    strb_addc(cfg->strb, '?');
+    nonterm_elem();
+    strb_addc(&strb, '?');
 }
 
-void nonterm_one (randexp_cfg_t *cfg)
+void nonterm_one (void)
 {
-    nonterm_elem(cfg);
-    strb_addc(cfg->strb, '+');
+    nonterm_elem();
+    strb_addc(&strb, '+');
 }
 
-void nonterm_zero (randexp_cfg_t *cfg)
+void nonterm_zero (void)
 {
-    nonterm_elem(cfg);
-    strb_addc(cfg->strb, '*');
+    nonterm_elem();
+    strb_addc(&strb, '*');
 }
 
-void nonterm_basic (randexp_cfg_t *cfg)
+void nonterm_basic (void)
 {
     nonterm_t nonterm;
 
-    nonterm = basic_choices[rand_range(0, (BASIC_CHOICES - 1))];
-    nonterm(cfg);
+    if (choice(cfg->literals))
+        nonterm = nonterm_elem;
+    else
+        nonterm = basic_choices[rand_range(0, (BASIC_CHOICES - 1))];
+
+    nonterm();
 }
 
-void nonterm_concat (randexp_cfg_t *cfg)
+void nonterm_concat (void)
 {
-    nonterm_simple(cfg);
-    nonterm_basic(cfg);
+    nonterm_simple();
+    nonterm_basic();
 }
 
-void nonterm_simple (randexp_cfg_t *cfg)
-{
-    uint8_t val;
-
-    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
-
-    if (choice(val)) {
-        nonterm_concat(cfg);
-    } else {
-        nonterm_basic(cfg);
-    }
-}
-
-void nonterm_union (randexp_cfg_t *cfg)
-{
-    nonterm_re(cfg);
-    strb_addc(cfg->strb, '|');
-    nonterm_simple(cfg);
-}
-
-void nonterm_re (randexp_cfg_t *cfg)
+void nonterm_simple (void)
 {
     uint8_t val;
 
-    val = (cfg->strb->size >= cfg->limit) ? 0 : cfg->tokens;
+    val = (strb.size >= cfg->limit) ? 0 : cfg->tokens;
 
     if (choice(val)) {
-        nonterm_union(cfg);
+        nonterm_concat();
     } else {
-        nonterm_simple(cfg);
+        nonterm_basic();
     }
 }
 
-char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len)
+void nonterm_union (void)
 {
-    strb_t strb;
+    nonterm_re();
+    strb_addc(&strb, '|');
+    nonterm_simple();
+}
 
+void nonterm_re (void)
+{
+    uint8_t val;
+
+    val = (strb.size >= cfg->limit) ? 0 : cfg->tokens;
+
+    if (choice(val)) {
+        nonterm_union();
+    } else {
+        nonterm_simple();
+    }
+}
+
+char *gen_randexp (randexp_cfg_t *randcfg, uint64_t *len)
+{
+    cfg = randcfg;
     strb_init(&strb, 128);
-    cfg->strb = &strb;
 
-    nonterm_re(cfg);
+    nonterm_re();
 
     if (len) {
         *len = strb.size;

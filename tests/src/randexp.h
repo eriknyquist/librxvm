@@ -12,5 +12,6 @@ struct randexp_cfg {
 };
 
 char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len);
+void init_charmap (void);
 
 #endif

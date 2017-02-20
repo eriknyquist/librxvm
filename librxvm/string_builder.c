@@ -68,7 +68,8 @@ int strb_addc (strb_t *cfg, char c)
         }
     }
 
-    cfg->buf[cfg->size++] = c;
+    cfg->buf[cfg->size] = c;
+    ++cfg->size;
     return 0;
 }
 

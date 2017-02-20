@@ -26,16 +26,9 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
-    if (compiled.simple) {
-        /* If the expression contains no meta-characters, then no
-         * instructions will be generated and the "simple" pointer
-         * will be populated */
-        printf("%s\n", compiled.simple);
-    } else {
-        gen = rxvm_gen(&compiled, NULL);
-        printf("%s\n", gen);
-        free(gen);
-    }
+    gen = rxvm_gen(&compiled, NULL);
+    printf("%s\n", gen);
+    free(gen);
 
     rxvm_free(&compiled);
     return ret;

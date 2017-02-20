@@ -31,7 +31,7 @@ int main (void)
     test_rxvm_lfix_heuristic();
     test_rxvm_lfix_to_str();
     test_fuzz_rxvm_match();
-    //test_fuzz_full_rxvm_match();
+    test_fuzz_full_rxvm_match();
 #endif
 
     fclose(logfp);
