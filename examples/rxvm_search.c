@@ -41,8 +41,8 @@ int main (int argc, char *argv[])
         printf("Found match: ");
         print_substring(start, end);
 
-        /* Reset input pointer to end of the last match */
-        input = end;
+        /* Reset input pointer to after the end of the last match */
+        input = end + 1;
     }
 
     printf("Done.\n");
