@@ -89,6 +89,7 @@ static void verify_search_api (char *regex, char *input, char **start,
     printf("%s: %s #%d\n", msg, func, ++count);
 }
 
+#ifndef NOEXTRAS
 static void verify_fsearch_api (char *regex, FILE *fp, uint64_t *msize,
         int flags, int ret)
 {
@@ -122,6 +123,7 @@ static void verify_fsearch_api (char *regex, FILE *fp, uint64_t *msize,
     log_trs(msg, func);
     printf("%s: %s #%d\n", msg, func, ++count);
 }
+#endif
 
 static void verify_match_api (char *regex, char *input, int flags, int ret)
 {
@@ -195,12 +197,6 @@ void test_rxvm_api (void)
     verify_search_api("^str", "xx\nstr\nxx", NULL, NULL, RXVM_MULTILINE, 1);
     verify_search_api("str$", "xx\nstr\nxx", NULL, NULL, RXVM_MULTILINE, 1);
 
-    verify_fsearch_api("a+", fp, NULL, 0, 0);
-    verify_fsearch_api(NULL, fp, NULL, 0, RXVM_EPARAM);
-    verify_fsearch_api("a+", NULL, NULL, 0, RXVM_EPARAM);
-    verify_fsearch_api(NULL, NULL, NULL, 0, RXVM_EPARAM);
-    verify_fsearch_api(NULL, NULL, &msize, 0, RXVM_EPARAM);
-
     verify_search_flags("ab+", "abbb", "abbb", 0);
     verify_search_flags("ab*", "abbb", "abbb", 0);
     verify_search_flags("ab{,3}", "abbb", "abbb", 0);
@@ -222,5 +218,14 @@ void test_rxvm_api (void)
     verify_search_flags("ab{2,3}", "xxxxabbbyy", "abb", RXVM_NONGREEDY);
     verify_search_flags("<.*>", "xxxx<a<b>c>yyy", "<a<b>", RXVM_NONGREEDY);
 
+#ifndef NOEXTRAS
+    verify_fsearch_api("a+", fp, NULL, 0, 0);
+    verify_fsearch_api(NULL, fp, NULL, 0, RXVM_EPARAM);
+    verify_fsearch_api("a+", NULL, NULL, 0, RXVM_EPARAM);
+    verify_fsearch_api(NULL, NULL, NULL, 0, RXVM_EPARAM);
+    verify_fsearch_api(NULL, NULL, &msize, 0, RXVM_EPARAM);
+#endif
+
+    (void)msize;
     fclose(fp);
 }

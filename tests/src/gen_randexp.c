@@ -3,7 +3,8 @@
 #include <string.h>
 #include <time.h>
 #include "rxvm.h"
-#include "test_common.h"
+#include "string_builder.h"
+#include "randexp.h"
 
 int parse_int (char *input)
 {

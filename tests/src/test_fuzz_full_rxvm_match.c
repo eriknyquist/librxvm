@@ -4,6 +4,7 @@
 #include <time.h>
 #include "rxvm.h"
 #include "test_common.h"
+#include "randexp.h"
 
 #define RANDEXP_LIMIT     80
 #define RANDINPUT_LIMIT   500

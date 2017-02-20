@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "rxvm.h"
-#include "test_common.h"
+#include "string_builder.h"
+#include "randexp.h"
 #include "lex.h"
 
 #define BLOCK_SIZE          50
@@ -60,6 +61,11 @@ nonterm_t elem_choices[ELEM_CHOICES] =
     {nonterm_group, nonterm_any, /*nonterm_eol, nonterm_sol,*/ nonterm_char,
     nonterm_set};
 nonterm_t setitem_choices[SETITEM_CHOICES] = {nonterm_range, nonterm_char_ccs};
+
+static unsigned int rand_range (unsigned int low, unsigned int high)
+{
+    return (unsigned int) low + (rand() % ((high - low) + 1));
+}
 
 static int ismeta (char c)
 {
