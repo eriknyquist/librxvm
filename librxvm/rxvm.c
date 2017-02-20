@@ -342,20 +342,32 @@ void rxvm_print_err (int err)
         case RXVM_EREP:
             msg = "Missing repetition closing character";
         break;
+        case RXVM_ERANGE:
+            msg = "Incomplete character range inside character class";
+        break;
+        case RXVM_ECOMMA:
+            msg = "Invalid extra comma inside repetition";
+        break;
+        case RXVM_EDIGIT:
+            msg = "Non-numerical character inside repetition";
+        break;
         case RXVM_MREP:
             msg = "Empty repetition";
         break;
         case RXVM_ETRAIL:
             msg = "Trailing escape character";
         break;
-        case RXVM_EMEM:
-            msg = "Failed to allocate memory";
-        break;
         case RXVM_EINVAL:
             msg = "Invalid symbol";
         break;
+        case RXVM_EMEM:
+            msg = "Failed to allocate memory";
+        break;
         case RXVM_EPARAM:
             msg = "Invalid parameter passed to library function";
+        break;
+        case RXVM_IOERR:
+            msg = "rxvm_fsearch can't read from supplied FILE pointer";
         break;
         default:
             msg = "Unrecognised error code";
