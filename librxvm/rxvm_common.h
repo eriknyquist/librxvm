@@ -31,7 +31,7 @@
 
 typedef struct stackitem stackitem_t;
 typedef struct inst inst_t;
-typedef struct stack stack_t;
+typedef struct ir_stack ir_stack_t;
 typedef struct context context_t;
 
 /*  one node in a list */
@@ -42,7 +42,7 @@ struct stackitem {
 };
 
 /* a list */
-struct stack {
+struct ir_stack {
     stackitem_t *head;
     stackitem_t *tail;
     stackitem_t *dangling_alt;

@@ -52,7 +52,7 @@ unsigned int alt_seen;
 
 enum {STATE_START, STATE_CHARC};
 
-static void stack_reset (stack_t *stack)
+static void stack_reset (ir_stack_t *stack)
 {
     if (stack != NULL) {
         stack->size = 0;
@@ -77,9 +77,9 @@ static void inst_stack_cleanup (void *data)
 
 static void stack_stack_cleanup (void *data)
 {
-    stack_t *stack;
+    ir_stack_t *stack;
 
-    stack = (stack_t *) data;
+    stack = (ir_stack_t *) data;
     stack_free(stack, inst_stack_cleanup);
 }
 
@@ -159,7 +159,7 @@ static void parse_rep (char *start, char *end, int *rep_n, int *rep_m)
 static int process_op (context_t *cp)
 {
     stackitem_t *i;
-    stack_t *cur;
+    ir_stack_t *cur;
     unsigned int size;
     int err;
     int rep_n;
@@ -167,7 +167,7 @@ static int process_op (context_t *cp)
 
     if (cp->buf == NULL || cp->buf->head == NULL) {
         if (cp->tok == ALT) {
-            cur = (stack_t *) cp->parens->head->data;
+            cur = (ir_stack_t *) cp->parens->head->data;
             size = cur->size;
             i = NULL;
         } else {
@@ -229,7 +229,7 @@ static int process_op (context_t *cp)
         stack_free_head(cp->parens);
     }
 
-    cp->buf = (stack_t *) cp->parens->tail->data;
+    cp->buf = (ir_stack_t *) cp->parens->tail->data;
     return 0;
 }
 
@@ -238,9 +238,9 @@ static int process_op (context_t *cp)
  * can operate on them, should any operators be seen. */
 static int stage1_main_state (context_t *cp, int *state)
 {
-    stack_t *new;
-    stack_t *cur;
-    stack_t *base;
+    ir_stack_t *new;
+    ir_stack_t *cur;
+    ir_stack_t *base;
     inst_t inst;
 
     if (ISOP(cp->tok)) {
@@ -254,11 +254,11 @@ static int stage1_main_state (context_t *cp, int *state)
         stack_cat(cp->target, cp->buf);
         free(cp->buf);
         stack_free_head(cp->parens);
-        cp->buf = (stack_t *) cp->parens->tail->data;
+        cp->buf = (ir_stack_t *) cp->parens->tail->data;
 
     }
 
-    base = (stack_t *) cp->parens->tail->data;
+    base = (ir_stack_t *) cp->parens->tail->data;
 
     if (cp->tok == LITERAL) {
         if (!newline_seen && !cp->depth) {
@@ -311,11 +311,11 @@ static int stage1_main_state (context_t *cp, int *state)
 
                 stack_reset(base);
 
-                cur = (stack_t *) cp->parens->head->data;
+                cur = (ir_stack_t *) cp->parens->head->data;
                 cp->operand = cur->tail;
                 cp->buf = cur;
                 cp->target = (cp->parens->head->next == cp->parens->tail) ?
-                    cp->prog : (stack_t *) cp->parens->head->next->data;
+                    cp->prog : (ir_stack_t *) cp->parens->head->next->data;
             }
 
             --cp->depth;
@@ -401,7 +401,7 @@ static int stage1_charc_state (context_t *cp, int *state)
 
 static void stage1_cleanup (context_t *cp)
 {
-    free((stack_t *) cp->parens->tail->data);
+    free((ir_stack_t *) cp->parens->tail->data);
     free(cp->parens->tail);
     free(cp->parens);
 }
@@ -413,9 +413,9 @@ static void stage1_err_cleanup (context_t *cp)
     if (cp->strb.buf) free(cp->strb.buf);
 }
 
-static int stage1_init (context_t *cp, stack_t **ret)
+static int stage1_init (context_t *cp, ir_stack_t **ret)
 {
-    stack_t *base;
+    ir_stack_t *base;
 
     memset(cp, 0, sizeof(context_t));
 
@@ -496,7 +496,7 @@ void check_simple_for_lfix (rxvm_t *compiled, char *orig)
 
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates an IR for stage 2. */
-int stage1 (rxvm_t *compiled, char *input, stack_t **ret)
+int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret)
 {
     int state;
     int err;
@@ -577,7 +577,7 @@ int stage1 (rxvm_t *compiled, char *input, stack_t **ret)
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
     lfix_stop();
-    stack_cat(ctx.prog, (stack_t *) ctx.parens->tail->data);
+    stack_cat(ctx.prog, (ir_stack_t *) ctx.parens->tail->data);
     attach_dangling_alt(&ctx);
 
     /* Add the match instruction */

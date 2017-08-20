@@ -88,7 +88,7 @@ static int optimise_chains (rxvm_t *cmp)
     return 0;
 }
 
-int stage2 (stack_t *ir, rxvm_t *ret)
+int stage2 (ir_stack_t *ir, rxvm_t *ret)
 {
     stackitem_t *item;
     stackitem_t *next;

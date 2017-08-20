@@ -24,7 +24,7 @@
 #ifndef _VMCODE_H_
 #define _VMCODE_H_
 
-stackitem_t *stack_add_inst_head (stack_t *stack, inst_t *inst);
+stackitem_t *stack_add_inst_head (ir_stack_t *stack, inst_t *inst);
 void attach_dangling_alt (context_t *cp);
 
 int code_match (context_t *cp);

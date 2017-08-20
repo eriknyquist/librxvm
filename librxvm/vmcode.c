@@ -53,19 +53,19 @@ static inst_t *create_inst (inst_t *inst)
     return new;
 }
 
-stackitem_t *stack_add_inst_head (stack_t *stack, inst_t *inst)
+stackitem_t *stack_add_inst_head (ir_stack_t *stack, inst_t *inst)
 {
     return stack_add_head(stack, (void *) create_inst(inst));
 }
 
-static stackitem_t *stack_add_inst_tail (stack_t *stack, inst_t *inst)
+static stackitem_t *stack_add_inst_tail (ir_stack_t *stack, inst_t *inst)
 {
     return stack_add_tail(stack, (void *) create_inst(inst));
 }
 
 /* stack_cat_from_item: append items from a stack, starting from
  * stack item 'i', until stack item 'stop' is reached, onto stack1. */
-static void stack_cat_from_item (stack_t *stack1, stackitem_t *stop,
+static void stack_cat_from_item (ir_stack_t *stack1, stackitem_t *stop,
                                  stackitem_t *i)
 {
     while (1) {
@@ -75,7 +75,7 @@ static void stack_cat_from_item (stack_t *stack1, stackitem_t *stop,
     }
 }
 
-static int stack_dupe_from_item (stack_t *stack1, stackitem_t *stop,
+static int stack_dupe_from_item (ir_stack_t *stack1, stackitem_t *stop,
                                   stackitem_t *i)
 {
     char *temp;
@@ -329,7 +329,7 @@ int code_alt (context_t *cp, stackitem_t *i)
 
 int code_ccs (context_t *cp, uint8_t is_nchar)
 {
-    stack_t *topmost;
+    ir_stack_t *topmost;
     inst_t inst;
 
     strb_addc(&cp->strb, '\0');
@@ -340,7 +340,7 @@ int code_ccs (context_t *cp, uint8_t is_nchar)
         set_op_class(&inst, cp->strb.buf);
     }
 
-    topmost = (stack_t *)cp->parens->tail->data;
+    topmost = (ir_stack_t *)cp->parens->tail->data;
     cp->operand = stack_add_inst_head(topmost, &inst);
     cp->strb.buf = NULL;
 
