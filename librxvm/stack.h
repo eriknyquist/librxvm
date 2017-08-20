@@ -24,12 +24,12 @@
 #ifndef STACK_H_
 #define STACK_H_
 
-stack_t *create_stack (void);
-stackitem_t *stack_add_head (stack_t *stack, void *data);
-stackitem_t *stack_add_tail (stack_t *stack, void *data);
-void stack_point_new_head (stack_t *stack, stackitem_t *new);
-void stack_free_head (stack_t *stack);
-void stack_cat (stack_t *stack1, stack_t *stack2);
-void stack_free (stack_t *stack, void (*cleanup) (void *));
+ir_stack_t *create_stack (void);
+stackitem_t *stack_add_head (ir_stack_t *stack, void *data);
+stackitem_t *stack_add_tail (ir_stack_t *stack, void *data);
+void stack_point_new_head (ir_stack_t *stack, stackitem_t *new);
+void stack_free_head (ir_stack_t *stack);
+void stack_cat (ir_stack_t *stack1, ir_stack_t *stack2);
+void stack_free (ir_stack_t *stack, void (*cleanup) (void *));
 
 #endif

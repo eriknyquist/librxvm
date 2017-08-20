@@ -44,7 +44,7 @@ static uint64_t *charcp;
 
 int rxvm_compile (rxvm_t *compiled, char *exp)
 {
-    stack_t *ir;
+    ir_stack_t *ir;
     int ret;
     size_t size;
 

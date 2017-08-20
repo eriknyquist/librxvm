@@ -26,11 +26,11 @@
 
 struct context {
     strb_t strb;
-    stack_t *target;
-    stack_t *buf;
-    stack_t *prog;
+    ir_stack_t *target;
+    ir_stack_t *buf;
+    ir_stack_t *prog;
     stackitem_t *operand;
-    stack_t *parens;
+    ir_stack_t *parens;
     char *simple;
     char *orig;
 
@@ -40,6 +40,6 @@ struct context {
     uint8_t chained;
 };
 
-int stage1 (rxvm_t *compiled, char *input, stack_t **ret);
+int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret);
 
 #endif
