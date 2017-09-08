@@ -12,7 +12,7 @@
 #define SIMPLE_CHOICES      2
 #define BASIC_CHOICES       5
 #define REPS_CHOICES        4
-#define ELEM_CHOICES        4
+#define ELEM_CHOICES        5
 /*#define ELEM_CHOICES        6 */
 #define SETITEM_CHOICES     2
 
@@ -47,6 +47,7 @@ static void nonterm_any      (void);
 static void nonterm_char     (void);
 static void nonterm_char_ccs (void);
 static void nonterm_set      (void);
+static void nonterm_nset     (void);
 static void nonterm_setitems (void);
 static void nonterm_setitem  (void);
 static void nonterm_range    (void);
@@ -60,7 +61,7 @@ nonterm_t reps_choices[REPS_CHOICES] =
     {nonterm_repn, nonterm_reprange, nonterm_repmore, nonterm_repless};
 nonterm_t elem_choices[ELEM_CHOICES] =
     {nonterm_group, nonterm_any, /*nonterm_eol, nonterm_sol,*/ nonterm_char,
-    nonterm_set};
+    nonterm_set, nonterm_nset};
 nonterm_t setitem_choices[SETITEM_CHOICES] = {nonterm_range, nonterm_char_ccs};
 
 static unsigned int rand_range (unsigned int low, unsigned int high)
@@ -151,12 +152,23 @@ void nonterm_set (void)
     strb_addc(&strb, ']');
 }
 
+void nonterm_nset (void)
+{
+    strb_adds(&strb, "[^", 2);
+    nonterm_setitems();
+    strb_addc(&strb, ']');
+}
+
+int is_bad_ccs_char (char c)
+{
+    return (c == ']' || c == '-' || c == '\\' || c == '^');
+}
+
 void nonterm_char_ccs (void)
 {
     char c;
 
-    c = get_rand_literal(1);
-    if (c == ']' || c == '-' || c == '\\') c = '*';
+    while(is_bad_ccs_char(c = get_rand_literal(1)));
     strb_addc(&strb, c);
 }
 

@@ -412,6 +412,12 @@ void test_rxvm_compile (void)
         ":ly:lu:ly:ly:lu:ly:b1573,1577:b1578,1596:le:le:ly:lu:ly:ly:lu:ly:ly"
         ":lu:ly:ly:lu:ly:ly:lu:ly:b1592,1596:m");
 
+    verify_cmp("[]abc", "la:lb:lc:m");
+    verify_cmp("a[]bc", "la:lb:lc:m");
+    verify_cmp("abc[]", "la:lb:lc:m");
+    verify_cmp("[^]abc", "la:lb:lc:m");
+    verify_cmp("a[^]bc", "la:lb:lc:m");
+    verify_cmp("abc[^]", "la:lb:lc:m");
     verify_cmp("[^abc]", "nabc:m");
     verify_cmp("[^a\\bc]", "nabc:m");
     verify_cmp("[^^abc]", "n^abc:m");

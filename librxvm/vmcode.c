@@ -332,6 +332,9 @@ int code_ccs (context_t *cp, uint8_t is_nchar)
     ir_stack_t *topmost;
     inst_t inst;
 
+    if (cp->strb.size == 0)
+        return 0;
+
     strb_addc(&cp->strb, '\0');
 
     if (is_nchar) {
