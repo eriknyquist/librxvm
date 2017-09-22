@@ -28,7 +28,7 @@ provides a function (``rxvm_fsearch``) that takes a FILE pointer for large sets
 of input data. ``rxvm_fsearch`` uses the Boyer-Moore-Horspool algorithm to
 achieve **extremely high** throughput for regular expression searches on any
 data that can be accessed through a standard ``FILE`` pointer. You can try it
-out with the `rxvm_fsearch` example application.
+out with the ``rxvm_fsearch`` example application.
 
 ``rxvm_fsearch`` quick test, 1GB plain-text file (using ``grep`` as a benchmark)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -289,7 +289,8 @@ instructions into the ``rxvm_t`` type pointed to by ``compiled``.
 **Return value**
 
 * 0 if compilation succeeded
-* negative number if an error occured (See `Error codes`_)
+* negative number if an error occured (See `rxvm_compile error codes`_) and
+  `General error codes`_)
 
 |
 
@@ -311,7 +312,7 @@ exactly.
 
 * 1 if the input matches the expression
 * 0 if the input doesn't match the compiled expression
-* negative number if an error occured (See `Error codes`_)
+* negative number if an error occured (See `General error codes`_)
 
 |
 
@@ -337,7 +338,7 @@ last characters of the matching substring. If no match is found, then both
 
 * 1 if a match is found
 * 0 if no match is found
-* negative number if an error occured (See `Error codes`_)
+* negative number if an error occured (See `General error codes`_)
 
 |
 
@@ -411,7 +412,8 @@ of the ``rxvm_search`` function. Specifically, **longer** strings means
 
 * 1 if a match is found
 * 0 if no match is found
-* negative number if an error occured (See `Error codes`_)
+* negative number if an error occured (See `rxvm_fsearch error codes`_ and
+  `General error codes`_)
 
 |
 
@@ -523,10 +525,32 @@ enabled when ``rxvm_match`` is used; since ``rxvm_match`` effectively
 requires a matching string to be anchored at both the start and end of input,
 then ``^`` and ``$`` are only useful if they can also act as line anchors.
 
-Error codes
-^^^^^^^^^^^
+General error codes
+^^^^^^^^^^^^^^^^^^^
 
-**Compilation errors (``rxvm_compile`` only)**
+The following error codes are returned by all ``librxvm`` functions
+
+|
+
+``RXVM_EMEM``
+#############
+
+Indicates that memory allocation failed.
+
+|
+
+``RXVM_EPARAM``
+###############
+
+Indicates that an invalid parameter (e.g. a ``NULL`` pointer) was passed to a
+``librxvm`` library function.
+
+|
+
+``rxvm_compile`` error codes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following error codes are returned only by the ``rxvm_compile`` function
 
 |
 
@@ -682,26 +706,20 @@ character set) was encountered in the input expression.
 
 |
 
-**Miscellaneous errors**
+``rxvm_fsearch`` error codes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following error codes are returned only by the ``rxvm_fsearch`` function
 
 |
-
-``RXVM_EMEM``
-#############
-
-Indicates that memory allocation failed.
-
-``RXVM_EPARAM``
-###############
-
-Indicates that an invalid parameter (e.g. a ``NULL`` pointer) was passed to a
-``librxvm`` library function.
 
 ``RXVM_IOERR``
 ##############
 
-(Only returned by ``rxvm_fsearch``) Indicates that an error occured while
-attempting to read from the passed ``FILE`` pointer
+Indicates that an error occured while attempting to read from the passed
+``FILE`` pointer
+
+|
 
 Test Suite
 ----------
