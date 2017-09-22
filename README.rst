@@ -30,22 +30,43 @@ achieve **extremely high** throughput for regular expression searches on any
 data that can be accessed through a standard ``FILE`` pointer. You can try it
 out with the ``rxvm_fsearch`` example application.
 
-``rxvm_fsearch`` quick test, 1GB plain-text file (using ``grep`` as a benchmark)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Speed test: using the ``rxvm_fsearch`` function to search a 1GB plain-text file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-   $> ls -lh file
+    $> ls -lh file
+    -rw-r--r-- 1 enyquist enyquist 954M Jul 23 21:55 file
 
-   -rw-r--r-- 1 enyquist ekn 954M Dec 11 16:33 file
+    $> time examples/rxvm_fsearch "eriknyquist" file
 
-   $> time grep "non-existent string" file
+    eriknyquistB6dvGZ7wxvd9pqXnep5wABDee7UqaNibTUch/LUAcAjqRPAnQBpMjdG3w7R4wR+1082/ctpmmWk
 
-   real 0m0.348s
+    real    0m0.528s
+    user    0m0.444s
+    sys 0m0.084s
 
-   $> time examples/rxvm_fsearch "non-existent string" file
+    $>
 
-   real 0m0.358s
+528 milliseconds-- pretty fast. In fact, if we search for longer strings, we can
+go even faster, because of how the Boyer-Moore string searching algorithm works
+
+::
+
+    $> time examples/rxvm_fsearch "this is a long string" file
+
+    real    0m0.424s
+    user    0m0.300s
+    sys 0m0.120s
+
+    $> time examples/rxvm_fsearch "this is a very very very very veeeeeeeeeerrrrrrrrrryyyyyyyyyyyyy long string" file
+
+    real    0m0.197s
+    user    0m0.068s
+    sys 0m0.128s
+
+Under 200 milliseconds to search a 1GB file, when the search pattern contains a
+fixed string of ~80 characters or more. That's fast!
 
 What's missing from ``librxvm``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
