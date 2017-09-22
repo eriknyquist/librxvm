@@ -9,13 +9,19 @@ char *input;
 int main (int argc, char *argv[])
 {
     char *gen;
-    int ret;
+    int ret, num, i;
     rxvm_t compiled;
 
     ret = 0;
-    if (argc != 2) {
-        printf("Usage: %s <regex>\n", argv[0]);
+    num = 1;
+
+    if (argc < 2 || argc > 3) {
+        printf("Usage: %s <regex> [<number>]\n", argv[0]);
         exit(1);
+    }
+
+    if (argc == 3) {
+        num = atoi(argv[2]);
     }
 
     srand(time(NULL));
@@ -26,9 +32,11 @@ int main (int argc, char *argv[])
         exit(ret);
     }
 
-    gen = rxvm_gen(&compiled, NULL);
-    printf("%s\n", gen);
-    free(gen);
+    for (i = 0; i < num; ++i) {
+        gen = rxvm_gen(&compiled, NULL);
+        printf("%s\n", gen);
+        free(gen);
+    }
 
     rxvm_free(&compiled);
     return ret;
