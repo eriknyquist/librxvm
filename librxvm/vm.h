@@ -32,7 +32,7 @@ struct threads {
 };
 
 int vm_init (threads_t *tm, unsigned int size);
-int vm_execute (threads_t *tm, rxvm_t *compiled);
+int vm_execute (threads_t *tm, rxvm_t *compiled, uint64_t input_limit);
 void vm_cleanup (threads_t *tm);
 
 #endif

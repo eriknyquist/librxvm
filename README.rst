@@ -194,6 +194,12 @@ To install, do the usual stuff:
     make
     sudo make install
 
+The resulting static library ``librxvm.a`` will be installed in
+``/usr/local/lib`` by default. With the default configuration (i.e. everything
+turned on), the compiled library is about 54K on my 64-bit system. If you want
+to shave off ~40% of this size (around 20K in my case), you can configure with
+the ``--disable-extras`` flag (see `Reference: optional features`_).
+
 Building with librxvm
 ^^^^^^^^^^^^^^^^^^^^^
 

@@ -296,6 +296,9 @@ void test_rxvm_fsearch (void)
     verify_fsearch("eri+k", "erieri", 0, FIRST);
     verify_fsearch("eri+k", "erieri", 0, LAST);
     verify_fsearch("eri+k", "erieri", 0, MIDDLE);
+    verify_fsearch("apples((KLKKK)|(oranges+))?", "98yth4r", 0, FIRST);
+    verify_fsearch("apples((KLKKK)|(oranges+))?", "plki9", 0, LAST);
+    verify_fsearch("apples((KLKKK)|(oranges+))?", "ooaxk", 0, MIDDLE);
     verify_fsearch("xyz+abcd", "lmno", 0, FIRST);
     verify_fsearch("xyz+abcd", "lmno", 0, LAST);
     verify_fsearch("xyz+abcd", "lmno", 0, MIDDLE);

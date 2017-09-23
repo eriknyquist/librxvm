@@ -10,7 +10,10 @@
 #include "rxvm.h"
 #include "stage1.h"
 #include "setop.h"
+
+#ifndef NOEXTRAS
 #include "lfix.h"
+#endif /* NOEXTRAS */
 
 #define REP_NO_FIELD        -1
 #define REP_FIELD_EMPTY     -2
@@ -83,7 +86,9 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
             return err;
         }
 
+#ifndef NOEXTRAS
     lfix_dec();
+#endif /* NOEXTRAS */
 
     /* {n} */
     } else if (rep_n >= 0 && rep_m == REP_NO_FIELD) {
@@ -97,7 +102,9 @@ static int process_op_rep (context_t *cp, int rep_n, int rep_m,
             return err;
         }
 
+#ifndef NOEXTRAS
         lfix_dec();
+#endif /* NOEXTRAS */
     }
 
     return 0;
@@ -181,14 +188,18 @@ static int process_op (context_t *cp)
                 return err;
             }
 
+#ifndef NOEXTRAS
             lfix_dec();
+#endif /* NOEXTRAS */
         break;
         case ONEZERO:
             if ((err = code_onezero(cp, size, i)) < 0) {
                 return err;
             }
 
+#ifndef NOEXTRAS
             lfix_dec();
+#endif /* NOEXTRAS */
         break;
         case ALT:
             if ((err = code_alt(cp, i)) < 0) {
@@ -199,7 +210,9 @@ static int process_op (context_t *cp)
         break;
     }
 
+#ifndef NOEXTRAS
     lfix_stop();
+#endif /* NOEXTRAS */
     stack_reset(cp->buf);
     if (cp->lasttok == RPAREN) {
         free(cp->buf);
@@ -238,15 +251,19 @@ static int stage1_main_state (context_t *cp, int *state)
     base = (ir_stack_t *) cp->parens->tail->data;
 
     if (cp->tok == LITERAL) {
+#ifndef NOEXTRAS
         if (!newline_seen && !cp->depth) {
             lfix_continue(cp->orig, lp1);
         }
+#endif /* NOEXTRAS */
 
         set_op_char(&inst, *lp1);
         goto single;
     }
 
+#ifndef NOEXTRAS
     lfix_stop();
+#endif /* NOEXTRAS */
 
     switch (cp->tok) {
         case ANY:
@@ -410,7 +427,10 @@ static int stage1_init (context_t *cp, ir_stack_t **ret)
         return RXVM_EMEM;
     }
 
+#ifndef NOEXTRAS
     lfix_zero();
+#endif /* NOEXTRAS */
+
     alt_seen = 0;
     cp->prog = *ret;
     stack_add_head(cp->parens, (void *) base);
@@ -446,11 +466,14 @@ static int compile_simple_backlog (context_t *cp)
         ++orig;
     }
 
+#ifndef NOEXTRAS
     set_ltempn((fixtemp) ? fixtemp : orig - cp->orig - 1 - delimit);
+#endif /* NOEXTRAS */
     cp->operand = cp->buf->head;
     return 0;
 }
 
+#ifndef NOEXTRAS
 void check_simple_for_lfix (rxvm_t *compiled, char *orig)
 {
     unsigned int i;
@@ -470,6 +493,7 @@ void check_simple_for_lfix (rxvm_t *compiled, char *orig)
 
     compiled->lfixn = i - 1 - delimit;
 }
+#endif /* NOEXTRAS */
 
 /* Stage 1 compiler: takes the input expression string,
  * runs it through the lexer and generates an IR for stage 2. */
@@ -494,7 +518,9 @@ int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret)
     /* String contains only literal characters;
      * no compilation necessary. */
     if (ctx.tok == END) {
+#ifndef NOEXTRAS
         check_simple_for_lfix(compiled, ctx.orig);
+#endif /* NOEXTRAS */
         ctx.simple = ctx.orig;
         stage1_cleanup(&ctx);
         stack_free(ctx.prog, inst_stack_cleanup);
@@ -553,7 +579,9 @@ int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret)
 
     /* End of input-- anything left in the buffer
      * can be appended to the output. */
+#ifndef NOEXTRAS
     lfix_stop();
+#endif /* NOEXTRAS */
     stack_cat(ctx.prog, (ir_stack_t *) ctx.parens->tail->data);
     attach_dangling_alt(&ctx);
 
@@ -562,6 +590,7 @@ int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret)
         return err;
     }
 
+#ifndef NOEXTRAS
     if (alt_seen) {
         compiled->lfix0 = 0;
         compiled->lfixn = 0;
@@ -569,6 +598,7 @@ int stage1 (rxvm_t *compiled, char *input, ir_stack_t **ret)
         compiled->lfix0 = get_lfix0();
         compiled->lfixn = get_lfixn();
     }
+#endif /* NOEXTRAS */
 
     /* Re-use dsize member to indicate to stage2 whether
      * jmp chain optimisation is needed */

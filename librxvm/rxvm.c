@@ -7,39 +7,97 @@
 #include "stage2.h"
 #include "stack.h"
 #include "vm.h"
+#include "bmh.h"
+#include "lfix_to_str.h"
 
 #ifndef NOEXTRAS
 #include "bmh.h"
 #endif
 
-#define FBUF_SIZE  256
+#define LBUF_SIZE     16
+#define FBUF_SIZE     256
 
+#ifndef NOEXTRAS
 static char *fbuf;
 static int bufpos;
 static long fpos;
 static uint64_t *charcp;
+#endif /* NOEXTRAS */
 
 int rxvm_compile (rxvm_t *compiled, char *exp)
 {
     ir_stack_t *ir;
+    char *lfix;
     int ret;
     size_t size;
+    size_t simplesize;
+    size_t cmpsize;
+    size_t lfix_size;
 
-    if (!compiled || !exp) return RXVM_EPARAM;
-    if ((ret = stage1(compiled, exp, &ir)) < 0) return ret;
+    if (!compiled || !exp) {
+        return RXVM_EPARAM;
+    }
+
+    compiled->exe = NULL;
+    compiled->simple = NULL;
+    compiled->lfix = NULL;
+
+    /* Compile expression to VM instructions in an incomplete
+     * IR, stored in a linked list */
+    if ((ret = stage1(compiled, exp, &ir)) < 0) {
+        return ret;
+    }
+
+    /* Determine whether extra space should be allocated
+     * for lfix string */
+    size = 0;
+    lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
+    if (lfix_size > 1) {
+        size += lfix_size + 1;
+    } else {
+        lfix_size = 0;
+    }
 
     if (ir == NULL) {
-        size = sizeof(char) * (strlen(exp) + 1);
+        /* Simple case; expression contains no special
+         * characters. Stage2 not required, but a copy of the
+         * original expression string must be stored */
+        simplesize = strlen(exp) + 1;
+        size += simplesize;
+
         if ((compiled->simple = malloc(size)) == NULL) {
             return RXVM_EMEM;
         }
 
-        memcpy(compiled->simple, exp, size);
-        compiled->exe = NULL;
-        return 0;
+        memcpy(compiled->simple, exp, simplesize);
+        lfix = compiled->simple + simplesize;
+    } else {
+        /* Normal case; expression contains characters that require
+         * full compilation. Stage2 must be run to generate
+         * the final instructions */
+        cmpsize = sizeof(inst_t) * ir->size;
+        size += cmpsize;
+
+        if ((compiled->exe = malloc(size)) == NULL)
+            return RXVM_EMEM;
+
+        /* Convert the linked list IR into a contiguous
+         * array of executable instructions, and perform any
+         * available optimisations on the final executable program */
+        if ((ret = stage2(ir, compiled)) < 0) {
+            return ret;
+        }
+
+        lfix = ((char *)compiled->exe) + cmpsize;
     }
 
-    if ((ret = stage2(ir, compiled)) < 0) return ret;
+    if (lfix_size) {
+        compiled->lfix = lfix;
+#ifndef NOEXTRAS
+        lfix_to_str(exp, compiled);
+#endif /* NOEXTRAS */
+    }
+
     return 0;
 }
 
@@ -116,7 +174,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
 
-        vm_execute(&tm, compiled);
+        vm_execute(&tm, compiled, 0);
     }
 
     if (tm.match_end == 0) {
@@ -164,7 +222,7 @@ int rxvm_match (rxvm_t *compiled, char *input, int flags)
         if ((ret = vm_init(&tm, compiled->size)) != 0)
             goto cleanup;
 
-        if (vm_execute(&tm, compiled))
+        if (vm_execute(&tm, compiled, 0))
             goto cleanup;
     }
 
@@ -176,6 +234,72 @@ cleanup:
 }
 
 #ifndef NOEXTRAS
+
+static int read_backwards (FILE *fp, char *buf, long size)
+{
+    int ret;
+
+    if ((ret = fseek(fp, -size, SEEK_CUR)) < 0)
+        return RXVM_IOERR;
+
+    if ((ret = fread(buf, 1, size, fp)) < 0)
+        return RXVM_IOERR;
+
+    if (fseek(fp, -ret, SEEK_CUR) < 0)
+        return RXVM_IOERR;
+
+    return ret;
+}
+
+static long seek_to_start_of_line (FILE *fp)
+{
+    char buf[LBUF_SIZE];
+    long curr;
+    long seek_size;
+    int ret;
+    int i;
+
+    curr = ftell(fp);
+    if (curr == 0) {
+        return 0;
+    } else if (curr < 0) {
+        return RXVM_IOERR;
+    }
+
+    /* Read backwards from current position in LBUF_SIZE sized chunks until
+     * a newline character is found */
+    while (curr) {
+        seek_size = (curr < LBUF_SIZE) ? curr : LBUF_SIZE;
+        ret = read_backwards(fp, buf, seek_size);
+
+        if (ret < 0 || ret != seek_size)
+            return RXVM_IOERR;
+
+        curr -= seek_size;
+        for (i = 0; i < seek_size; ++i) {
+            if (buf[i] == '\n') {
+                fseek(fp, i, SEEK_CUR);
+                return curr + i;
+            }
+        }
+    }
+
+    return curr;
+}
+
+static int seek_to_start_of_match (threads_t *tm, FILE *fp, uint64_t *msize)
+{
+    if (msize) {
+        *msize = tm->match_end - tm->match_start - 1;
+    }
+
+    if (fseek(fp, tm->match_start, SEEK_SET) < 0) {
+        return RXVM_IOERR;
+    }
+
+    return 0;
+}
+
 static char getchar_file (void *data)
 {
     size_t num;
@@ -185,7 +309,7 @@ static char getchar_file (void *data)
 
     if (bufpos == FBUF_SIZE) {
         bufpos = 0;
-        num = fread(fbuf, sizeof(char), FBUF_SIZE, fp);
+        num = fread(fbuf, 1, FBUF_SIZE, fp);
         fpos += FBUF_SIZE;
 
         if (num < FBUF_SIZE) {
@@ -196,12 +320,51 @@ static char getchar_file (void *data)
     return fbuf[bufpos++];
 }
 
+static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
+    uint64_t *msize)
+{
+    size_t lfix_size;
+    int err;
+    long reset;
+
+    lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
+    bmh_init(fp, compiled->lfix, lfix_size);
+    bmh(tm);
+
+    while (tm->match_end) {
+        /* re-start Boyer-Moore from here if vm_execute fails */
+        reset = tm->match_end - 1;
+
+        /* Reset file pointer to the start of the line containing the match,
+         * to be ready for vm_execute */
+        if ((err = seek_to_start_of_match(tm, fp, NULL)) < 0)
+           return err;
+
+        if ((fpos = seek_to_start_of_line(fp)) < 0)
+           return fpos;
+
+        tm->chars = fpos;
+        tm->match_end = 0;
+        vm_execute(tm, compiled, reset);
+
+        if (tm->match_end) {
+            return 1;
+        }
+
+        fseek(fp, reset, SEEK_SET);
+        tm->match_end = 0;
+        bmh_reset();
+        bmh(tm);
+    }
+
+    return 0;
+}
+
 int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
                   int flags)
 {
     threads_t tm;
     int ret;
-    uint64_t msize;
     char file_buffer[FBUF_SIZE];
 
     if (!compiled || !fp) return RXVM_EPARAM;
@@ -222,22 +385,34 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
 
     ret = 0;
     if (compiled->simple) {
+        /* Simple expression-- we can do the whole search using
+         * Boyer-Moore (bmh()) */
         bmh_init(fp, compiled->simple, strlen(compiled->simple));
         bmh(&tm);
     } else {
-        if ((ret = vm_init(&tm, compiled->size)) != 0)
-            goto cleanup;
+        /* Full regular expression, with a fixed substring suitable for
+         * running Boyer-Moore (bmh_partial()). Initialise the VM, since
+         * bmh_partial will call vm_execute if it finds a substring match */
+        if (compiled->lfix) {
+            if ((ret = vm_init(&tm, compiled->size)) != 0)
+                goto cleanup;
 
-        tm.chars = fpos;
-        vm_execute(&tm, compiled);
+            if ((ret = bmh_partial(fp, compiled, &tm, match_size)) < 0)
+                goto cleanup;
+
+        } else {
+            /* Full regular expression, with no fix substrings suitable for
+             * Boyer-Moore. Initialise & execute the VM */
+            if ((ret = vm_init(&tm, compiled->size)) != 0)
+                goto cleanup;
+
+            tm.chars = fpos;
+            vm_execute(&tm, compiled, 0);
+        }
     }
 
     if (tm.match_end) {
-        msize = tm.match_end - tm.match_start - 1;
-
-        if (match_size) *match_size = msize;
-
-        fseek(fp, tm.match_start, SEEK_SET);
+        seek_to_start_of_match(&tm, fp, match_size);
         ret = 1;
     }
 
@@ -362,15 +537,12 @@ void rxvm_free (rxvm_t *compiled)
 
     if (compiled->simple) {
         free(compiled->simple);
-        return;
-    } else if (compiled->exe == NULL) {
-        return;
-    }
+    } else if (compiled->exe) {
+        for (i = 0; i < compiled->size; i++) {
+            if (compiled->exe[i].ccs != NULL)
+                free(compiled->exe[i].ccs);
+        }
 
-    for (i = 0; i < compiled->size; i++) {
-        if (compiled->exe[i].ccs != NULL)
-            free(compiled->exe[i].ccs);
+        free(compiled->exe);
     }
-
-    free(compiled->exe);
 }

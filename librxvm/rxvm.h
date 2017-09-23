@@ -15,6 +15,7 @@ typedef struct rxvm rxvm_t;
 struct rxvm {
     inst_t *exe;
     char *simple;
+    char *lfix;
     unsigned int lfix0;
     unsigned int lfixn;
     unsigned int size;

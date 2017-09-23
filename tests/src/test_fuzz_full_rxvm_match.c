@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "rxvm.h"
 #include "test_common.h"
 #include "randexp.h"
@@ -40,15 +39,16 @@ void test_fuzz_full_rxvm_match (void)
     int passed;
     int failed;
     int err;
+    int percent;
     int i;
     int j;
 
     memset(&ecfg, 0, sizeof(randexp_cfg_t));
     init_charmap();
-    srand(time(NULL));
 
     func = __func__;
     total_size = 0;
+    percent = 1;
 
     ecfg.limit = RANDEXP_LIMIT;
     ecfg.literals = RANDEXP_LITERALS;
@@ -96,6 +96,8 @@ void test_fuzz_full_rxvm_match (void)
                     ++failed;
                 }
 
+                percent = j / (NUM_ITER / 100);
+                printf("  %d%%\r", percent);
                 itersize += icfg.len;
                 fflush(stdout);
                 free(gen);

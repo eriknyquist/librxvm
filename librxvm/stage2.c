@@ -72,10 +72,6 @@ int stage2 (ir_stack_t *ir, rxvm_t *ret)
     inst_t *inst;
     int i, err;
 
-    /* array to hold pointers to the already-allocated instructions */
-    if ((ret->exe = malloc(sizeof(inst_t) * ir->size)) == NULL)
-        return RXVM_EMEM;
-
     err = 0;
     item = ir->tail;
     for (i = 0; i < ir->size; i++) {

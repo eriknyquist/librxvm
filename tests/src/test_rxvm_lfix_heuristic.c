@@ -97,4 +97,6 @@ void test_rxvm_lfix_heuristic (void)
     verify_rxvm_lfix("abc[defgh]ijkl", 10, 13);
     verify_rxvm_lfix("abc[d\\]fgh]ijkl", 11, 14);
     verify_rxvm_lfix("abc[d\\]fgh]ij\\kl", 11, 14);
+
+    verify_rxvm_lfix("abcd+efgh", 0, 3);
 }

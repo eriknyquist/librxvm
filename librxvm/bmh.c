@@ -90,6 +90,13 @@ skip:
     return 0;
 }
 
+void bmh_reset (void)
+{
+    pos = 0;
+    pendix = plen - 1;
+    fill(0);
+}
+
 void bmh_init (FILE *file, char *pat, unsigned int length)
 {
     unsigned int i;
@@ -102,11 +109,9 @@ void bmh_init (FILE *file, char *pat, unsigned int length)
         badchar[atoindex(pat[i])] = length - i - 1;
     }
 
-    pos = 0;
     pattern = pat;
     fp = file;
     plen = length;
-    pendix = plen - 1;
 
-    fill(0);
+    bmh_reset();
 }

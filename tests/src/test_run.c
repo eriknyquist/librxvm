@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "rxvm.h"
 #include "test_common.h"
 #include "test_modules.h"
@@ -18,6 +19,8 @@ int main (void)
         printf("Unable to open file "TEST_LOG" for writing\n");
         return 1;
     }
+
+    srand(time(NULL));
 
     test_rxvm_compile();
     test_rxvm_err();

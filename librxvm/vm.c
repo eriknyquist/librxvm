@@ -55,15 +55,15 @@ static void add_thread_next (threads_t *tm, int val)
     add_thread(tm->np, tm->np_lookup, &tm->nsize, val);
 }
 
-int vm_execute (threads_t *tm, rxvm_t *compiled)
+int vm_execute (threads_t *tm, rxvm_t *compiled, uint64_t input_limit)
 {
+    inst_t inst;
+    int *dtemp;
+    uint8_t *ltemp;
     char C;
     int t;
     int i;
     int ii;
-    int *dtemp;
-    uint8_t *ltemp;
-    inst_t inst;
 
     C = 0;
     tm->nsize = 0;
@@ -136,7 +136,8 @@ skip_readchar:
             }
         }
 
-        if (C == tm->endchar) break;
+        if (C == tm->endchar)
+            break;
 
         if (!tm->nsize) {
             /* If we've used no thread slots for the next character, avoid

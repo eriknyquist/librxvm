@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "rxvm.h"
 #include "test_common.h"
 
@@ -34,8 +33,10 @@ static void fuzz_rxvm_match (char *regex)
     uint64_t itersize;
     char *msg, *gen;
     int ret, j;
+    int percent;
 
     itersize = 0;
+    percent = 0;
 
     msg = "PASS";
     j = 0;
@@ -66,6 +67,9 @@ static void fuzz_rxvm_match (char *regex)
                 fflush(stdout);
                 free(gen);
             }
+
+            percent = j / (NUM_ITER / 100);
+            printf("  %d%%\r", percent);
         }
     }
 
@@ -81,7 +85,6 @@ void test_fuzz_rxvm_match (void)
     tests = 0;
     total_size = 0;
     func = __func__;
-    srand(time(NULL));
 
     cfg.limit = RANDINPUT_LIMIT;
     cfg.generosity = 90;
