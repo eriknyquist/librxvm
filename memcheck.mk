@@ -12,7 +12,7 @@ MEMCHECK := tests/scripts/memcheck.sh
 
 CFLAGS := -Wall -Wno-trigraphs -I$(RXVM_INC)
 
-testobjs: CFLAGS += -I$(TEST_INC) -DNUM_TESTS_FUZZ_FULL_MATCH=$(FUZZ_FULL_NUM)
+testobjs: CFLAGS += -I$(TEST_INC)
 testobjs: $(TEST_OBJS)
 
 $(TESTS): $(RXVM_OBJS) testobjs
