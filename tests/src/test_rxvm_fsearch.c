@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
 #include "rxvm.h"
 #include "test_common.h"
 
-#define MIN_FSIZE   80
+#define LINE_WIDTH  80
+#define MIN_FSIZE   65536
 #define LIMIT       256
 #define GENEROSITY  85
 #define WHITESPACE  10
@@ -41,6 +41,9 @@ static int fill_padding (const char *pad, unsigned padlen, unsigned count,
                          FILE *fp)
 {
     unsigned int write_size;
+    unsigned int linecount;
+
+    linecount = 0;
 
     while (count) {
         write_size = (count < padlen) ? count : padlen;
@@ -52,14 +55,20 @@ static int fill_padding (const char *pad, unsigned padlen, unsigned count,
         }
 
         count -= write_size;
+        linecount += write_size;
+
+        if (count && linecount >= LINE_WIDTH) {
+            fputc('\n', fp);
+            linecount = 0;
+            --count;
+        }
     }
 
     return 0;
 }
 
-void fail_and_cleanup (void)
+void fail_and_cleanup (char *failname)
 {
-    log_trs("FAIL", func);
     rxvm_free(&compiled);
     free(gen);
 
@@ -68,7 +77,13 @@ void fail_and_cleanup (void)
         fp = NULL;
     }
 
-    cleanup_testfile();
+    if (failname)
+        rename(TMPFILE, failname);
+    else
+        cleanup_testfile();
+
+    log_trs("FAIL", func);
+    printf("FAIL: %s #%d\n", func, ++count);
 }
 
 int generate_test_file (FILE *fp, char *gen, char *pad, int position)
@@ -138,11 +153,15 @@ int generate_test_file (FILE *fp, char *gen, char *pad, int position)
 
 static void verify_fsearch (char *regex, char *pad, int flags, int position)
 {
+    char failed_input[48];
     char match[LIMIT * 2];
     uint64_t msize;
     int pos;
     long fpos;
     int err;
+
+    snprintf(failed_input, sizeof(failed_input),
+        "rxvm_fsearch_failed_input_%d.txt", count);
 
     if ((err = rxvm_compile(&compiled, regex)) < 0) {
         log_trs("FAIL", func);
@@ -159,40 +178,42 @@ static void verify_fsearch (char *regex, char *pad, int flags, int position)
     }
 
     if ((pos = generate_test_file(fp, gen, pad, position)) < 0) {
-        fail_and_cleanup();
+        fail_and_cleanup(NULL);
         return;
     }
 
     if ((fp = fopen(TMPFILE, "r")) == NULL) {
         fprintf(logfp, "Can't open test file "TMPFILE" for reading\n");
-        fail_and_cleanup();
+        fail_and_cleanup(failed_input);
         return;
     }
 
     if ((err = rxvm_fsearch(&compiled, fp, &msize, flags)) < 0) {
-        fprintf(logfp, "verify_fsearch: regex=%s (flags=%d):"
-                " errcode=%d\n", regex, flags, err);
-        fail_and_cleanup();
+        fprintf(logfp, "%s:\n\tregex=%s (flags=%d): errcode=%d\n\n",
+            failed_input, regex, flags, err);
+        fail_and_cleanup(failed_input);
         return;
     } else if (err == 0) {
-        fprintf(logfp, "verify_fsearch:\n\nregex=%s\ninput=%s\nflags=%d\nNo"
-                       " match found in file %s\n", regex, gen, flags, TMPFILE);
-        fail_and_cleanup();
+        fprintf(logfp, "%s:\n\tregex=%s\n\tinput=%s\n\tflags=%d\n\tNo match "
+                       "found in file %s\n\n", failed_input, regex, gen, flags,
+                       TMPFILE);
+        fail_and_cleanup(failed_input);
         return;
     }
 
     fpos = ftell(fp);
     if (fpos!= pos) {
-        fprintf(logfp, "verify_fsearch:\n\nregex=%s\ninput=%s\nflags=%d\nmatch"
-                       " offset is %ld, expecting %d\n", regex, gen, flags,
-                       fpos, pos);
-        fail_and_cleanup();
+        fprintf(logfp, "%s:\n\tregex=%s\n\tinput=%s\n\tflags=%d\n\tmatch offset"
+                       " is %ld, expecting %d\n\n", failed_input, regex, gen,
+                       flags, fpos, pos);
+        fail_and_cleanup(failed_input);
         return;
     }
 
     if (fread(match, 1, msize, fp) != msize) {
-        fprintf(logfp, "Error reading match from test file");
-        fail_and_cleanup();
+        fprintf(logfp, "%s:\n\terror reading match from test file\n\n",
+                       failed_input);
+        fail_and_cleanup(failed_input);
         return;
     }
 
@@ -201,10 +222,10 @@ static void verify_fsearch (char *regex, char *pad, int flags, int position)
     match[msize] = 0;
 
     if (strcmp(match, gen) != 0) {
-        fprintf(logfp, "verify_fsearch:\n\nregex=%s\ninput=%s\nflags=%d\nmatch"
-                       "should be:\n%s\n\nbut got this:\n%s\n\n", regex, gen,
-                       flags, gen, match);
-        fail_and_cleanup();
+        fprintf(logfp, "%s:\n\nregex=%s\ninput=%s\nflags=%d\nmatch should be:"
+                       "\n%s\n\nbut got this:\n%s\n\n", failed_input, regex,
+                       gen, flags, gen, match);
+        fail_and_cleanup(failed_input);
         return;
     }
 
@@ -226,7 +247,6 @@ void test_rxvm_fsearch (void)
     fp = NULL;
     count = 0;
     func = __func__;
-    srand(time(NULL));
 
     if (cleanup_testfile() != 0) {
         log_trs("FAIL", func);
@@ -237,30 +257,48 @@ void test_rxvm_fsearch (void)
     cfg.generosity = GENEROSITY;
     cfg.whitespace = WHITESPACE;
 
-    verify_fsearch("xyz", "abc", 0, FIRST);
-    verify_fsearch("xyz", "abc", 0, LAST);
-    verify_fsearch("xyz", "abc", 0, MIDDLE);
-    verify_fsearch("abcdef", "abcde", 0, FIRST);
-    verify_fsearch("abcdef", "abcde", 0, LAST);
-    verify_fsearch("abcdef", "abcde", 0, MIDDLE);
-    verify_fsearch(".+", "\n", 0, FIRST );
-    verify_fsearch(".+", "\n", 0, LAST );
-    verify_fsearch(".+", "\n", 0, MIDDLE );
-    verify_fsearch("<[^\n<>]+>", "<\n>", 0, FIRST );
-    verify_fsearch("<[^\n<>]+>", "<\n>", 0, LAST );
-    verify_fsearch("<[^\n<>]+>", "<\n>", 0, MIDDLE );
-    verify_fsearch("[^A-Za-z]+", "abc", 0, FIRST);
-    verify_fsearch("[^A-Za-z]+", "abc", 0, LAST);
-    verify_fsearch("[^A-Za-z]+", "abc", 0, MIDDLE);
-    verify_fsearch("[a-f\\-]+-", "ABCDEF", 0, FIRST);
-    verify_fsearch("[a-f\\-]+-", "ABCDEF", 0, LAST);
-    verify_fsearch("[a-f\\-]+-", "ABCDEF", 0, MIDDLE);
+    verify_fsearch("xyz", "abccccc", 0, FIRST);
+    verify_fsearch("xyz", "abccccc", 0, LAST);
+    verify_fsearch("xyz", "abccccc", 0, MIDDLE);
+    verify_fsearch("abcdef", "abcdeabcde", 0, FIRST);
+    verify_fsearch("abcdef", "abcdeabcde", 0, LAST);
+    verify_fsearch("abcdef", "abcdeabcde", 0, MIDDLE);
+    verify_fsearch("abcdef+", "abcdeeeeee", 0, FIRST);
+    verify_fsearch("abcdef+", "abcdeeeeee", 0, LAST);
+    verify_fsearch("abcdef+", "abcdeeeeee", 0, MIDDLE);
+    verify_fsearch("abcdef*", "abcdddddd", 0, FIRST);
+    verify_fsearch("abcdef*", "abcdddddd", 0, LAST);
+    verify_fsearch("abcdef*", "abcdddddd", 0, MIDDLE);
+    verify_fsearch(".+", "\n\n\n\n\n", 0, FIRST );
+    verify_fsearch(".+", "\n\n\n\n\n", 0, LAST );
+    verify_fsearch(".+", "\n\n\n\n\n", 0, MIDDLE );
+    verify_fsearch("<[^\n<>]+>", "<<\n><\n>>", 0, FIRST );
+    verify_fsearch("<[^\n<>]+>", "<<\n><\n>>", 0, LAST );
+    verify_fsearch("<[^\n<>]+>", "<<\n><\n>>", 0, MIDDLE );
+    verify_fsearch("[^A-Za-z\n]+", "abcdefg", 0, FIRST);
+    verify_fsearch("[^A-Za-z\n]+", "abcdefg", 0, LAST);
+    verify_fsearch("[^A-Za-z\n]+", "abcdefg", 0, MIDDLE);
+    verify_fsearch("[a-f\\-]+-", "ABCDEFFFFF", 0, FIRST);
+    verify_fsearch("[a-f\\-]+-", "ABCDEFFFFF", 0, LAST);
+    verify_fsearch("[a-f\\-]+-", "ABCDEFFFFF", 0, MIDDLE);
     verify_fsearch("[[*-+?]+", "@#$", 0, FIRST);
     verify_fsearch("[[*-+?]+", "@#$", 0, LAST);
     verify_fsearch("[[*-+?]+", "@#$", 0, MIDDLE);
     verify_fsearch("a+", "bc", 0, FIRST);
     verify_fsearch("a+", "bc", 0, LAST);
     verify_fsearch("a+", "bc", 0, MIDDLE);
+    verify_fsearch("axq+", "bc", 0, FIRST);
+    verify_fsearch("axq+", "bc", 0, LAST);
+    verify_fsearch("axq+", "bc", 0, MIDDLE);
+    verify_fsearch("axq+d", "bcX4", 0, FIRST);
+    verify_fsearch("axq+d", "bcX4", 0, LAST);
+    verify_fsearch("axq+d", "bcX4", 0, MIDDLE);
+    verify_fsearch("eri+k", "erieri", 0, FIRST);
+    verify_fsearch("eri+k", "erieri", 0, LAST);
+    verify_fsearch("eri+k", "erieri", 0, MIDDLE);
+    verify_fsearch("xyz+abcd", "lmno", 0, FIRST);
+    verify_fsearch("xyz+abcd", "lmno", 0, LAST);
+    verify_fsearch("xyz+abcd", "lmno", 0, MIDDLE);
     verify_fsearch("a+|bb?|cc*|d{12}", "ef", 0, FIRST);
     verify_fsearch("a+|bb?|cc*|d{12}", "ef", 0, LAST);
     verify_fsearch("a+|bb?|cc*|d{12}", "ef", 0, MIDDLE);

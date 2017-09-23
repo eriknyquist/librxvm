@@ -95,6 +95,7 @@ int stage2 (ir_stack_t *ir, rxvm_t *ret)
         /* copy instruction pointer into array
          * and free list item struct. */
         memcpy(&ret->exe[i], inst, sizeof(inst_t));
+
         free(item->data);
         free(item);
         item = next;
