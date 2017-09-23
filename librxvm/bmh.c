@@ -32,13 +32,11 @@ static void fill (unsigned int backup)
 
     memmove(bmhbuf, bmhbuf + (end - backup), backup);
 
-    if ((rsize = fread(bmhbuf + backup,
-                       sizeof(char),
-                       BUFSIZE - backup,
-                       fp)) < (BUFSIZE - backup)) {
+    if ((rsize = fread(bmhbuf + backup, sizeof(char), BUFSIZE - backup, fp))
+        < (BUFSIZE - backup)) {
 
         memset(bmhbuf + backup + rsize, EOF, BUFSIZE - (backup + rsize));
-        end = rsize;
+        end = backup + rsize;
     } else {
         end = BUFSIZE;
     }
