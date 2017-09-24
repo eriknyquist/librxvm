@@ -210,8 +210,8 @@ int rxvm_match (rxvm_t *compiled, char *input, int flags)
 
     sot = input;
     tm.multiline = 1;
+    tm.nongreedy = 0;
     tm.icase = (flags & RXVM_ICASE);
-    tm.nongreedy = (flags & RXVM_NONGREEDY);
 
     ret = 0;
     if (compiled->simple) {
