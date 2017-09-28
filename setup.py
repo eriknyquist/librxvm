@@ -1,7 +1,9 @@
 import os
 import glob
-from distutils.core import setup, Extension
+import wheel
+from setuptools import setup, Extension
 
+PYRXVM_DIR = 'pyrxvm'
 source_files = glob.glob('librxvm/*.c') + ['pyrxvm/pyrxvm.c']
 
 module1 = Extension('rxvm',
@@ -11,7 +13,7 @@ module1 = Extension('rxvm',
                     sources = source_files)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-README = os.path.join(HERE, "pyrxvm/README.rst")
+README = os.path.join(HERE, os.path.join(PYRXVM_DIR, "README.rst"))
 
 classifiers = [
     'License :: OSI Approved :: Apache Software License',
@@ -36,4 +38,5 @@ setup (name = 'rxvm',
        author = 'Erik Nyquist',
        author_email = 'eknyquist@gmail.com',
        url = 'https://github.com/eriknyquist/librxvm',
+       package_dir = {'rxvm': PYRXVM_DIR},
        ext_modules = [module1])
