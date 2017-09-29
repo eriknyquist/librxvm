@@ -22,7 +22,7 @@ unsigned int rand_range (unsigned int low, unsigned int high);
 
 void test_err (char *regex, char *input, const char *test, char *msg, int ret);
 void rxvm_print_oneline (rxvm_t *compiled);
-void hrsize (uint64_t size, char *buf, unsigned int bufsize);
+void hrsize (size_t size, char *buf, unsigned int bufsize);
 int substring_match (char *string, char *start, char *end);
 
 extern FILE *logfp;

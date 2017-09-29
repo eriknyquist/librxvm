@@ -8,10 +8,10 @@ struct randexp_cfg {
     uint8_t escapes;    /* 0-100; higher means more escaped literals */
     uint8_t tokens;     /* 0-100; higher means more tokens */
 
-    uint64_t limit;
+    size_t limit;
 };
 
-char *gen_randexp (randexp_cfg_t *cfg, uint64_t *len);
+char *gen_randexp (randexp_cfg_t *cfg, size_t *len);
 void init_charmap (void);
 
 #endif

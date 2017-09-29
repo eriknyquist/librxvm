@@ -9,9 +9,9 @@ extern const int udiff;
 typedef struct threads threads_t;
 
 struct threads {
-    uint64_t chars;         /* Number of input chars processed */
-    uint64_t match_start;   /* Start of matching portion of input stream */
-    uint64_t match_end;     /* End of matching portion of input stream */
+    size_t chars;         /* Number of input chars processed */
+    size_t match_start;   /* Start of matching portion of input stream */
+    size_t match_end;     /* End of matching portion of input stream */
     int *cp;                /* Threads for current input char. */
     int *np;                /* Threads for next input char. */
     uint8_t *cp_lookup;     /* Lookup table for current input char. */
@@ -32,7 +32,7 @@ struct threads {
 };
 
 int vm_init (threads_t *tm, unsigned int size);
-int vm_execute (threads_t *tm, rxvm_t *compiled, uint64_t input_limit);
+int vm_execute (threads_t *tm, rxvm_t *compiled, size_t input_limit);
 void vm_cleanup (threads_t *tm);
 
 #endif

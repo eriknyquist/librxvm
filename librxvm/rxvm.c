@@ -21,7 +21,7 @@
 static char *fbuf;
 static int bufpos;
 static long fpos;
-static uint64_t *charcp;
+static size_t *charcp;
 #endif /* NOEXTRAS */
 
 int rxvm_compile (rxvm_t *compiled, char *exp)
@@ -245,7 +245,7 @@ static int read_backwards (FILE *fp, char *buf, long size)
     if ((ret = fread(buf, 1, size, fp)) < 0)
         return RXVM_IOERR;
 
-    if (fseek(fp, -ret, SEEK_CUR) < 0)
+    if (fseek(fp, -((int64_t)ret), SEEK_CUR) < 0)
         return RXVM_IOERR;
 
     return ret;
@@ -287,13 +287,13 @@ static long seek_to_start_of_line (FILE *fp)
     return curr;
 }
 
-static int seek_to_start_of_match (threads_t *tm, FILE *fp, uint64_t *msize)
+static int seek_to_start_of_match (threads_t *tm, FILE *fp, size_t *msize)
 {
     if (msize) {
         *msize = tm->match_end - tm->match_start - 1;
     }
 
-    if (fseek(fp, tm->match_start, SEEK_SET) < 0UL) {
+    if (fseek(fp, tm->match_start, SEEK_SET) < 0) {
         return RXVM_IOERR;
     }
 
@@ -321,11 +321,11 @@ static char getchar_file (void *data)
 }
 
 static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
-    uint64_t *msize)
+    size_t *msize)
 {
     unsigned int lfix_size;
     int err;
-    uint64_t reset;
+    size_t reset;
 
     lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
     bmh_init(fp, compiled->lfix, lfix_size);
@@ -360,7 +360,7 @@ static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
     return 0;
 }
 
-int rxvm_fsearch (rxvm_t *compiled, FILE *fp, uint64_t *match_size,
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, size_t *match_size,
                   int flags)
 {
     threads_t tm;

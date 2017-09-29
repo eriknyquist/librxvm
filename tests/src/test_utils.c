@@ -48,14 +48,14 @@ void test_err (char *regex, char *input, const char *test, char *msg, int ret)
     fprintf(logfp, "        input text : %s\n\n", input);
 }
 
-void hrsize (uint64_t size, char *buf, unsigned int bufsize)
+void hrsize (size_t size, char *buf, unsigned int bufsize)
 {
     static const char *names[NUMNAMES] =
     {
         "EB", "PB", "TB", "GB", "MB", "KB", "B"
     };
 
-    uint64_t mult;
+    size_t mult;
     int i;
 
     mult = EXABYTES;

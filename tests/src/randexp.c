@@ -325,7 +325,7 @@ void nonterm_re (void)
     }
 }
 
-char *gen_randexp (randexp_cfg_t *randcfg, uint64_t *len)
+char *gen_randexp (randexp_cfg_t *randcfg, size_t *len)
 {
     cfg = randcfg;
     strb_init(&strb, 128);

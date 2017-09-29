@@ -66,7 +66,7 @@ char *rxvm_gen (rxvm_t *compiled, rxvm_gencfg_t *cfg)
     strb_t strb;
     uint8_t generosity;
     uint8_t whitespace;
-    uint64_t limit;
+    size_t limit;
 
     if (compiled->simple) {
         size = strlen(compiled->simple) + 1;

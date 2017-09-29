@@ -34,8 +34,8 @@ void test_fuzz_full_rxvm_match (void)
     randexp_cfg_t ecfg;
 
     rxvm_t compiled;
-    uint64_t itersize;
-    uint64_t total_size;
+    size_t itersize;
+    size_t total_size;
     int passed;
     int failed;
     int err;

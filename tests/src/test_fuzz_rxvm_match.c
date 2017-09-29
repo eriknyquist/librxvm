@@ -10,7 +10,7 @@
 char *rgx;
 char *input;
 
-static uint64_t total_size;
+static size_t total_size;
 static rxvm_gencfg_t cfg;
 static int tests;
 static const char *func;
@@ -30,7 +30,7 @@ static void fuzz_rxvm_match (char *regex)
 {
     rxvm_t compiled;
     char sizestr[20];
-    uint64_t itersize;
+    size_t itersize;
     char *msg, *gen;
     int ret, j;
     int percent;
