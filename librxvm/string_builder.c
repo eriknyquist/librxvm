@@ -69,11 +69,49 @@ int strb_adds (strb_t *cfg, char *s, int n)
     return 0;
 }
 
+int my_utoa(unsigned int val, char *buf, int size)
+{
+    int pos;
+    int chars;
+    unsigned int i;
+    unsigned int rem;
+
+    chars = 0;
+    i = val;
+
+    while (i > 0) {
+        i /= 10;
+        ++chars;
+    }
+
+    if ((chars + 1) > size) {
+        return -1;
+    }
+
+    if (!chars) {
+        buf[0] = '0';
+        buf[1] = '\0';
+        return 1;
+    }
+
+    pos = chars;
+    buf[pos] = '\0';
+    --pos;
+
+    while (val > 0) {
+        rem = val % 10;
+        buf[pos--] = rem + '0';
+        val /= 10;
+    }
+
+    return chars;
+}
+
 int strb_addu (strb_t *cfg, unsigned int i)
 {
     int chars;
     char num[20];
 
-    chars = snprintf(num, sizeof(num), "%u", i);
+    chars = my_utoa(i, num, sizeof(num));
     return strb_adds(cfg, num, chars);
 }
