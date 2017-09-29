@@ -165,7 +165,7 @@ int code_rep_more (context_t *cp, int rep_n, unsigned int size, stackitem_t *i)
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
 
-    set_op_branch(&inst, -(size), 1);
+    set_op_branch(&inst, -((int)size), 1);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
         return RXVM_EMEM;
     }
@@ -226,7 +226,7 @@ int code_one (context_t *cp, unsigned int size, stackitem_t *i)
     inst_t inst;
     /* x = current position MINUS size of operand buf
      * y = current position PLUS 1 */
-    set_op_branch(&inst, -(size), 1);
+    set_op_branch(&inst, -((int)size), 1);
     stack_cat_from_item(cp->target, cp->buf->head, i);
 
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
@@ -248,7 +248,7 @@ int code_zero (context_t *cp, unsigned int size, stackitem_t *i)
     }
 
     stack_cat_from_item(cp->target, cp->buf->head, i);
-    set_op_branch(&inst, -(size), 1);
+    set_op_branch(&inst, -((int)size), 1);
     if (stack_add_inst_head(cp->target, &inst) == NULL) {
         return RXVM_EMEM;
     }

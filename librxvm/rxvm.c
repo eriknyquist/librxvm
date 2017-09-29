@@ -237,7 +237,7 @@ cleanup:
 
 static int read_backwards (FILE *fp, char *buf, long size)
 {
-    int ret;
+    size_t ret;
 
     if ((ret = fseek(fp, -size, SEEK_CUR)) < 0)
         return RXVM_IOERR;
@@ -293,7 +293,7 @@ static int seek_to_start_of_match (threads_t *tm, FILE *fp, uint64_t *msize)
         *msize = tm->match_end - tm->match_start - 1;
     }
 
-    if (fseek(fp, tm->match_start, SEEK_SET) < 0) {
+    if (fseek(fp, tm->match_start, SEEK_SET) < 0UL) {
         return RXVM_IOERR;
     }
 
@@ -323,9 +323,9 @@ static char getchar_file (void *data)
 static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
     uint64_t *msize)
 {
-    size_t lfix_size;
+    unsigned int lfix_size;
     int err;
-    long reset;
+    uint64_t reset;
 
     lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
     bmh_init(fp, compiled->lfix, lfix_size);
