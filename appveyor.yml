@@ -7,6 +7,13 @@ environment:
 
   matrix:
 
+    - PYTHON: "C:\\Python27.14"
+      PYTHON_VERSION: "2.7.14"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python27.14-x64"
+      PYTHON_VERSION: "2.7.14"
+      PYTHON_ARCH: "64"
 
     - PYTHON: "C:\\Python27.13"
       PYTHON_VERSION: "2.7.13"
@@ -14,6 +21,14 @@ environment:
 
     - PYTHON: "C:\\Python27.13-x64"
       PYTHON_VERSION: "2.7.13"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python27.10"
+      PYTHON_VERSION: "2.7.10"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python27.10-x64"
+      PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
 
     # Pre-installed Python versions, which Appveyor may upgrade to
