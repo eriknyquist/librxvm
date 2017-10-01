@@ -1,7 +1,8 @@
 import os
 import glob
 import wheel
-from setuptools import setup, Extension
+import unittest
+from setuptools import setup, Extension, Command
 
 PYRXVM_DIR = 'pyrxvm'
 source_files = glob.glob('librxvm/*.c') + ['pyrxvm/pyrxvm.c']
@@ -28,6 +29,20 @@ classifiers = [
     'Programming Language :: Python :: 2.7',
 ]
 
+class RunPyRXVMTests(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        suite = unittest.TestLoader().discover("pyrxvm/test")
+        t = unittest.TextTestRunner(verbosity=2)
+        t.run(suite)
+
 with open(README, 'r') as f:
     long_description = f.read()
 
@@ -39,4 +54,5 @@ setup (name = 'rxvm',
        author_email = 'eknyquist@gmail.com',
        url = 'https://github.com/eriknyquist/librxvm',
        package_dir = {'rxvm': PYRXVM_DIR},
+       cmdclass={'test': RunPyRXVMTests},
        ext_modules = [module1])
