@@ -1,12 +1,23 @@
 
 language: c
+python:
+  - "2.7"
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq valgrind
+  - sudo apt-get install -qq python-pip
+  - sudo pip install wheel
 
 script:
+# Build C lib
   - ./autogen.sh
   - ./configure
   - make
+
+# Run main librxvm test suite
   - make check
+
+# Build python extension and run tests
+  - python setup.py build
+  - sudo pip install . --upgrade
+  - python setup.py test
