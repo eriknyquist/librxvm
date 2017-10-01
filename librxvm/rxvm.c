@@ -21,7 +21,6 @@
 static char *fbuf;
 static int bufpos;
 static long fpos;
-static size_t *charcp;
 #endif /* NOEXTRAS */
 
 int rxvm_compile (rxvm_t *compiled, char *exp)
@@ -235,9 +234,9 @@ cleanup:
 
 #ifndef NOEXTRAS
 
-static int read_backwards (FILE *fp, char *buf, long size)
+static long read_backwards (FILE *fp, char *buf, long size)
 {
-    size_t ret;
+    long ret;
 
     if ((ret = fseek(fp, -size, SEEK_CUR)) < 0)
         return RXVM_IOERR;
@@ -251,13 +250,13 @@ static int read_backwards (FILE *fp, char *buf, long size)
     return ret;
 }
 
-static long seek_to_start_of_line (FILE *fp)
+static long seek_to_start_of_line (FILE *fp, long boundary)
 {
     char buf[LBUF_SIZE];
     long curr;
     long seek_size;
-    int ret;
-    int i;
+    long ret;
+    long i;
 
     curr = ftell(fp);
     if (curr == 0) {
@@ -268,8 +267,13 @@ static long seek_to_start_of_line (FILE *fp)
 
     /* Read backwards from current position in LBUF_SIZE sized chunks until
      * a newline character is found */
-    while (curr) {
+    while (curr > boundary) {
         seek_size = (curr < LBUF_SIZE) ? curr : LBUF_SIZE;
+
+        if ((curr - seek_size) < boundary) {
+            seek_size = curr - boundary;
+        }
+
         ret = read_backwards(fp, buf, seek_size);
 
         if (ret < 0 || ret != seek_size)
@@ -320,13 +324,14 @@ static char getchar_file (void *data)
     return fbuf[bufpos++];
 }
 
-static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
-    size_t *msize)
+static long bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm)
 {
     unsigned int lfix_size;
     int err;
-    size_t reset;
+    long reset;
+    long last_match_end;
 
+    last_match_end = ftell(fp);
     lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
     bmh_init(fp, compiled->lfix, lfix_size);
     bmh(tm);
@@ -340,11 +345,12 @@ static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
         if ((err = seek_to_start_of_match(tm, fp, NULL)) < 0)
            return err;
 
-        if ((fpos = seek_to_start_of_line(fp)) < 0)
+        if ((fpos = seek_to_start_of_line(fp, last_match_end)) < 0)
            return fpos;
 
-        tm->chars = fpos;
+        last_match_end = tm->match_end;
         tm->match_end = 0;
+        tm->chars = fpos;
         vm_execute(tm, compiled, reset);
 
         if (tm->match_end) {
@@ -352,7 +358,6 @@ static int bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm,
         }
 
         fseek(fp, reset, SEEK_SET);
-        tm->match_end = 0;
         bmh_reset();
         bmh(tm);
     }
@@ -381,7 +386,6 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, size_t *match_size,
     tm.nongreedy = (flags & RXVM_NONGREEDY);
     tm.multiline = (flags & RXVM_MULTILINE);
     tm.search = 1;
-    charcp = &tm.chars;
 
     ret = 0;
     if (compiled->simple) {
@@ -397,7 +401,7 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, size_t *match_size,
             if ((ret = vm_init(&tm, compiled->size)) != 0)
                 goto cleanup;
 
-            if ((ret = bmh_partial(fp, compiled, &tm, match_size)) < 0)
+            if ((ret = bmh_partial(fp, compiled, &tm)) < 0)
                 goto cleanup;
 
         } else {
