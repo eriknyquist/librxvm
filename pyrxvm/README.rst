@@ -399,7 +399,7 @@ Example expressions: ``xy]``, ``[a-f]]``
 
 |
 
-``rxvm.BadClosingRepetition``
+``rxvm.BadRepetition``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Indicates that an unexpected (and unescaped) repetition closing character
@@ -411,7 +411,7 @@ Example expressions: ``a}``, ``bb{4,}}``
 
 |
 
-``rxvm.BadClosingParenthesis``
+``rxvm.BadParenthesis``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Indicates that an unexpected (and unescaped) closing parenthesis character

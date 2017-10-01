@@ -8,8 +8,8 @@
 char *exception_descs[NUM_RXVM_EXC][2] = {
     {"rxvm.BadOperator", "Operator used incorrectly"},
     {"rxvm.BadClass", "Unexpected character class closing character"},
-    {"rxvm.BadClosingRepetition", "Unexpected repetition closing character"},
-    {"rxvm.BadClosingParenthesis", "Unexpected closing parenthesis"},
+    {"rxvm.BadRepetition", "Unexpected repetition closing character"},
+    {"rxvm.BadParenthesis", "Unexpected closing parenthesis"},
     {"rxvm.MissingClosingParenthesis", "Missing closing parenthesis"},
     {"rxvm.MissingClosingClass", "Missing character class closing character"},
     {"rxvm.MissingClosingRepetition", "Missing repetition closing character"},
@@ -291,17 +291,19 @@ initrxvm(void)
     if (PyType_Ready(&Pyrxvm_Type) < 0)
         return;
 
+    m = Py_InitModule3("rxvm", module_methods, "Python bindings for librxvm");
+    Py_INCREF(&Pyrxvm_Type);
+    PyModule_AddObject(m, "pyrxvm", (PyObject *)&Pyrxvm_Type);
+
     /* Create exceptions to wrap librxvm error codes */
     for (i = 0; i < NUM_RXVM_EXC; i++) {
         exceptions[i] = PyErr_NewException(exception_descs[i][0], NULL, NULL);
+        PyModule_AddObject(m, exception_descs[i][0] + 5, exceptions[i]);
     }
 
     /* Default exception for unknown error codes */
     UnknownError = PyErr_NewException("rxvm.UnknownError", NULL, NULL);
-
-    m = Py_InitModule3("rxvm", module_methods, "Python bindings for librxvm");
-    Py_INCREF(&Pyrxvm_Type);
-    PyModule_AddObject(m, "pyrxvm", (PyObject *)&Pyrxvm_Type);
+    PyModule_AddObject(m, "UnknownError", UnknownError);
 
     /* Module globals for rxvm flag constants */
     PyModule_AddObject(m, "ICASE", Py_BuildValue("i", RXVM_ICASE));
