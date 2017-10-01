@@ -74,6 +74,8 @@ static PyObject *Pyrxvm_fsearch (Pyrxvm_t *self, PyObject *args,
 {
     PyObject *ret;
     PyObject *File;
+    PyFileObject *PyFile;
+
     FILE *fp;
     char *match;
     int flags = 0;
@@ -87,30 +89,34 @@ static PyObject *Pyrxvm_fsearch (Pyrxvm_t *self, PyObject *args,
         return NULL;
     }
 
+    PyFile = (PyFileObject *)File;
     fp = PyFile_AsFile(File);
+    PyFile_IncUseCount(PyFile);
+
     err = rxvm_fsearch(&self->compiled, fp, &match_size, flags);
 
     if (err < 0) {
-        return Pyrxvm_Raise(err);
+        ret = Pyrxvm_Raise(err);
 
-    }
+    } else if (err == 0) {
+        ret = Py_None;
 
-    if (err) {
+    } else {
         if ((match = malloc(match_size + 1)) == NULL) {
-            return Pyrxvm_Raise(RXVM_EMEM);
-        }
+            ret = Pyrxvm_Raise(RXVM_EMEM);
 
-        if (fread(match, 1, match_size, fp) != match_size) {
-            return Pyrxvm_Raise(RXVM_IOERR);
-        }
+        } else if (fread(match, 1, match_size, fp) != match_size) {
+            ret = Pyrxvm_Raise(RXVM_IOERR);
 
-        match[match_size] = '\0';
-        ret = Py_BuildValue("s", match);
-        free(match);
-        return ret;
+        } else {
+            match[match_size] = '\0';
+            ret = Py_BuildValue("s", match);
+            free(match);
+        }
     }
 
-    return Py_None;
+    PyFile_DecUseCount(PyFile);
+    return ret;
 }
 
 static PyObject *Pyrxvm_gen (Pyrxvm_t *self, PyObject *args, PyObject *kwargs)
