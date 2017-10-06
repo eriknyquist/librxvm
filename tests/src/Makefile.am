@@ -16,6 +16,7 @@ AM_DEFAULT_SOURCE_EXT = .c
 if NOEXTRAS
 AM_CFLAGS += -DNOEXTRAS
 else
+AM_CFLAGS += -D_FILE_OFFSET_BITS=64
 rxvm_test_SOURCES += test_rxvm_fsearch.c test_rxvm_lfix_heuristic.c \
 test_rxvm_lfix_to_str.c test_fuzz_full_rxvm_match.c test_fuzz_rxvm_match.c
 endif
