@@ -90,7 +90,7 @@ static void verify_search_api (char *regex, char *input, char **start,
 }
 
 #ifndef NOEXTRAS
-static void verify_fsearch_api (char *regex, FILE *fp, size_t *msize,
+static void verify_fsearch_api (char *regex, FILE *fp, int64_t *msize,
         int flags, int ret)
 {
     rxvm_t *cp;
@@ -161,7 +161,7 @@ static void verify_match_api (char *regex, char *input, int flags, int ret)
 void test_rxvm_api (void)
 {
     FILE *fp;
-    size_t msize;
+    int64_t msize;
     char *start;
     char *end;
 

@@ -39,7 +39,7 @@ void rxvm_free   (rxvm_t *compiled);
 void rxvm_print_err (int err);
 void rxvm_print  (rxvm_t *compiled);
 char *rxvm_gen   (rxvm_t *compiled, rxvm_gencfg_t *cfg);
-int rxvm_fsearch (rxvm_t *compiled, FILE *fp, size_t *match_size, int flags);
+int rxvm_fsearch (rxvm_t *compiled, FILE *fp, int64_t *match_size, int flags);
 #endif /* NOEXTRAS */
 
 #endif

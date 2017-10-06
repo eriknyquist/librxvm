@@ -155,7 +155,7 @@ static void verify_fsearch (char *regex, char *pad, int flags, int position)
 {
     char failed_input[48];
     char match[LIMIT * 2];
-    size_t msize;
+    int64_t msize;
     int pos;
     long fpos;
     int err;

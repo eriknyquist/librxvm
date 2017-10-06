@@ -6,6 +6,7 @@
 #include "lex.h"
 #include "vm.h"
 #include "rxvm_common.h"
+#include "bmh.h"
 
 #define BUFSIZE 8192
 #define ASIZE (PRINTABLE_HIGH - WS_LOW)
@@ -64,7 +65,7 @@ int bmh (threads_t *tm)
 {
     char c;
     unsigned int i, skiplen;
-    long fpos;
+    int64_t fpos;
     char *input;
 
     skiplen = pendix;

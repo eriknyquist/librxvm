@@ -38,7 +38,7 @@ int main (int argc, char *argv[])
     char linebuf[120];
     FILE *fp;
     char *match;
-    uint64_t size;
+    int64_t size;
     int i;
     int ret;
     int flags;

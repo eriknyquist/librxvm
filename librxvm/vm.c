@@ -55,7 +55,7 @@ static void add_thread_next (threads_t *tm, int val)
     add_thread(tm->np, tm->np_lookup, &tm->nsize, val);
 }
 
-int vm_execute (threads_t *tm, rxvm_t *compiled, size_t input_limit)
+int vm_execute (threads_t *tm, rxvm_t *compiled, int64_t input_limit)
 {
     inst_t inst;
     int *dtemp;
