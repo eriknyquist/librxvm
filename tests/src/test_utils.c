@@ -55,7 +55,7 @@ void hrsize (size_t size, char *buf, unsigned int bufsize)
         "EB", "PB", "TB", "GB", "MB", "KB", "B"
     };
 
-    unsigned long long mult;
+    uint64_t mult;
     int i;
 
     mult = EXABYTES;
