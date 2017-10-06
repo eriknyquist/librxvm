@@ -55,7 +55,7 @@ void hrsize (size_t size, char *buf, unsigned int bufsize)
         "EB", "PB", "TB", "GB", "MB", "KB", "B"
     };
 
-    size_t mult;
+    unsigned long long mult;
     int i;
 
     mult = EXABYTES;
@@ -64,7 +64,7 @@ void hrsize (size_t size, char *buf, unsigned int bufsize)
         if (size < mult)
             continue;
 
-        if ((size % mult) == 0) {
+        if (mult && (size % mult) == 0) {
             snprintf(buf, bufsize, "%"PRIu64" %s", size / mult, names[i]);
         } else {
             snprintf(buf, bufsize, "%.2f %s", (float) size / mult, names[i]);
