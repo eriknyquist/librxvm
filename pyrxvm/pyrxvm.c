@@ -81,7 +81,7 @@ static PyObject *Pyrxvm_fsearch (Pyrxvm_t *self, PyObject *args,
     int flags = 0;
     char *kwlist[] = {"file", "flags", NULL};
 
-    uint64_t match_size;
+    int64_t match_size;
     int err;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|i", kwlist,

@@ -19,6 +19,7 @@ $PYTHON_PRERELEASE_REGEX = @"
 
 
 function Download ($filename, $url) {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $webclient = New-Object System.Net.WebClient
 
     $basedir = $pwd.Path + "\"

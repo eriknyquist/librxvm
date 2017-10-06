@@ -1,12 +1,18 @@
-
 language: c
+
+os:
+  - linux
+  - osx
+
+compiler:
+  - gcc
+
 python:
   - "2.7"
 
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq python-pip
-  - sudo pip install wheel
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pip; pip install wheel; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq python-pip; sudo pip install wheel; fi
 
 script:
 # Build C lib
@@ -19,5 +25,16 @@ script:
 
 # Build python extension and run tests
   - python setup.py build
+  - python setup.py bdist_wheel
   - sudo pip install . --upgrade
   - python setup.py test
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  file_glob: true
+  file: pyrxvm/dist/*
+  api-key: $GITHUB_TOKEN
+  on:
+    repo: eriknyquist/librxvm
+    tags: true
