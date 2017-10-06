@@ -7,7 +7,7 @@ lib_LIBRARIES = librxvm.a
 librxvm_a_SOURCES = stack.c lex.c stage1.c stage2.c vm.c rxvm.c vmcode.c \
 					   string_builder.c setop.c
 
-AM_CFLAGS =-Wall -pedantic
+AM_CFLAGS =-Wall -pedantic -D_FILE_OFFSET_BITS=64
 
 if NOEXTRAS
 AM_CFLAGS += -DNOEXTRAS
