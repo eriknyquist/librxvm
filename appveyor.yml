@@ -108,11 +108,11 @@ after_test:
   - "%CMD_IN_ENV% python setup.py bdist_wheel"
   - "%CMD_IN_ENV% python setup.py bdist_wininst"
   - "%CMD_IN_ENV% python setup.py bdist_msi"
-  - ps: "ls pyrxvm/dist"
+  - "move \"pyrxvm/dist\" \"python_%PYTHON_VERSION%_%PYTHON_ARCH%\""
 
 artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
-  - path: pyrxvm\dist\*
+  - path: python_$(PYTHON_VERSION)_$(PYTHON_ARCH)\*
 
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse
