@@ -1,18 +1,26 @@
 language: c
 
-os:
-  - linux
-  - osx
-
 compiler:
   - gcc
 
-python:
-  - "2.7"
+matrix:
+  include:
+  - python: "2.7"
+    os: linux
+  - python: "2.7"
+    os: osx
+  - python: "2.6"
+    os: osx
+  - python: "2.5"
+    os: osx
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pip; pip install wheel; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq python-pip; sudo pip install wheel; fi
+
+after_install:
+  - ls pyrxvm/dist
+  - echo $python
 
 script:
 # Build C lib
@@ -27,7 +35,7 @@ script:
   - python setup.py build
   - python setup.py bdist_wheel
   - sudo pip install . --upgrade
-  - python setup.py test
+  - python pyrxvm/test/test.py
 
 deploy:
   provider: releases

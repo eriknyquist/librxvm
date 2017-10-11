@@ -93,3 +93,10 @@ class RXVMTest(unittest.TestCase):
         self.assertTrue(p.match("azbc"))
         self.assertTrue(p.match("azzzzzbcc"))
         self.assertFalse(p.match("ab"))
+
+def main():
+    suite = unittest.TestLoader().loadTestsFromTestCase(RXVMTest)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+if __name__ == '__main__':
+    main()
