@@ -1,11 +1,17 @@
 librxvm: non-backtracking NFA-based C library for regular expressions
 =====================================================================
 
-.. image:: https://travis-ci.org/eriknyquist/librxvm.svg?branch=master
+
+.. |travis_badge| image:: https://travis-ci.org/eriknyquist/librxvm.svg?branch=master
     :target: https://travis-ci.org/eriknyquist/librxvm
 
-.. image:: https://ci.appveyor.com/api/projects/status/v7mj5v1xjg8rqdr5?svg=true
+.. |appveyor_badge| image:: https://ci.appveyor.com/api/projects/status/v7mj5v1xjg8rqdr5?svg=true
     :target: https://ci.appveyor.com/project/eriknyquist/librxvm
+
+Linux, OSX :  |travis_badge|
+
+Windows :  |appveyor_badge|
+
 |
 
 .. contents:: Table of Contents
