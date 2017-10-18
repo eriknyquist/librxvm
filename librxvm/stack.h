@@ -1,5 +1,5 @@
-#ifndef STACK_H_
-#define STACK_H_
+#ifndef STACK_H
+#define STACK_H
 
 ir_stack_t *create_stack (void);
 stackitem_t *stack_add_head (ir_stack_t *stack, void *data);

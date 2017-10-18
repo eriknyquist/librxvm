@@ -1,5 +1,5 @@
-#ifndef _SETOP_H_
-#define _SETOP_H_
+#ifndef SETOP_H
+#define SETOP_H
 
 void set_op_class (inst_t *inst, char *ccs);
 void set_op_nclass (inst_t *inst, char *ccs);

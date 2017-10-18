@@ -1,4 +1,4 @@
-#ifndef RANDEXP_H_
+#ifndef RANDEXP_H
 
 typedef struct randexp_cfg randexp_cfg_t;
 

@@ -1,5 +1,5 @@
-#ifndef STAGE1_H_
-#define STAGE1_H_
+#ifndef STAGE1_H
+#define STAGE1_H
 
 struct context {
     strb_t strb;

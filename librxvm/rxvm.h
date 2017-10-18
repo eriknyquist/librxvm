@@ -1,5 +1,5 @@
-#ifndef RXVM_H_
-#define RXVM_H_
+#ifndef RXVM_H
+#define RXVM_H
 
 #include "rxvm_common.h"
 

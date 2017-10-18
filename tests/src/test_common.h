@@ -1,5 +1,5 @@
-#ifndef TEST_COMMON_H_
-#define TEST_COMMON_H_
+#ifndef TEST_COMMON_H
+#define TEST_COMMON_H
 
 #include "string_builder.h"
 

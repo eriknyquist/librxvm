@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include "rxvm_err.h"
 
-#ifndef RXVM_COMMON_H_
-#define RXVM_COMMON_H_
+#ifndef RXVM_COMMON_H
+#define RXVM_COMMON_H
 
 #define CHARC_BLOCK_SIZE      10
 

@@ -1,5 +1,5 @@
-#ifndef RXVM_ERR_H_
-#define RXVM_ERR_H_
+#ifndef RXVM_ERR_H
+#define RXVM_ERR_H
 
 #define RXVM_BADOP      -1   /* Operator used incorrectly */
 #define RXVM_BADCLASS   -2   /* Unexpected character class closing character */

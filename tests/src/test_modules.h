@@ -1,5 +1,5 @@
-#ifndef TEST_MODULES_H_
-#define TEST_MODULES_H_
+#ifndef TEST_MODULES_H
+#define TEST_MODULES_H
 
 void test_rxvm_compile (void);
 void test_rxvm_lfix_heuristic (void);

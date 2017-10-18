@@ -1,5 +1,5 @@
-#ifndef _STRING_BUILDER_H_
-#define _STRING_BUILDER_H_
+#ifndef STRING_BUILDER_H
+#define STRING_BUILDER_H
 
 typedef struct strb strb_t;
 

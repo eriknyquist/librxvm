@@ -1,5 +1,5 @@
-#ifndef BMH_H_
-#define BMH_H_
+#ifndef BMH_H
+#define BMH_H
 
 #ifdef _WIN32
 #define fseek _fseeki64
