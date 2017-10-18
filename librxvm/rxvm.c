@@ -170,7 +170,7 @@ int rxvm_search (rxvm_t *compiled, char *input, char **start, char **end,
     if (compiled->simple) {
         simple_match(&tm, compiled->simple);
     } else {
-        if ((ret = vm_init(&tm, compiled->size)) != 0)
+        if ((ret = vm_init(&tm, compiled->size)) < 0)
             goto cleanup;
 
         vm_execute(&tm, compiled, 0);
@@ -218,7 +218,7 @@ int rxvm_match (rxvm_t *compiled, char *input, int flags)
             goto cleanup;
         }
     } else {
-        if ((ret = vm_init(&tm, compiled->size)) != 0)
+        if ((ret = vm_init(&tm, compiled->size)) < 0)
             goto cleanup;
 
         if (vm_execute(&tm, compiled, 0))
@@ -238,13 +238,13 @@ static int64_t read_backwards (FILE *fp, char *buf, int64_t size)
 {
     int64_t ret;
 
-    if ((ret = fseek(fp, -size, SEEK_CUR)) < 0)
+    if ((ret = fseek(fp, -size, SEEK_CUR)) != 0)
         return RXVM_IOERR;
 
-    if ((ret = fread(buf, 1, size, fp)) < 0)
+    if ((ret = fread(buf, 1, size, fp)) != size)
         return RXVM_IOERR;
 
-    if (fseek(fp, -((int64_t)ret), SEEK_CUR) < 0)
+    if (fseek(fp, -((int64_t)ret), SEEK_CUR) != 0)
         return RXVM_IOERR;
 
     return ret;
@@ -282,7 +282,10 @@ static int64_t seek_to_start_of_line (FILE *fp, int64_t boundary)
         curr -= seek_size;
         for (i = 0; i < seek_size; ++i) {
             if (buf[i] == '\n') {
-                fseek(fp, i, SEEK_CUR);
+                if (fseek(fp, i, SEEK_CUR) != 0) {
+                    return RXVM_IOERR;
+                }
+
                 return curr + i;
             }
         }
@@ -297,7 +300,7 @@ static int seek_to_start_of_match (threads_t *tm, FILE *fp, int64_t *msize)
         *msize = tm->match_end - tm->match_start - 1;
     }
 
-    if (fseek(fp, tm->match_start, SEEK_SET) < 0) {
+    if (fseek(fp, tm->match_start, SEEK_SET) != 0) {
         return RXVM_IOERR;
     }
 
@@ -314,7 +317,7 @@ static char getchar_file (void *data)
     if (bufpos == FBUF_SIZE) {
         bufpos = 0;
         num = fread(fbuf, 1, FBUF_SIZE, fp);
-        fpos += FBUF_SIZE;
+        fpos += num;
 
         if (num < FBUF_SIZE) {
             fbuf[num] = EOF;
@@ -331,10 +334,16 @@ static int64_t bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm)
     int64_t reset;
     int64_t last_match_end;
 
-    last_match_end = ftell(fp);
+    if ((last_match_end = ftell(fp)) < 0) {
+        return RXVM_IOERR;
+    }
+
     lfix_size = (compiled->lfixn - compiled->lfix0) + 1;
     bmh_init(fp, compiled->lfix, lfix_size);
-    bmh(tm);
+
+    if (bmh(tm) < 0) {
+        return RXVM_IOERR;
+    }
 
     while (tm->match_end) {
         /* re-start Boyer-Moore from here if vm_execute fails */
@@ -357,9 +366,14 @@ static int64_t bmh_partial(FILE *fp, rxvm_t *compiled, threads_t *tm)
             return 1;
         }
 
-        fseek(fp, reset, SEEK_SET);
+        if (fseek(fp, reset, SEEK_SET) != 0) {
+            return RXVM_IOERR;
+        }
+
         bmh_reset();
-        bmh(tm);
+        if (bmh(tm) < 0) {
+            return RXVM_IOERR;
+        }
     }
 
     return 0;
@@ -372,8 +386,13 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, int64_t *match_size,
     int ret;
     char file_buffer[FBUF_SIZE];
 
-    if (!compiled || !fp) return RXVM_EPARAM;
-    if ((fpos = ftell(fp)) < 0) return RXVM_IOERR;
+    if (!compiled || !fp) {
+        return RXVM_EPARAM;
+    }
+
+    if ((fpos = ftell(fp)) < 0) {
+        return RXVM_IOERR;
+    }
 
     memset(&tm, 0, sizeof(threads_t));
     tm.getchar = getchar_file;
@@ -392,23 +411,29 @@ int rxvm_fsearch (rxvm_t *compiled, FILE *fp, int64_t *match_size,
         /* Simple expression-- we can do the whole search using
          * Boyer-Moore (bmh()) */
         bmh_init(fp, compiled->simple, strlen(compiled->simple));
-        bmh(&tm);
+        if ((ret = bmh(&tm)) < 0) {
+            goto cleanup;
+        }
+
     } else {
         /* Full regular expression, with a fixed substring suitable for
          * running Boyer-Moore (bmh_partial()). Initialise the VM, since
          * bmh_partial will call vm_execute if it finds a substring match */
         if (compiled->lfix) {
-            if ((ret = vm_init(&tm, compiled->size)) != 0)
+            if ((ret = vm_init(&tm, compiled->size)) < 0) {
                 goto cleanup;
+            }
 
-            if ((ret = bmh_partial(fp, compiled, &tm)) < 0)
+            if ((ret = bmh_partial(fp, compiled, &tm)) < 0) {
                 goto cleanup;
+            }
 
         } else {
             /* Full regular expression, with no fix substrings suitable for
              * Boyer-Moore. Initialise & execute the VM */
-            if ((ret = vm_init(&tm, compiled->size)) != 0)
+            if ((ret = vm_init(&tm, compiled->size)) < 0) {
                 goto cleanup;
+            }
 
             tm.chars = fpos;
             vm_execute(&tm, compiled, 0);

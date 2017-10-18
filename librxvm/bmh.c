@@ -61,7 +61,7 @@ static char skip (unsigned int num)
     return bmhbuf[pos];
 }
 
-int bmh (threads_t *tm)
+int64_t bmh (threads_t *tm)
 {
     char c;
     unsigned int i, skiplen;
@@ -81,7 +81,10 @@ skip:
             }
         } while (i--);
 
-        fpos = ftell(fp);
+        if ((fpos = ftell(fp)) < 0) {
+            return RXVM_IOERR;
+        }
+
         tm->match_start = fpos - 1 - pendix - (endix - pos);
         tm->match_end = fpos + 1 - (endix - pos);
 
