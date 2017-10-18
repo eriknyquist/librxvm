@@ -46,13 +46,16 @@ class RunPyRXVMTests(Command):
 with open(README, 'r') as f:
     long_description = f.read()
 
-setup (name = 'rxvm',
-       version = '1.0.3',
-       description = 'Regular expression engine with super-fast file searching',
-       long_description=long_description,
-       author = 'Erik Nyquist',
-       author_email = 'eknyquist@gmail.com',
-       url = 'https://github.com/eriknyquist/librxvm',
-       package_dir = {'rxvm': PYRXVM_DIR},
-       cmdclass={'test': RunPyRXVMTests},
-       ext_modules = [module1])
+setup(
+    name = 'rxvm',
+    version = '1.0.3',
+    description = ("Non-backtracking regular expression engine with super-fast"
+        " file searching"),
+    long_description=long_description,
+    author = 'Erik Nyquist',
+    author_email = 'eknyquist@gmail.com',
+    url = 'https://github.com/eriknyquist/librxvm',
+    package_dir = {'rxvm': PYRXVM_DIR},
+    cmdclass={'test': RunPyRXVMTests},
+    ext_modules = [module1]
+)
