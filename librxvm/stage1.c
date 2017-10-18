@@ -48,9 +48,7 @@ static void inst_stack_cleanup (void *data)
     inst = (inst_t *) data;
 
     if (inst != NULL) {
-        if (inst->ccs != NULL)
-            free(inst->ccs);
-
+        free(inst->ccs);
         free(inst);
     }
 }
@@ -404,7 +402,7 @@ static void stage1_err_cleanup (context_t *cp)
 {
     stack_free(cp->parens, stack_stack_cleanup);
     stack_free(cp->prog, inst_stack_cleanup);
-    if (cp->strb.buf) free(cp->strb.buf);
+    free(cp->strb.buf);
 }
 
 static int stage1_init (context_t *cp, ir_stack_t **ret)

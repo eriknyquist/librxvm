@@ -201,6 +201,5 @@ int vm_init (threads_t *tm, unsigned int size)
 
 void vm_cleanup(threads_t *tm)
 {
-    if (tm->table_base)
-        free(tm->table_base);
+    free(tm->table_base);
 }
