@@ -15,7 +15,7 @@ matrix:
     os: osx
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pip; pip install wheel; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pip2; pip2 install wheel; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq python-pip; sudo pip install wheel; fi
 
 script:
